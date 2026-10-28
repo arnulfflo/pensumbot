@@ -85,22 +85,54 @@ sporsmal:
     forventet_kilde:
       - notater/ORG1100_kap-1.docx
 
-  # Felle-spørsmål: boten skal svare «finnes ikke i materialet».
-  # Sjekket mot teksten i alle filer i notater/, foiler/ og oppgaver/ per 28.10.2026.
-  # Legger du inn notater for flere kapitler, må disse sjekkes på nytt.
+  # Spørsmål 11–15 er lagt til 28.10.2026 for kap. 7, 8, 11, 15 og 17.
   - id: 11
-    sporsmal: "Hvilke faser går en gruppe gjennom ifølge Tuckman?"
+    sporsmal: "Hva er forskjellen på å velge mellom flere jobbsøkere og å takke ja eller nei til ett jobbtilbud, som beslutningstype?"
+    forventet_svar: "Å velge mellom flere søkere er en valgbeslutning (et klart sett alternativer). Å ta stilling til ett jobbtilbud er en evalueringsbeslutning (ett alternativ som aksepteres eller forkastes). Den tredje typen er konstruksjonsbeslutning, der man må lage løsningen selv."
+    forventet_kilde:
+      - notater/ORG1100_kap-7.docx
+
+  - id: 12
+    sporsmal: "Hvilken fase i gruppeutviklingen preges av konflikter og frustrasjon over roller, og hvorfor er den nyttig?"
+    forventet_svar: "Storming i Tuckmans fasemodell. Konfliktene er ifølge modellen nødvendige for å få frem ulike standpunkter og dypere forståelse."
+    forventet_kilde:
+      - notater/ORG1100_kap-8.docx
+
+  - id: 13
+    sporsmal: "Hva er forskjellen på at en medarbeider bare gjør det lederen ber om, og at hun virkelig er med på det?"
+    forventet_svar: "Det første er aksept (compliance): atferden endres, men ikke tanker og motivasjon. Det andre er indre forpliktelse (commitment): både atferd og motivasjon endres, og innsatsen blir høyere. Det tredje mulige resultatet av et påvirkningsforsøk er motstand."
+    forventet_kilde:
+      - notater/ORG1100_kap-11.docx
+
+  - id: 14
+    sporsmal: "Hvorfor kritiseres det siste steget i Lewins endringsmodell?"
+    forventet_svar: "Stabilisering (refreeze) forutsetter at stabilitet er normalen og endring et unntak. Mange organisasjoner har nesten kontinuerlige endringer og kommer sjelden til en stabil periode."
+    forventet_kilde:
+      - notater/ORG1100_kap-15.docx
+
+  - id: 15
+    sporsmal: "Kan arbeidsgiver bestemme hva som helst om arbeidet, eller finnes det grenser for styringsretten?"
+    forventet_svar: "Styringsretten har fem begrensninger: arbeidsavtalen og omstendighetene rundt ansettelsen, samfunnsutviklingen, krav om saklighet og forholdsmessighet (Kårstø-dommen), lover og forskrifter, og virksomhetens legitime interesser."
+    forventet_kilde:
+      - notater/ORG1100_kap-17.docx
+
+  # Felle-spørsmål: boten skal svare «finnes ikke i materialet».
+  # Sjekket mot teksten i alle filer i notater/ (inkl. emneoversikt og kap. 7, 8,
+  # 11, 15, 17), foiler/ og oppgaver/ per 28.10.2026. Tuckman ble byttet ut fordi
+  # han står i kap. 8. Legger du inn flere notater, må fellene sjekkes på nytt.
+  - id: 16
+    sporsmal: "Hvordan bruker en bedrift balansert målstyring (balanced scorecard)?"
     forventet_svar: "finnes ikke i materialet"
     forventet_kilde: ingen
     felle: true
 
-  - id: 12
+  - id: 17
     sporsmal: "Hvilke teamroller beskriver Belbin?"
     forventet_svar: "finnes ikke i materialet"
     forventet_kilde: ingen
     felle: true
 
-  - id: 13
+  - id: 18
     sporsmal: "Hvordan setter man opp en SWOT-analyse av en bedrift?"
     forventet_svar: "finnes ikke i materialet"
     forventet_kilde: ingen

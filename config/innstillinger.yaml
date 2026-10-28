@@ -1,20 +1,34 @@
 # Innstillinger for pensumboten.
 # Endre her, ikke i koden, og kjør testsettet på nytt etter hver endring.
-# Verdier merket "velges i fase 1" bestemmes sammen med Claude Code.
 
 pensum_mappe: pensum
 data_mappe: data
 
+innlesing:
+  fag: ORG1100
+  typer: [foiler, notater, oppgaver]   # eksamener tas inn i fase 2
+  min_tegn_per_side: 20                # sider med mindre tekst enn dette hoppes over
+
 sprakmodell:
-  leverandor: anthropic        # eller ollama
-  modell:                      # velges i fase 1
+  leverandor: ollama           # ollama (lokal, gratis) eller anthropic (krever nøkkel i .env)
+  temperatur: 0.1              # lav = saklig og forutsigbar (brukes av Ollama)
+  ollama:
+    modell: gemma4:e4b         # forslag fra `uv run python -m src.sjekk_maskin` (16 GB minne)
+    tenkning: false            # true = modellen resonnerer skjult før svaret (ca. 3x tregere)
+  anthropic:
+    modell: claude-sonnet-5-5
+    maks_tokens: 1024
 
 embeddings:
-  modell:                      # flerspråklig sentence-transformers-modell, velges i fase 1
+  modell: intfloat/multilingual-e5-base   # maks 512 tokens per bit, krever "query: "/"passage: "
 
 chunking:
-  storrelse:                   # velges i fase 1 (spesifikasjonen sier ca. 500–800 ord)
-  overlapp:                    # velges i fase 1
+  storrelse: 1000              # tegn, ikke ord (ca. 150 ord). SPEC sier 500–800 ord, men e5 kutter etter ~300 ord
+  overlapp: 150                # tegn
 
 henting:
   antall_biter: 6              # spesifikasjonen sier 5–8
+
+testing:
+  testsett: tester/testsett_ORG1100.yaml
+  mal_andel: 0.8               # 80 % riktig kilde (12 av 15)
