@@ -1,0 +1,11 @@
+Dette er en side fra en forelesningsfoil eller et notat fra GoodNotes, med mine håndskrevne notater.
+
+Skriv av kun den håndskrevne teksten, ordrett. Ikke gjengi den trykte teksten på foilen.
+
+Hvis det er tydelig hvilket punkt på foilen et notat hører til, oppgi det i hakeparentes før notatet, for eksempel: [til: «Matriseorganisasjon»].
+
+Skriv [uleselig] for ord du ikke kan lese. Ikke gjett.
+
+Tegninger, piler og understrekinger uten tekst skal ikke beskrives.
+
+Hvis siden ikke har håndskrift, svar bare: INGEN

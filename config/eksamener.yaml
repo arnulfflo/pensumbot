@@ -1,0 +1,20 @@
+# Eksamensdatoer og temaer per fag. Brukes først i fase 3.
+# Fyll inn fra emnebeskrivelse eller pensumliste – ikke gjett.
+
+ORG1100:
+  dato: UKJENT                 # format: 2026-12-10
+  temaer: []                   # f.eks. ["Organisasjonsstruktur", "Ledelse"]
+
+MRK1001:
+  dato: UKJENT
+  temaer: []
+
+BOA1100:
+  dato: UKJENT
+  temaer: []
+
+MET1001:
+  dato: UKJENT
+  temaer: []
+
+timer_per_dag: UKJENT

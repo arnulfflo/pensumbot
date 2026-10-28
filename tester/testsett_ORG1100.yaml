@@ -1,0 +1,107 @@
+# Testsett for fase 1 – ORG1100
+#
+# Utkast laget av Claude 28.10.2026 ut fra notater/ og foiler/. Gå gjennom hvert
+# spørsmål og sjekk svar og kilde selv før du stoler på resultatene.
+#
+# Regler for formatet:
+# - forventet_kilde er en liste. Testen regnes som bestått hvis minst én av de
+#   hentede bitene kommer fra en av kildene i listen. Samme tema står ofte i
+#   både notat og foil, så flere kilder kan være riktige.
+# - Sidetall er sidenummeret slik det vises i PDF-leseren (første side = 1).
+#   PyPDFLoader teller fra 0, så testscriptet må legge til 1.
+# - Word-filer har ikke sidetall ved innlesing, så for .docx sjekkes bare filen.
+# - Stiene er relative til pensum/ORG1100/.
+
+fag: ORG1100
+
+sporsmal:
+  - id: 1
+    sporsmal: "Blir en avdeling alltid mer effektiv jo flere ansatte hver leder har under seg?"
+    forventet_svar: "Nei. Sammenhengen er kurvelineær: effektiviteten øker opp til et visst punkt, men så avtar den fordi lederen får vanskeligere med å styre og koordinere når avdelingen blir for stor."
+    forventet_kilde:
+      - notater/ORG1100_kap-13.docx
+      - foiler/goodnotes/Modul-2-Kap-13-Organisasjonsstruktur.pdf, s. 15
+
+  - id: 2
+    sporsmal: "En selger tror ikke at gode salgstall faktisk gir bonus. Hva skjer med motivasjonen ifølge forventningsteorien?"
+    forventet_svar: "Instrumentaliteten (troen på at resultatet gir belønningen) blir lav. Faktorene multipliseres, så motivasjonen svekkes, og blir null hvis én faktor er null."
+    forventet_kilde:
+      - notater/ORG1100_kap-3.docx
+      - foiler/Pensumteori som ikke står i boka.pdf, s. 11
+      - foiler/goodnotes/Modul-5-Motivasjon-og-ytelse-stud.pdf, s. 12
+      - foiler/goodnotes/Modul-5-Motivasjon-og-ytelse-stud.pdf, s. 13
+
+  - id: 3
+    sporsmal: "Holder det å skrive at lønn er en hygienefaktor når jeg analyserer en case med Herzberg?"
+    forventet_svar: "Nei. Det er den opplevde kvaliteten som avgjør, ikke om faktoren finnes. Man må vise at lønna oppleves så lav at den virker som en hygienefaktor. Høy lønn kan for noen være en motivasjonsfaktor."
+    forventet_kilde:
+      - foiler/Pensumteori som ikke står i boka.pdf, s. 14
+
+  - id: 4
+    sporsmal: "Hva skiller en klankultur fra en markedskultur i Competing Values Framework?"
+    forventet_svar: "Klankultur har internt fokus og fleksibilitet og verdsetter samarbeid og samhold. Markedskultur har eksternt fokus og stabilitet og verdsetter konkurranse, resultater og kundeorientering."
+    forventet_kilde:
+      - notater/ORG1100_kap-14.docx
+
+  - id: 5
+    # Kjent svakhet: selve tabellen er et bilde, så teksten kan ikke leses ut.
+    # Kilden bør bli funnet via bildeteksten, men svaret blir trolig feil eller
+    # «finnes ikke» til bilder blir lest (fase 1b). Det er nyttig å se.
+    sporsmal: "Hva er ulempene med å la toppledelsen ta nesten alle beslutninger?"
+    forventet_svar: "Lokal informasjon går tapt i hierarkiet, lite fleksibilitet, demotiverende og treghet."
+    forventet_kilde:
+      - foiler/Pensumteori som ikke står i boka.pdf, s. 6
+      - foiler/goodnotes/Modul-2-Kap-13-Organisasjonsstruktur.pdf, s. 17
+
+  - id: 6
+    sporsmal: "Er det selve lønnsfordelingen eller måten den bestemmes på som henger mest sammen med hvor godt folk presterer?"
+    forventet_svar: "Måten den bestemmes på. I en stor oversiktsanalyse var bare prosedyrerettferdighet, ikke fordelingsrettferdighet, konsekvent positivt knyttet til arbeidsprestasjoner."
+    forventet_kilde:
+      - notater/ORG1100_kap-3.docx
+      - notater/ORG1100_kap-9.docx
+      - foiler/goodnotes/Modul-5-Motivasjon-og-ytelse-stud.pdf, s. 14
+
+  - id: 7
+    sporsmal: "Hvorfor lærer ikke folk alltid av feilene sine, ifølge Argyris og Schön?"
+    forventet_svar: "Det er et gap mellom bruksteorien (det som faktisk styrer atferden) og den uttrykte teorien (begrunnelsene vi gir). Gapet gjør oss blinde for egne feil."
+    forventet_kilde:
+      - notater/ORG1100_kap-6.docx
+
+  - id: 8
+    sporsmal: "Kan Friedmans poeng om at bedrifter skal tjene penger brukes som argument FOR samfunnsansvar?"
+    forventet_svar: "Ja. Å unngå samfunnsansvar kan bli dyrt gjennom boikott, økt risiko, dårligere tilgang til kapital og svekket omdømme, så ansvar kan være nødvendig for å sikre lønnsomheten."
+    forventet_kilde:
+      - notater/ORG1100_kap-18.docx
+
+  - id: 9
+    sporsmal: "I hvilke situasjoner gjør en oppgaveorientert leder det best, ifølge Fiedler?"
+    forventet_svar: "I svært gunstige og svært ugunstige situasjoner. Relasjonsorienterte ledere lykkes best i moderat gunstige situasjoner."
+    forventet_kilde:
+      - notater/ORG1100_kap-12.docx
+
+  - id: 10
+    sporsmal: "Hva er forskjellen på det man har lært seg og evnen til å løse helt nye problemer, når det gjelder intelligens?"
+    forventet_svar: "Krystallisert intelligens er kunnskap og ferdigheter man har lært. Flytende intelligens er evnen til å løse nye problemer man ikke har sett før."
+    forventet_kilde:
+      - notater/ORG1100_kap-1.docx
+
+  # Felle-spørsmål: boten skal svare «finnes ikke i materialet».
+  # Sjekket mot teksten i alle filer i notater/, foiler/ og oppgaver/ per 28.10.2026.
+  # Legger du inn notater for flere kapitler, må disse sjekkes på nytt.
+  - id: 11
+    sporsmal: "Hvilke faser går en gruppe gjennom ifølge Tuckman?"
+    forventet_svar: "finnes ikke i materialet"
+    forventet_kilde: ingen
+    felle: true
+
+  - id: 12
+    sporsmal: "Hvilke teamroller beskriver Belbin?"
+    forventet_svar: "finnes ikke i materialet"
+    forventet_kilde: ingen
+    felle: true
+
+  - id: 13
+    sporsmal: "Hvordan setter man opp en SWOT-analyse av en bedrift?"
+    forventet_svar: "finnes ikke i materialet"
+    forventet_kilde: ingen
+    felle: true

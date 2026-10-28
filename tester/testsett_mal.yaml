@@ -1,0 +1,19 @@
+# Testsett for fase 1. Kopier til f.eks. testsett_ORG1100.yaml når du har valgt fag.
+# Skriv 10 spørsmål du vet svaret på, og hvor i materialet svaret står.
+# Ta med 2–3 "felle"-spørsmål om ting som IKKE er i pensum (forventet_kilde: ingen).
+
+fag: UKJENT
+
+sporsmal:
+  - sporsmal: ""
+    forventet_svar: ""
+    forventet_kilde: ""        # f.eks. foiler/F05.pdf, s. 12
+
+  - sporsmal: ""
+    forventet_svar: ""
+    forventet_kilde: ""
+
+  # Felle-spørsmål: boten skal svare "finnes ikke i materialet"
+  - sporsmal: ""
+    forventet_svar: "finnes ikke i materialet"
+    forventet_kilde: ingen

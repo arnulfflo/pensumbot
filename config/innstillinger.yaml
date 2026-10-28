@@ -1,0 +1,20 @@
+# Innstillinger for pensumboten.
+# Endre her, ikke i koden, og kjør testsettet på nytt etter hver endring.
+# Verdier merket "velges i fase 1" bestemmes sammen med Claude Code.
+
+pensum_mappe: pensum
+data_mappe: data
+
+sprakmodell:
+  leverandor: anthropic        # eller ollama
+  modell:                      # velges i fase 1
+
+embeddings:
+  modell:                      # flerspråklig sentence-transformers-modell, velges i fase 1
+
+chunking:
+  storrelse:                   # velges i fase 1 (spesifikasjonen sier ca. 500–800 ord)
+  overlapp:                    # velges i fase 1
+
+henting:
+  antall_biter: 6              # spesifikasjonen sier 5–8
