@@ -43,7 +43,10 @@ def er_treff(bit, kilder) -> bool:
                for fil, side in kilder)
 
 
-def kjor(fag: str, k: int | None, med_svar: bool = False):
+DIAGNOSE_K = 20     # så langt ned vi leter etter riktig bit for å måle rangen
+
+
+def kjor(fag: str, k: int | None, med_svar: bool = False, kort: bool = False):
     innst = last_innstillinger()
     sti = ROT / "tester" / f"testsett_{fag}.yaml"
     if not sti.exists():
@@ -59,14 +62,21 @@ def kjor(fag: str, k: int | None, med_svar: bool = False):
     riktige, beste_avstand_vanlige = 0, []
     sitert_riktig, sa_finnes_ikke = 0, []
     per_kategori = {}     # kategori → [riktige, totalt]
+    resiproke, utenfor = [], []
     for s in vanlige:
         kilder = forventede_kilder(s)
+        # Hent flere enn k bare for å måle rangen. Bestått/ikke gjelder fortsatt de k første.
+        kandidater = hent(s["sporsmal"], fag=testsett["fag"], k=max(k, DIAGNOSE_K))
+        rang_full = next((nr for nr, b in enumerate(kandidater, start=1) if er_treff(b, kilder)), None)
+        resiproke.append(1 / rang_full if rang_full else 0)
         if med_svar:
             svar = svar_pa(s["sporsmal"], fag=testsett["fag"], k=k)
             biter = svar.biter
         else:
-            biter = hent(s["sporsmal"], fag=testsett["fag"], k=k)
-        rang = next((nr for nr, b in enumerate(biter, start=1) if er_treff(b, kilder)), None)
+            biter = kandidater[:k]
+        rang = rang_full if rang_full and rang_full <= k else None
+        if rang_full and not rang:
+            utenfor.append(f"nr. {s['id']} på rang {rang_full}")
         riktige += rang is not None
         beste_avstand_vanlige.append(biter[0].avstand)
         if "kategori" in s:
@@ -74,6 +84,8 @@ def kjor(fag: str, k: int | None, med_svar: bool = False):
             teller[0] += rang is not None
             teller[1] += 1
 
+        if kort and rang and not med_svar:
+            continue
         merke = f"✓ rang {rang}" if rang else "✗"
         print(f"{s['id']:>2}. {merke:<9} {s['sporsmal']}")
         for nr, b in enumerate(biter[:3], start=1):
@@ -81,6 +93,7 @@ def kjor(fag: str, k: int | None, med_svar: bool = False):
             print(f"      {stjerne} {nr}. {b.avstand:.3f}  {b.kilde}")
         if not rang:
             print("      forventet: " + "; ".join(f"{f}, s. {p}" if p else f for f, p in kilder))
+            print(f"      rang blant de {DIAGNOSE_K} nærmeste: {rang_full or 'ikke funnet'}")
         if med_svar:
             sitert = any(er_treff(b, kilder) for b in svar.siterte)
             sitert_riktig += sitert
@@ -112,6 +125,9 @@ def kjor(fag: str, k: int | None, med_svar: bool = False):
           + ("BESTÅTT" if riktige >= mal else "IKKE BESTÅTT"))
     for kategori, (r, n) in sorted(per_kategori.items()):
         print(f"  {kategori}: {r} av {n}")
+    # MRR: snittet av 1/rang. Rang 1 gir 1.0, rang 2 gir 0.5, ikke funnet gir 0. Høyere er bedre.
+    print(f"MRR@{DIAGNOSE_K}: {statistics.mean(resiproke):.3f}"
+          + (f"   (utenfor topp {k}: {', '.join(utenfor)})" if utenfor else ""))
     print(f"Beste avstand, vanlige spørsmål: median {statistics.median(beste_avstand_vanlige):.3f}, "
           f"høyest {max(beste_avstand_vanlige):.3f}")
     if beste_avstand_feller:
@@ -135,5 +151,6 @@ if __name__ == "__main__":
     parser.add_argument("--fag", help="faget som skal testes (standard: standardfag i innstillingene)")
     parser.add_argument("--k", type=int, help="antall biter å hente (overstyrer innstillingene)")
     parser.add_argument("--med-svar", action="store_true", help="la språkmodellen svare (ca. 1 minutt)")
+    parser.add_argument("--kort", action="store_true", help="vis bare spørsmål som feiler, og oppsummeringen")
     args = parser.parse_args()
-    kjor(args.fag or standardfag(), args.k, args.med_svar)
+    kjor(args.fag or standardfag(), args.k, args.med_svar, args.kort)
