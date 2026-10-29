@@ -58,6 +58,7 @@ def kjor(fag: str, k: int | None, med_svar: bool = False):
 
     riktige, beste_avstand_vanlige = 0, []
     sitert_riktig, sa_finnes_ikke = 0, []
+    per_kategori = {}     # kategori → [riktige, totalt]
     for s in vanlige:
         kilder = forventede_kilder(s)
         if med_svar:
@@ -68,6 +69,10 @@ def kjor(fag: str, k: int | None, med_svar: bool = False):
         rang = next((nr for nr, b in enumerate(biter, start=1) if er_treff(b, kilder)), None)
         riktige += rang is not None
         beste_avstand_vanlige.append(biter[0].avstand)
+        if "kategori" in s:
+            teller = per_kategori.setdefault(s["kategori"], [0, 0])
+            teller[0] += rang is not None
+            teller[1] += 1
 
         merke = f"✓ rang {rang}" if rang else "✗"
         print(f"{s['id']:>2}. {merke:<9} {s['sporsmal']}")
@@ -105,6 +110,8 @@ def kjor(fag: str, k: int | None, med_svar: bool = False):
     print("\n" + "=" * 60)
     print(f"Riktig kilde: {riktige} av {len(vanlige)}  (mål: {mal})  "
           + ("BESTÅTT" if riktige >= mal else "IKKE BESTÅTT"))
+    for kategori, (r, n) in sorted(per_kategori.items()):
+        print(f"  {kategori}: {r} av {n}")
     print(f"Beste avstand, vanlige spørsmål: median {statistics.median(beste_avstand_vanlige):.3f}, "
           f"høyest {max(beste_avstand_vanlige):.3f}")
     if beste_avstand_feller:

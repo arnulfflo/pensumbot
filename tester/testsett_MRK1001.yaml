@@ -1,0 +1,151 @@
+# Testsett for fase 1 – MRK1001
+#
+# Utkast laget av Claude 29.10.2026 ut fra notater/ og foiler/. Gå gjennom hvert
+# spørsmål og sjekk svar og kilde selv før du stoler på resultatene.
+#
+# Regler for formatet (samme som ORG1100):
+# - forventet_kilde er en liste. Testen er bestått hvis minst én av de hentede
+#   bitene kommer fra en av kildene i listen.
+# - Sidetall er sidenummeret slik det vises i PDF-leseren (første side = 1).
+#   Innlesingen lagrer sidetallene slik allerede, så testscriptet legger ikke til noe.
+# - Word-filer har ikke sidetall, så for .docx sjekkes bare filen.
+# - Stiene er relative til pensum/MRK1001/.
+# - kategori: begrep = forklar et begrep, anvendt = bruk teorien på en situasjon,
+#   slik eksamen (casebasert) krever. Testscriptet viser resultat per kategori.
+
+fag: MRK1001
+
+sporsmal:
+  - id: 1
+    kategori: anvendt
+    sporsmal: "En bedrift er flink til å selge og kommersialisere produkter, men vet lite om hva kundene faktisk etterspør. Hva kalles en slik bedrift når man ser på markedsorientering og markedsføringskompetanse?"
+    forventet_svar: "En «byråkratisk» markedsfører: høy markedsføringskompetanse, lav markedsorientering. Den kan kommersialisere, men har dårlig grunnlag for å vite om produktet faktisk er etterspurt (figur 1.4)."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 1.docx
+
+  - id: 2
+    kategori: anvendt
+    sporsmal: "Strømmetjenester tar kunder fra kinoene. Hvilken av Porters konkurransekrefter er dette, og hva avgjør hvor sterk trusselen er?"
+    forventet_svar: "Trussel fra substitusjon. Styrken avhenger av substituttets ytelse i forhold til pris, byttekostnadene og kjøpernes tilbøyelighet til å bytte."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 2.docx
+      - foiler/goodnotes/Forelesning-2.pdf, s. 20
+
+  - id: 3
+    kategori: anvendt
+    sporsmal: "IKEA tilbyr høy opplevd verdi til lav pris. Hvor i strategiklokken er det, og hvorfor er posisjonen vanskelig å oppnå?"
+    forventet_svar: "Rute 3 (høy opplevd verdi, lav pris). Den er den vanskeligste å realisere fordi den krever ekstremt kostnadseffektiv produksjon kombinert med høy kvalitet."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 3.docx
+      - foiler/goodnotes/Forelesning-3.pdf, s. 15
+
+  - id: 4
+    kategori: anvendt
+    sporsmal: "En kunde går på en konsert hun egentlig ikke har lyst til å gå på, fordi billetten var så dyr. Hvilken tankefeil er dette?"
+    forventet_svar: "Sunk cost: penger som allerede er brukt, påvirker valget selv om det er irrasjonelt. Følelsen av tap avtar over tid («betalingsavskrivning»)."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 4.docx
+      - foiler/goodnotes/Forelesning4.pdf, s. 12
+
+  - id: 5
+    kategori: begrep
+    sporsmal: "Hvilken rolle i kjøpssenteret kontrollerer informasjonsflyten fra leverandørene til dem som skal kjøpe?"
+    forventet_svar: "Portvakten (gatekeeper), for eksempel innkjøpsfunksjonen eller en sekretær. Det er én av seks kjøperroller (Bonoma): initiativtaker, bruker, påvirker, innkjøper, beslutter og portvakt."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 5.docx
+      - foiler/goodnotes/Forelesning-5.pdf, s. 21
+
+  - id: 6
+    kategori: begrep
+    sporsmal: "Hvilke krav bør et markedssegment oppfylle for å være et godt segment?"
+    forventet_svar: "Det bør være målbart, stort nok/lønnsomt, tilgjengelig, heterogent (ulikt de andre segmentene) og mulig å betjene."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 6.docx
+
+  - id: 7
+    kategori: anvendt
+    sporsmal: "Et produkt har høy markedsandel i et marked som har sluttet å vokse. Hva kalles det i BCG-matrisen, og hvilken rolle har det for bedriften?"
+    forventet_svar: "En melkeku. Den er lønnsom og gir overskudd som kan finansiere andre satsinger, for eksempel stjerner og spørsmålstegn."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 7.docx
+
+  - id: 8
+    # Står bare på én foilside, ikke i notatet. Tester om korte foilsider blir funnet.
+    kategori: anvendt
+    sporsmal: "En produsent av impulsvarer med lite merkelojalitet vil inn i dagligvarebutikkene. Passer en push- eller en pull-strategi best?"
+    forventet_svar: "Push-strategi: salgskorps og salgsfremmende tiltak overtaler grossister og detaljister til å ta inn produktet. Passer ved lav lojalitet, merkevalg i butikk, impulskjøp og lett forståtte produktfordeler. Ulempen er at produsenten mister kontroll i mellomleddet."
+    forventet_kilde:
+      - foiler/goodnotes/Forelesning-7-og-8.pdf, s. 25
+
+  - id: 9
+    kategori: begrep
+    sporsmal: "Hva betyr det at etterspørselen etter et produkt er elastisk?"
+    forventet_svar: "Den relative mengdeendringen er større enn den relative prisendringen, altså elastisitet over 1 i tallverdi. Normalt er elastisiteten negativ (pris opp gir mengde ned)."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 9.docx
+
+  - id: 10
+    kategori: anvendt
+    sporsmal: "Bør en bedrift alltid velge influenserne med flest følgere for å få størst effekt?"
+    forventet_svar: "Nei. Sammenhengen mellom antall følgere og påvirkningskraft er en omvendt U (Wies et al., 2023): både for få og for mange følgere er en ulempe."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 10.docx
+
+  - id: 11
+    kategori: begrep
+    sporsmal: "Hvilke nivåer består merkevarepyramiden av?"
+    forventet_svar: "Nedenfra: merkekjennskap, merkets ytelse og inntrykk, kundens evaluering av og følelser for merket, og øverst kunde–merkerelasjonen."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 11.docx
+      - foiler/goodnotes/Forelesning9.pdf, s. 12
+
+  - id: 12
+    kategori: anvendt
+    sporsmal: "En kunde handler alltid i samme butikk, men bare fordi den ligger nærmest. Hva slags lojalitet er dette, og hva bør butikken satse på?"
+    forventet_svar: "Kalkulativ lojalitet, det laveste av Olivers fire nivåer (bekvemmelighet og vane). De fleste kunder er på nivå 1–2, så butikken bør satse på å maksimere kundetilfredsheten."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 12.docx
+
+  - id: 13
+    kategori: begrep
+    sporsmal: "Hvilke dimensjoner av servicekvalitet inngår i Servqual-modellen?"
+    forventet_svar: "Strukturelle elementer, empati, pålitelighet, tillit og respons."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 13.docx
+
+  - id: 14
+    kategori: anvendt
+    sporsmal: "Kundene sa i en undersøkelse at de ville kjøpe et nytt produkt, men det floppet ved lansering. Hvilken feilkilde i markedsanalyser kan forklare dette?"
+    forventet_svar: "Validitetsfeil: man måler ikke det man vil måle. Folk sier én ting og gjør en annen, og ønsketenkning er vanskelig å skille fra reell handling (eksempel: Ford Edsel)."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 14.docx
+
+  - id: 15
+    kategori: begrep
+    sporsmal: "Hvorfor stopper salget av ny teknologi ofte opp etter at de første entusiastiske kundene har kjøpt?"
+    forventet_svar: "Avgrunnen (Moore, Crossing the Chasm) mellom tidlige adoptører (visjonære) og tidlig majoritet (pragmatikere), som vil ha noe utprøvd og trygt. Strategien er å finne et brohode (en nisje) og utvikle det komplette produktet."
+    forventet_kilde:
+      - notater/Modeller og Teori markedsføring kap 15.docx
+
+  # Felle-spørsmål: boten skal svare «finnes ikke i materialet».
+  # SWOT og balansert målstyring (fellene i ORG1100) står i MRK kap. 3 og kan
+  # ikke brukes her. Disse er sjekket mot all tekst i notater/, foiler/ og
+  # oppgaver/ per 29.10.2026. 16 og 17 er bevisst nær temaer som finnes
+  # (strategi i kap. 3 og lojalitet i kap. 12), så de er vanskelige feller.
+  - id: 16
+    sporsmal: "Hva går en blå hav-strategi (Blue Ocean Strategy) ut på?"
+    forventet_svar: "finnes ikke i materialet"
+    forventet_kilde: ingen
+    felle: true
+
+  - id: 17
+    sporsmal: "Hvordan regner man ut Net Promoter Score (NPS)?"
+    forventet_svar: "finnes ikke i materialet"
+    forventet_kilde: ingen
+    felle: true
+
+  - id: 18
+    sporsmal: "Hvilke kulturdimensjoner beskriver Hofstede, og hva betyr de for internasjonal markedsføring?"
+    forventet_svar: "finnes ikke i materialet"
+    forventet_kilde: ingen
+    felle: true
