@@ -72,7 +72,7 @@ def kjor(fag: str, k: int | None, med_svar: bool = False, kort: bool = False, re
         rang_full = next((nr for nr, b in enumerate(kandidater, start=1) if er_treff(b, kilder)), None)
         resiproke.append(1 / rang_full if rang_full else 0)
         if med_svar:
-            svar = svar_pa(s["sporsmal"], fag=testsett["fag"], k=k, bruk_reranker=rerank)
+            svar = svar_pa(s["sporsmal"], biter=kandidater[:k])
             biter = svar.biter
         else:
             biter = kandidater[:k]

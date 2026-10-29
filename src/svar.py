@@ -45,8 +45,10 @@ def bygg_melding(sporsmal: str, biter: list[Bit]) -> str:
 
 
 def svar_pa(sporsmal: str, fag: str | None = None, k: int | None = None,
-            bruk_reranker: bool = True) -> Svar:
-    biter = hent(sporsmal, fag=fag, k=k, bruk_reranker=bruk_reranker)
+            bruk_reranker: bool = True, biter: list[Bit] | None = None) -> Svar:
+    """biter: allerede hentede biter (testscriptet bruker det for å slippe å hente to ganger)."""
+    if biter is None:
+        biter = hent(sporsmal, fag=fag, k=k, bruk_reranker=bruk_reranker)
     tekst = generer(SYSTEM, bygg_melding(sporsmal, biter)).strip()
 
     finnes_ikke = "finnes ikke i materialet" in tekst.lower()
