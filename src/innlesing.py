@@ -8,8 +8,8 @@ Kjør:  uv run python -m src.innlesing                 (alle fag)
 """
 
 import argparse
-
 import logging
+import re
 import unicodedata
 from pathlib import Path
 
@@ -41,6 +41,14 @@ def _metadata(fil: Path, fag_mappe: Path) -> dict:
     }
 
 
+def finn_tittel(tekst: str) -> str:
+    """Første linje med et ord i, f.eks. foiltittelen. Hopper over datoer og sidetall."""
+    for linje in tekst.splitlines():
+        if re.search(r"[A-Za-zÆØÅæøå]{3,}", linje):
+            return linje.strip()[:100]
+    return ""
+
+
 def fjern_stoy(tekst: str) -> str:
     """Fjerner tekst som står på mange sider (som NTNU-slagordet) og ikke sier noe om innholdet."""
     for stoy in last_innstillinger()["innlesing"].get("fjern_tekst") or []:
@@ -56,7 +64,8 @@ def _les_pdf(fil: Path, meta: dict, min_tegn: int) -> tuple[list[Document], int]
         if len(tekst) < min_tegn:
             continue                            # tom side, eller bare bilde/håndskrift
         # PyPDFLoader teller fra 0. Vi lagrer sidetallet slik PDF-leseren viser det.
-        docs.append(Document(page_content=tekst, metadata={**meta, "side": side.metadata["page"] + 1}))
+        docs.append(Document(page_content=tekst, metadata={
+            **meta, "side": side.metadata["page"] + 1, "tittel": finn_tittel(tekst)}))
     return docs, len(sider)
 
 
@@ -92,6 +101,7 @@ def les_fil(fil: Path, fag_mappe: Path, min_tegn: int) -> tuple[list[Document], 
     else:
         tekst = fil.read_text(encoding="utf-8").strip()
     # docx og md har ikke sidetall, så de får ikke noe "side"-felt.
+    meta["tittel"] = finn_tittel(tekst)
     return ([Document(page_content=tekst, metadata=meta)] if len(tekst) >= min_tegn else []), 1
 
 

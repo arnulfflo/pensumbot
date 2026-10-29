@@ -28,6 +28,7 @@ embeddings:
 chunking:
   storrelse: 1000              # tegn, ikke ord (ca. 150 ord). SPEC sier 500–800 ord, men e5 kutter etter ~300 ord
   overlapp: 150                # tegn
+  kontekst: true               # sett «fag · fil · tittel» foran hver PDF-side før embedding
 
 henting:
   antall_biter: 6              # spesifikasjonen sier 5–8

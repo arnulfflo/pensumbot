@@ -5,9 +5,11 @@ Flyt:  Document (side/fil)  →  biter (ca. 1000 tegn)  →  vektor per bit  →
 Kjør:  uv run python -m src.indeks      (bygger samlingen helt på nytt)
 """
 
+import re
 import statistics
 from collections import Counter
 from functools import cache
+from pathlib import Path
 
 import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -66,6 +68,23 @@ def del_i_biter(docs):
     return biter
 
 
+def kontekst(bit) -> str:
+    """F.eks. «MRK1001 · Forelesning 7 og 8 · 1.Push-strategi».
+
+    En foilside med noen stikkord sier lite alene. Med denne linjen foran får vektoren
+    med seg hvilken forelesning og hvilket tema den hører til. Språkmodellen ser den ikke.
+
+    Brukes bare på PDF-sider. Målt 29.10.2026: på alle biter ble MRR litt dårligere
+    (notattitlene er lange og like), bare på PDF-sider ble den bedre (MRK 0,813 → 0,872).
+    """
+    m = bit.metadata
+    fil = re.sub(r"[-_]+", " ", Path(m["fil"]).stem)
+    deler = [m["fag"], fil]
+    if m.get("tittel") and m["tittel"].lower() != fil.lower():
+        deler.append(m["tittel"])
+    return " · ".join(deler)
+
+
 def bit_id(bit) -> str:
     m = bit.metadata
     return f"{m['fag']}/{m['fil']}#{m.get('side', 0)}#{m['bit_nr']}"
@@ -76,7 +95,11 @@ def bygg_indeks():
     biter = del_i_biter(docs)
 
     print(f"Lager embeddings for {len(biter)} biter ...")
-    vektorer = embed_biter([b.page_content for b in biter])
+    if last_innstillinger()["chunking"].get("kontekst"):
+        vektorer = embed_biter([kontekst(b) + "\n" + b.page_content if "side" in b.metadata else b.page_content
+                                for b in biter])
+    else:
+        vektorer = embed_biter([b.page_content for b in biter])
 
     klient = chroma_klient()
     if SAMLING in [s.name for s in klient.list_collections()]:
