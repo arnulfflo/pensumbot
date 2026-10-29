@@ -44,8 +44,9 @@ def bygg_melding(sporsmal: str, biter: list[Bit]) -> str:
     return "\n".join(deler)
 
 
-def svar_pa(sporsmal: str, fag: str | None = None, k: int | None = None) -> Svar:
-    biter = hent(sporsmal, fag=fag, k=k)
+def svar_pa(sporsmal: str, fag: str | None = None, k: int | None = None,
+            bruk_reranker: bool = True) -> Svar:
+    biter = hent(sporsmal, fag=fag, k=k, bruk_reranker=bruk_reranker)
     tekst = generer(SYSTEM, bygg_melding(sporsmal, biter)).strip()
 
     finnes_ikke = "finnes ikke i materialet" in tekst.lower()

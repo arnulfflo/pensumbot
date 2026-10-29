@@ -32,6 +32,8 @@ chunking:
 
 henting:
   antall_biter: 6              # spesifikasjonen sier 5–8
+  reranker: BAAI/bge-reranker-v2-m3   # sorterer kandidatene på nytt; tom = av
+  kandidater: 30               # så mange hentes med vektorsøk før rerankeren velger
 
 testing:
   mal_andel: 0.8               # 80 % riktig kilde (12 av 15). Testsett: tester/testsett_<fag>.yaml

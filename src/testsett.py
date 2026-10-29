@@ -46,7 +46,7 @@ def er_treff(bit, kilder) -> bool:
 DIAGNOSE_K = 20     # så langt ned vi leter etter riktig bit for å måle rangen
 
 
-def kjor(fag: str, k: int | None, med_svar: bool = False, kort: bool = False):
+def kjor(fag: str, k: int | None, med_svar: bool = False, kort: bool = False, rerank: bool = True):
     innst = last_innstillinger()
     sti = ROT / "tester" / f"testsett_{fag}.yaml"
     if not sti.exists():
@@ -57,20 +57,22 @@ def kjor(fag: str, k: int | None, med_svar: bool = False, kort: bool = False):
     vanlige = [s for s in testsett["sporsmal"] if not s.get("felle")]
     feller = [s for s in testsett["sporsmal"] if s.get("felle")]
     k = k or innst["henting"]["antall_biter"]
-    print(f"Testsett: {sti.relative_to(ROT)}  |  fag {testsett['fag']}  |  henter {k} biter\n")
+    print(f"Testsett: {sti.relative_to(ROT)}  |  fag {testsett['fag']}  |  henter {k} biter"
+          f"  |  reranker {'på' if rerank and innst['henting'].get('reranker') else 'av'}\n")
 
     riktige, beste_avstand_vanlige = 0, []
+    beste_score_vanlige, beste_score_feller = [], []
     sitert_riktig, sa_finnes_ikke = 0, []
     per_kategori = {}     # kategori → [riktige, totalt]
     resiproke, utenfor = [], []
     for s in vanlige:
         kilder = forventede_kilder(s)
         # Hent flere enn k bare for å måle rangen. Bestått/ikke gjelder fortsatt de k første.
-        kandidater = hent(s["sporsmal"], fag=testsett["fag"], k=max(k, DIAGNOSE_K))
+        kandidater = hent(s["sporsmal"], fag=testsett["fag"], k=max(k, DIAGNOSE_K), bruk_reranker=rerank)
         rang_full = next((nr for nr, b in enumerate(kandidater, start=1) if er_treff(b, kilder)), None)
         resiproke.append(1 / rang_full if rang_full else 0)
         if med_svar:
-            svar = svar_pa(s["sporsmal"], fag=testsett["fag"], k=k)
+            svar = svar_pa(s["sporsmal"], fag=testsett["fag"], k=k, bruk_reranker=rerank)
             biter = svar.biter
         else:
             biter = kandidater[:k]
@@ -79,6 +81,7 @@ def kjor(fag: str, k: int | None, med_svar: bool = False, kort: bool = False):
             utenfor.append(f"nr. {s['id']} på rang {rang_full}")
         riktige += rang is not None
         beste_avstand_vanlige.append(biter[0].avstand)
+        beste_score_vanlige.append(kandidater[0].score)
         if "kategori" in s:
             teller = per_kategori.setdefault(s["kategori"], [0, 0])
             teller[0] += rang is not None
@@ -109,12 +112,13 @@ def kjor(fag: str, k: int | None, med_svar: bool = False, kort: bool = False):
         print("\nFelle-spørsmål (skal ikke finnes; nærmeste bit vises bare som pekepinn):")
     for s in feller:
         if med_svar:
-            svar = svar_pa(s["sporsmal"], fag=testsett["fag"], k=k)
+            svar = svar_pa(s["sporsmal"], fag=testsett["fag"], k=k, bruk_reranker=rerank)
             beste = svar.biter[0]
             feller_ok += svar.finnes_ikke
         else:
-            beste = hent(s["sporsmal"], fag=testsett["fag"], k=1)[0]
+            beste = hent(s["sporsmal"], fag=testsett["fag"], k=1, bruk_reranker=rerank)[0]
         beste_avstand_feller.append(beste.avstand)
+        beste_score_feller.append(beste.score)
         print(f"{s['id']:>2}. {beste.avstand:.3f}  {beste.kilde:<55}  {s['sporsmal']}")
         if med_svar:
             print(f"      {'✓' if svar.finnes_ikke else '✗'} SVAR: " + svar.tekst.replace("\n", " ")[:300])
@@ -133,6 +137,13 @@ def kjor(fag: str, k: int | None, med_svar: bool = False, kort: bool = False):
     if beste_avstand_feller:
         print(f"Beste avstand, felle-spørsmål:   median {statistics.median(beste_avstand_feller):.3f}, "
               f"lavest {min(beste_avstand_feller):.3f}")
+    if None not in beste_score_vanlige + beste_score_feller:
+        print(f"Beste reranker-score, vanlige: median {statistics.median(beste_score_vanlige):.3f}, "
+              f"lavest {min(beste_score_vanlige):.3f}")
+        if beste_score_feller:
+            print(f"Beste reranker-score, feller:  median {statistics.median(beste_score_feller):.3f}, "
+                  f"høyest {max(beste_score_feller):.3f}")
+    if beste_avstand_feller:
         print("(En avstandsterskel for «finnes ikke» virker bare hvis fellene ligger tydelig høyere enn de vanlige.)")
     if med_svar:
         print(f"\nSvar som siterer riktig kilde: {sitert_riktig} av {len(vanlige)}")
@@ -152,5 +163,6 @@ if __name__ == "__main__":
     parser.add_argument("--k", type=int, help="antall biter å hente (overstyrer innstillingene)")
     parser.add_argument("--med-svar", action="store_true", help="la språkmodellen svare (ca. 1 minutt)")
     parser.add_argument("--kort", action="store_true", help="vis bare spørsmål som feiler, og oppsummeringen")
+    parser.add_argument("--uten-reranker", action="store_true", help="bare vektorsøk, for å sammenligne")
     args = parser.parse_args()
-    kjor(args.fag or standardfag(), args.k, args.med_svar, args.kort)
+    kjor(args.fag or standardfag(), args.k, args.med_svar, args.kort, rerank=not args.uten_reranker)
