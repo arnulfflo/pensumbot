@@ -41,11 +41,18 @@ def _metadata(fil: Path, fag_mappe: Path) -> dict:
     }
 
 
+def fjern_stoy(tekst: str) -> str:
+    """Fjerner tekst som står på mange sider (som NTNU-slagordet) og ikke sier noe om innholdet."""
+    for stoy in last_innstillinger()["innlesing"].get("fjern_tekst") or []:
+        tekst = tekst.replace(stoy, "")
+    return tekst.strip()
+
+
 def _les_pdf(fil: Path, meta: dict, min_tegn: int) -> tuple[list[Document], int]:
     sider = PyPDFLoader(str(fil)).load()        # én Document per side
     docs = []
     for side in sider:
-        tekst = side.page_content.strip()
+        tekst = fjern_stoy(side.page_content)
         if len(tekst) < min_tegn:
             continue                            # tom side, eller bare bilde/håndskrift
         # PyPDFLoader teller fra 0. Vi lagrer sidetallet slik PDF-leseren viser det.

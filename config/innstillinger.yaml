@@ -9,6 +9,8 @@ innlesing:
   standardfag: ORG1100                 # brukes når du ikke skriver --fag
   typer: [foiler, notater, oppgaver]   # eksamener tas inn i fase 2
   min_tegn_per_side: 20                # sider med mindre tekst enn dette hoppes over
+  fjern_tekst:                         # støy som står på mange sider (bunntekst o.l.)
+    - Kunnskap for en bedre verden
 
 sprakmodell:
   leverandor: ollama           # ollama (lokal, gratis) eller anthropic (krever nøkkel i .env)
