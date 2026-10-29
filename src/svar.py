@@ -3,13 +3,15 @@
 Dette er hele RAG-løkka:  spørsmål → hent() → prompt → generer() → svar + kilder
 
 Kjør:  uv run python -m src.svar "Hva er kontrollspenn?"
+       uv run python -m src.svar --fag MRK1001 "Hva er segmentering?"
 """
 
+import argparse
 import re
-import sys
 from dataclasses import dataclass
 
 from src.henting import Bit, hent
+from src.innlesing import standardfag
 from src.konfig import last_innstillinger
 from src.llm import generer
 
@@ -80,9 +82,10 @@ def vis(svar: Svar) -> str:
 
 
 if __name__ == "__main__":
-    sporsmal = " ".join(sys.argv[1:])
-    if not sporsmal:
-        raise SystemExit('Bruk:  uv run python -m src.svar "spørsmålet ditt"')
+    parser = argparse.ArgumentParser(description="Still et spørsmål til pensumboten.")
+    parser.add_argument("--fag", help="fag å søke i (standard: standardfag i innstillingene)")
+    parser.add_argument("sporsmal", nargs="+")
+    args = parser.parse_args()
     innst = last_innstillinger()["sprakmodell"]
-    print(f"(modell: {innst[innst['leverandor']]['modell']})\n")
-    print(vis(svar_pa(sporsmal)))
+    print(f"(fag: {args.fag or standardfag()}, modell: {innst[innst['leverandor']]['modell']})\n")
+    print(vis(svar_pa(" ".join(args.sporsmal), fag=args.fag)))

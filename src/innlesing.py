@@ -3,8 +3,11 @@
 Én Document per PDF-side, og én per docx- eller md-fil. Oppdelingen i mindre
 biter skjer først i indeks.py, slik at du kan se råteksten her først.
 
-Kjør:  uv run python -m src.innlesing
+Kjør:  uv run python -m src.innlesing                 (alle fag)
+       uv run python -m src.innlesing --fag MRK1001   (ett fag, med utdrag)
 """
+
+import argparse
 
 import logging
 import unicodedata
@@ -94,14 +97,21 @@ def finn_filer(fag_mappe: Path, typer: list[str]) -> list[Path]:
     return filer
 
 
-def les_fag(fag: str | None = None, typer: list[str] | None = None) -> list[Document]:
+def alle_fag() -> list[str]:
+    return last_innstillinger()["innlesing"]["fag"]
+
+
+def standardfag() -> str:
+    return last_innstillinger()["innlesing"]["standardfag"]
+
+
+def les_fag(fag: str, typer: list[str] | None = None) -> list[Document]:
     docs, _ = _les_fag_med_statistikk(fag, typer)
     return docs
 
 
-def _les_fag_med_statistikk(fag=None, typer=None):
+def _les_fag_med_statistikk(fag, typer=None):
     innst = last_innstillinger()["innlesing"]
-    fag = fag or innst["fag"]
     typer = typer or innst["typer"]
     fag_mappe = pensum_mappe() / fag
     docs, statistikk = [], []
@@ -113,9 +123,8 @@ def _les_fag_med_statistikk(fag=None, typer=None):
     return docs, statistikk
 
 
-if __name__ == "__main__":
-    docs, statistikk = _les_fag_med_statistikk()
-
+def skriv_rapport(fag: str, docs, statistikk):
+    print(f"\n### {fag}")
     print(f"{'Fil':<62} {'Sider m/tekst':>14} {'Tegn':>8}")
     print("-" * 86)
     for fil, med_tekst, totalt, tegn in statistikk:
@@ -129,7 +138,18 @@ if __name__ == "__main__":
         elif med_tekst < totalt:
             print(f"Merk: {totalt - med_tekst} av {totalt} sider uten tekst i {fil}")
 
-    eksempel = next(d for d in docs if d.metadata.get("goodnotes"))
-    print("\nEksempel (en GoodNotes-side):")
-    print(eksempel.metadata)
-    print(eksempel.page_content[:500])
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Vis hva som leses inn fra pensum/.")
+    parser.add_argument("--fag", help="bare dette faget (standard: alle i innstillingene)")
+    args = parser.parse_args()
+
+    for fag in [args.fag] if args.fag else alle_fag():
+        docs, statistikk = _les_fag_med_statistikk(fag)
+        skriv_rapport(fag, docs, statistikk)
+
+    if args.fag:
+        eksempel = next((d for d in docs if d.metadata.get("goodnotes")), docs[0])
+        print("\nEksempel på ett dokument:")
+        print(eksempel.metadata)
+        print(eksempel.page_content[:500])

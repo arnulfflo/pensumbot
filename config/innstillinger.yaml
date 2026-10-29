@@ -5,7 +5,8 @@ pensum_mappe: pensum
 data_mappe: data
 
 innlesing:
-  fag: ORG1100
+  fag: [ORG1100, MRK1001, BOA1100]     # alle fag som legges i indeksen
+  standardfag: ORG1100                 # brukes når du ikke skriver --fag
   typer: [foiler, notater, oppgaver]   # eksamener tas inn i fase 2
   min_tegn_per_side: 20                # sider med mindre tekst enn dette hoppes over
 
@@ -30,5 +31,4 @@ henting:
   antall_biter: 6              # spesifikasjonen sier 5–8
 
 testing:
-  testsett: tester/testsett_ORG1100.yaml
-  mal_andel: 0.8               # 80 % riktig kilde (12 av 15)
+  mal_andel: 0.8               # 80 % riktig kilde (12 av 15). Testsett: tester/testsett_<fag>.yaml

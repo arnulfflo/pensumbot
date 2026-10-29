@@ -3,12 +3,14 @@
 Dette er «R»-en i RAG. Ingen språkmodell er involvert her, bare vektorer og avstand.
 
 Kjør:  uv run python -m src.henting "Hva er kontrollspenn?"
+       uv run python -m src.henting --fag MRK1001 "Hva er segmentering?"
 """
 
-import sys
+import argparse
 from dataclasses import dataclass
 
 from src.indeks import embed_sporsmal, hent_samling
+from src.innlesing import standardfag
 from src.konfig import last_innstillinger
 
 
@@ -26,9 +28,8 @@ class Bit:
 
 
 def hent(sporsmal: str, fag: str | None = None, k: int | None = None) -> list[Bit]:
-    innst = last_innstillinger()
-    fag = fag or innst["innlesing"]["fag"]
-    k = k or innst["henting"]["antall_biter"]
+    fag = fag or standardfag()
+    k = k or last_innstillinger()["henting"]["antall_biter"]
 
     svar = hent_samling().query(
         query_embeddings=[embed_sporsmal(sporsmal)],
@@ -43,8 +44,12 @@ def hent(sporsmal: str, fag: str | None = None, k: int | None = None) -> list[Bi
 
 
 if __name__ == "__main__":
-    sporsmal = " ".join(sys.argv[1:]) or "Hva er kontrollspenn?"
-    print(f"Spørsmål: {sporsmal}\n")
-    for nr, bit in enumerate(hent(sporsmal), start=1):
+    parser = argparse.ArgumentParser(description="Vis bitene som hentes for et spørsmål.")
+    parser.add_argument("--fag", help="fag å søke i (standard: standardfag i innstillingene)")
+    parser.add_argument("sporsmal", nargs="+")
+    args = parser.parse_args()
+    sporsmal = " ".join(args.sporsmal)
+    print(f"Spørsmål: {sporsmal}   (fag: {args.fag or standardfag()})\n")
+    for nr, bit in enumerate(hent(sporsmal, fag=args.fag), start=1):
         print(f"[{nr}] avstand {bit.avstand:.3f}  {bit.kilde}")
         print("    " + bit.tekst[:200].replace("\n", " ") + " ...\n")

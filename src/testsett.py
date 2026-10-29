@@ -3,7 +3,8 @@
 Et spørsmål er bestått hvis minst én av de hentede bitene kommer fra en av
 de forventede kildene. «fil» uten sidetall godtar alle biter fra filen.
 
-Kjør:  uv run python -m src.testsett
+Kjør:  uv run python -m src.testsett                (standardfaget)
+       uv run python -m src.testsett --fag MRK1001  (testsett_MRK1001.yaml)
        uv run python -m src.testsett --k 8      (prøv et annet antall biter)
        uv run python -m src.testsett --med-svar (la også språkmodellen svare)
 """
@@ -16,7 +17,7 @@ import statistics
 import yaml
 
 from src.henting import hent
-from src.innlesing import nfc
+from src.innlesing import nfc, standardfag
 from src.konfig import ROT, last_innstillinger
 from src.svar import svar_pa
 
@@ -42,15 +43,18 @@ def er_treff(bit, kilder) -> bool:
                for fil, side in kilder)
 
 
-def kjor(k: int | None, med_svar: bool = False):
+def kjor(fag: str, k: int | None, med_svar: bool = False):
     innst = last_innstillinger()
-    with open(ROT / innst["testing"]["testsett"], encoding="utf-8") as f:
+    sti = ROT / "tester" / f"testsett_{fag}.yaml"
+    if not sti.exists():
+        raise SystemExit(f"Fant ikke testsett for {fag}: {sti.relative_to(ROT)}")
+    with open(sti, encoding="utf-8") as f:
         testsett = yaml.safe_load(f)
 
     vanlige = [s for s in testsett["sporsmal"] if not s.get("felle")]
     feller = [s for s in testsett["sporsmal"] if s.get("felle")]
     k = k or innst["henting"]["antall_biter"]
-    print(f"Testsett: {innst['testing']['testsett']}  |  fag {testsett['fag']}  |  henter {k} biter\n")
+    print(f"Testsett: {sti.relative_to(ROT)}  |  fag {testsett['fag']}  |  henter {k} biter\n")
 
     riktige, beste_avstand_vanlige = 0, []
     sitert_riktig, sa_finnes_ikke = 0, []
@@ -121,7 +125,8 @@ def _innrykk(tekst: str) -> str:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Mål hentingen (og eventuelt svarene) mot testsettet.")
+    parser.add_argument("--fag", help="faget som skal testes (standard: standardfag i innstillingene)")
     parser.add_argument("--k", type=int, help="antall biter å hente (overstyrer innstillingene)")
-    parser.add_argument("--med-svar", action="store_true", help="la språkmodellen svare (tar noen minutter)")
+    parser.add_argument("--med-svar", action="store_true", help="la språkmodellen svare (ca. 1 minutt)")
     args = parser.parse_args()
-    kjor(args.k, args.med_svar)
+    kjor(args.fag or standardfag(), args.k, args.med_svar)

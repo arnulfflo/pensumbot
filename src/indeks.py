@@ -13,7 +13,7 @@ import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 
-from src.innlesing import les_fag
+from src.innlesing import alle_fag, les_fag
 from src.konfig import data_mappe, last_innstillinger
 
 SAMLING = "pensum"
@@ -60,14 +60,19 @@ def del_i_biter(docs):
     # Nummerer bitene per fil og side, så hver bit får en stabil, lesbar ID.
     teller = Counter()
     for bit in biter:
-        nokkel = (bit.metadata["fil"], bit.metadata.get("side", 0))
+        nokkel = (bit.metadata["fag"], bit.metadata["fil"], bit.metadata.get("side", 0))
         bit.metadata["bit_nr"] = teller[nokkel]
         teller[nokkel] += 1
     return biter
 
 
+def bit_id(bit) -> str:
+    m = bit.metadata
+    return f"{m['fag']}/{m['fil']}#{m.get('side', 0)}#{m['bit_nr']}"
+
+
 def bygg_indeks():
-    docs = les_fag()
+    docs = [doc for fag in alle_fag() for doc in les_fag(fag)]
     biter = del_i_biter(docs)
 
     print(f"Lager embeddings for {len(biter)} biter ...")
@@ -82,7 +87,7 @@ def bygg_indeks():
         configuration={"hnsw": {"space": "cosine"}},   # avstand = 1 − cosinuslikhet
     )
     samling.add(
-        ids=[f"{b.metadata['fil']}#{b.metadata.get('side', 0)}#{b.metadata['bit_nr']}" for b in biter],
+        ids=[bit_id(b) for b in biter],
         documents=[b.page_content for b in biter],
         embeddings=vektorer,
         metadatas=[b.metadata for b in biter],
@@ -91,11 +96,13 @@ def bygg_indeks():
 
 
 def _skriv_statistikk(biter, samling):
-    per_fil = Counter(b.metadata["fil"] for b in biter)
-    print(f"\n{'Fil':<62} {'Biter':>6}")
-    print("-" * 69)
-    for fil, antall in sorted(per_fil.items()):
-        print(f"{fil[:62]:<62} {antall:>6}")
+    # Per-fil-oversikten finnes i `uv run python -m src.innlesing`. Her holder det med per fag.
+    print(f"\n{'Fag':<10} {'Filer':>6} {'Biter':>6}")
+    print("-" * 24)
+    for fag in alle_fag():
+        fagbiter = [b for b in biter if b.metadata["fag"] == fag]
+        filer = {b.metadata["fil"] for b in fagbiter}
+        print(f"{fag:<10} {len(filer):>6} {len(fagbiter):>6}")
 
     lengder = [len(b.page_content) for b in biter]
     print(f"\nBitlengde i tegn: min {min(lengder)}, median {statistics.median(lengder):.0f}, maks {max(lengder)}")
