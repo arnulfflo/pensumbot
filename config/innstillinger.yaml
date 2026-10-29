@@ -16,7 +16,7 @@ sprakmodell:
   leverandor: ollama           # ollama (lokal, gratis) eller anthropic (krever nøkkel i .env)
   temperatur: 0.1              # lav = saklig og forutsigbar (brukes av Ollama)
   ollama:
-    modell: gemma4:e4b         # forslag fra `uv run python -m src.sjekk_maskin` (16 GB minne)
+    modell: gemma4:e4b-it-qat  # 6,1 GB. gemma4:e4b (9,5 GB) ga swapping på 16 GB, se sjekk_maskin.py
     tenkning: false            # true = modellen resonnerer skjult før svaret (ca. 3x tregere)
   anthropic:
     modell: claude-sonnet-5-5

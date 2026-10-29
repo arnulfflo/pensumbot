@@ -16,11 +16,14 @@ GB = 1024**3
 
 # (minste totale minne i GB, modell, omtrentlig størrelse i GB, kommentar)
 # Gemma 4 er laget for mange språk og fungerer godt på norsk i forhold til størrelsen.
+# Merk: `gemma4:e4b` uten mer i navnet laster ned en variant på 9,5 GB. På en Mac med
+# 16 GB ga den swapping (varm og treg maskin) sammen med embedding-modell og reranker.
+# QAT-varianten er trent for å tåle komprimering og er 6,1 GB.
 FORSLAG = [
     (48, "gemma4:26b", 17, "stor og god, krever mye minne"),
     (24, "gemma4:12b", 8, "god kvalitet med god margin"),
-    (16, "gemma4:e4b", 6.6, "trygt valg for 16 GB"),
-    (16, "gemma4:12b", 8, "bedre svar, men trangt på 16 GB – lukk tunge programmer"),
+    (16, "gemma4:e4b-it-qat", 6.1, "trygt valg for 16 GB, ingen swapping i test"),
+    (16, "gemma4:e4b", 9.5, "raskere, men ga swapping på 16 GB sammen med reranker"),
     (8, "gemma4:e2b", 4.6, "liten, svakere på norsk"),
 ]
 
