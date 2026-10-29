@@ -33,6 +33,7 @@ chunking:
 henting:
   antall_biter: 6              # spesifikasjonen sier 5–8
   reranker: BAAI/bge-reranker-v2-m3   # sorterer kandidatene på nytt; tom = av
+  halv_presisjon: true         # float16: halvparten så mye minne (1,1 GB), ca. 4x raskere
   kandidater: 30               # så mange hentes med vektorsøk før rerankeren velger
 
 testing:

@@ -40,8 +40,15 @@ class Bit:
 
 @cache
 def reranker_modell(navn: str) -> CrossEncoder:
-    """Lastes bare én gang. Første gang lastes modellen ned."""
-    return CrossEncoder(navn)
+    """Lastes bare én gang. Første gang lastes modellen ned.
+
+    Halv presisjon (float16) halverer minnet og gjør den raskere. Det betyr mye på en
+    Mac med 16 GB, der språkmodellen også skal ligge i minnet samtidig.
+    """
+    import torch
+
+    halv = last_innstillinger()["henting"].get("halv_presisjon")
+    return CrossEncoder(navn, model_kwargs={"torch_dtype": torch.float16 if halv else torch.float32})
 
 
 def vektorsok(sporsmal: str, fag: str, n: int) -> list[Bit]:
