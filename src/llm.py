@@ -6,24 +6,43 @@ endrer du bare `sprakmodell.leverandor` i config/innstillinger.yaml.
 Kjør:  uv run python -m src.llm "Si hei på norsk"
 """
 
+import json
+import re
 import sys
 
 from src.konfig import last_innstillinger
 
 
-def generer(system: str, melding: str) -> str:
-    """system = instruksen (hvordan modellen skal oppføre seg), melding = det brukeren sender."""
+def generer(system: str, melding: str, skjema: dict | None = None) -> str:
+    """system = instruksen (hvordan modellen skal oppføre seg), melding = det brukeren sender.
+
+    skjema: et JSON-skjema svaret må følge. Brukes av generer_json().
+    """
     innst = last_innstillinger()["sprakmodell"]
     leverandor = innst["leverandor"]
 
     if leverandor == "ollama":
-        return _ollama(system, melding, innst)
+        return _ollama(system, melding, innst, skjema)
     if leverandor == "anthropic":
+        if skjema:
+            system += ("\n\nSvar BARE med gyldig JSON som følger dette skjemaet, uten annen tekst:\n"
+                       + json.dumps(skjema, ensure_ascii=False))
         return _anthropic(system, melding, innst)
     raise ValueError(f"Ukjent leverandør i innstillinger.yaml: {leverandor!r} (bruk ollama eller anthropic)")
 
 
-def _ollama(system: str, melding: str, innst: dict) -> str:
+def generer_json(system: str, melding: str, skjema: dict) -> dict:
+    """Som generer(), men svaret er strukturert data (dict) i stedet for fri tekst.
+
+    Ollama tvinges til å følge skjemaet (structured outputs). Claude får skjemaet i
+    instruksen. Eventuelle ```json-gjerder rundt svaret fjernes før tolkning.
+    """
+    tekst = generer(system, melding, skjema).strip()
+    tekst = re.sub(r"^```(?:json)?\s*|\s*```$", "", tekst)
+    return json.loads(tekst)
+
+
+def _ollama(system: str, melding: str, innst: dict, skjema: dict | None = None) -> str:
     import ollama
 
     modell = innst["ollama"]["modell"]
@@ -38,6 +57,7 @@ def _ollama(system: str, melding: str, innst: dict) -> str:
             options={"temperature": innst["temperatur"]},
             # Tenkende modeller skriver skjult resonnering før svaret. Det koster tid.
             think=innst["ollama"].get("tenkning"),
+            format=skjema,   # None = fri tekst, ellers må svaret følge JSON-skjemaet
         )
     except ollama.ResponseError as feil:
         if feil.status_code == 404:
