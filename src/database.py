@@ -3,7 +3,7 @@
 Chroma er for tekst som skal søkes etter mening. SQLite er for tall og historikk
 som skal regnes på (poengsum, hva du svarte feil på, når du øvde).
 
-Tabellene følger SPEC.md. Temaer, plan og eksamener kommer i fase 3–4.
+Tabellene følger SPEC.md. Eksamensdatoene ligger i config/eksamener.yaml i stedet for en egen tabell.
 """
 
 import json
@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS sporsmal (
     sitat        TEXT,                   -- ordrett fra kilden, brukes som kontroll
     kilde        TEXT NOT NULL,          -- f.eks. MRK1001/notater/kap 9.docx
     modell       TEXT,                   -- hvilken språkmodell som laget spørsmålet
-    laget        TEXT NOT NULL
+    laget        TEXT NOT NULL,
+    kildetekst   TEXT                    -- biten spørsmålet ble laget fra (trengs når kortsvar repeteres)
 );
 CREATE TABLE IF NOT EXISTS forsok (
     id               INTEGER PRIMARY KEY,
@@ -34,7 +35,7 @@ CREATE TABLE IF NOT EXISTS forsok (
     svar             TEXT,
     riktig           INTEGER NOT NULL,   -- 1 = riktig, 0 = feil
     tilbakemelding   TEXT,
-    neste_repetisjon TEXT                -- brukes i fase 4
+    neste_repetisjon TEXT                -- når spørsmålet/kortet skal vises igjen (NULL = ikke)
 );
 CREATE TABLE IF NOT EXISTS plan (
     id          INTEGER PRIMARY KEY,
@@ -45,7 +46,18 @@ CREATE TABLE IF NOT EXISTS plan (
     minutter    INTEGER NOT NULL,
     status      TEXT NOT NULL            -- planlagt, fullfort, hoppet_over
 );
+CREATE TABLE IF NOT EXISTS temaer (
+    fag         TEXT NOT NULL,
+    tema        TEXT NOT NULL,
+    mestring    REAL NOT NULL,           -- 0–1, regnes ut fra forsøkene (se repetisjon.py)
+    forsok      INTEGER NOT NULL,
+    sist_ovd    TEXT,
+    PRIMARY KEY (fag, tema)
+);
 """
+
+# Kolonner som er lagt til etter at databasen kan ha blitt laget. Legges til hvis de mangler.
+NYE_KOLONNER = {"sporsmal": {"kildetekst": "TEXT"}}
 
 
 def koble() -> sqlite3.Connection:
@@ -53,6 +65,11 @@ def koble() -> sqlite3.Connection:
     db = sqlite3.connect(data_mappe() / "studie.db")
     db.row_factory = sqlite3.Row      # rader kan leses som rad["fag"]
     db.executescript(SKJEMA)
+    for tabell, kolonner in NYE_KOLONNER.items():
+        finnes = {r["name"] for r in db.execute(f"PRAGMA table_info({tabell})")}
+        for navn, type_ in kolonner.items():
+            if navn not in finnes:
+                db.execute(f"ALTER TABLE {tabell} ADD COLUMN {navn} {type_}")
     return db
 
 
@@ -61,12 +78,12 @@ def naa() -> str:
 
 
 def lagre_sporsmal(db, *, fag, tema, ovingsmate, sporsmal, fasit, kilde,
-                   alternativer=None, forklaring=None, sitat=None, modell=None) -> int:
+                   alternativer=None, forklaring=None, sitat=None, modell=None, kildetekst=None) -> int:
     rad = db.execute(
         "INSERT INTO sporsmal (fag, tema, ovingsmate, sporsmal, alternativer, fasit, forklaring,"
-        " sitat, kilde, modell, laget) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        " sitat, kilde, modell, laget, kildetekst) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (fag, tema, ovingsmate, sporsmal, json.dumps(alternativer, ensure_ascii=False) if alternativer else None,
-         fasit, forklaring, sitat, kilde, modell, naa()),
+         fasit, forklaring, sitat, kilde, modell, naa(), kildetekst),
     )
     db.commit()
     return rad.lastrowid

@@ -14,13 +14,14 @@ import argparse
 import random
 from datetime import datetime
 
-from src.database import koble, lagre_forsok, lagre_sporsmal, resultater
+from src.database import koble, lagre_sporsmal, resultater
 from src.henting import Bit, hent
 from src.kontroll import Duplikatfilter, sitat_finnes
 from src.kortsvar import lag_kortsvar, vurder
 from src.innlesing import standardfag
 from src.konfig import data_mappe, last_innstillinger
 from src.llm import generer_json
+from src.repetisjon import lagre_resultat
 
 SYSTEM_FLERVALG = """Du lager flervalgsspørsmål til en student som øver til eksamen. Du skal BARE bruke teksten du får.
 
@@ -203,7 +204,8 @@ def kjor_quiz(fag: str, tema: str, antall: int, type_: str = "flervalg"):
         kilde = f"{fag}/{bit.kilde}"
         sid = lagre_sporsmal(db, fag=fag, tema=tema, ovingsmate=type_, sporsmal=q["sporsmal"],
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],
-                             forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=modellnavn())
+                             forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=modellnavn(),
+                             kildetekst=bit.tekst)
 
         print(f"{nr}. {q['sporsmal']}")
         resultat = (still_flervalg if type_ == "flervalg" else still_kortsvar)(q, bit)
@@ -212,8 +214,9 @@ def kjor_quiz(fag: str, tema: str, antall: int, type_: str = "flervalg"):
         svar, er_riktig, tilbakemelding = resultat
         riktige += er_riktig
         besvart += 1
-        lagre_forsok(db, sid, svar=svar, riktig=er_riktig, tilbakemelding=tilbakemelding)
-        print(f"   Kilde: {kilde}  «{q['sitat']}»\n")
+        neste = lagre_resultat(db, sid, svar, er_riktig, tilbakemelding)
+        print(f"   Kilde: {kilde}  «{q['sitat']}»")
+        print(f"   Kommer igjen {neste:%d.%m} for repetisjon.\n" if neste else "")
 
     if besvart:
         print(f"Resultat: {riktige} av {besvart} riktige ({riktige / besvart:.0%}). Lagret i data/studie.db.")

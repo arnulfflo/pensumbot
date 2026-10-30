@@ -26,6 +26,7 @@ from datetime import date, timedelta
 import yaml
 
 from src.database import koble
+from src.repetisjon import mestring_per_tema
 from src.konfig import ROT
 
 
@@ -118,10 +119,11 @@ def lag_plan(eksamener: dict[str, date], temaer: dict[str, list[str]], start: da
 
 
 def _neste_tema(fag, temaliste, dag, sist, mestring) -> str:
-    """Temaet med høyest prioritet: lenge siden sist × hvor svak du er. Aldri øvd = først."""
+    """Temaet med høyest prioritet: dager siden sist × (1,25 − mestring)². Aldri øvd = først."""
     def prioritet(tema):
         dager = (dag - sist[(fag, tema)]).days if (fag, tema) in sist else 10_000
-        return dager * (1.5 - mestring.get((fag, tema), 0.5))
+        # Kvadratet gjør at et svakt tema (0,17) får ca. dobbel prioritet og et sterkt (0,9) ca. en femdel.
+        return dager * (1.25 - mestring.get((fag, tema), 0.5)) ** 2
     return max(temaliste, key=prioritet)    # ved likhet vinner den første i listen
 
 
@@ -146,15 +148,6 @@ def sjekk_plan(plan: list[Blokk], eksamener: dict, temaer: dict, timer_per_dag: 
 
 # ---------- database: lagre, hente og endre planen ----------
 
-def mestring_fra_quiz(db) -> dict:
-    """Andel riktige på de siste 10 forsøkene per (fag, tema). Fase 4 gjør dette mer avansert."""
-    forsok = defaultdict(list)
-    for r in db.execute("SELECT s.fag, s.tema, f.riktig FROM forsok f JOIN sporsmal s ON s.id = f.sporsmal_id"
-                        " ORDER BY f.id"):
-        forsok[(r["fag"], r["tema"])].append(r["riktig"])
-    return {k: sum(v[-10:]) / len(v[-10:]) for k, v in forsok.items()}
-
-
 def lag_og_lagre(db, start: date | None = None) -> tuple[list[Blokk], list[str]]:
     """Lager planen på nytt fra `start` (i dag). Fullførte og hoppet-over-blokker beholdes."""
     start = start or date.today()
@@ -164,7 +157,7 @@ def lag_og_lagre(db, start: date | None = None) -> tuple[list[Blokk], list[str]]
     hoppes_over = {date.fromisoformat(r["dato"]) for r in db.execute(
         "SELECT DISTINCT dato FROM plan WHERE status = 'hoppet_over' AND dato >= ?", (start.isoformat(),))}
     plan = lag_plan(eksamener, temaer, start, innst["timer_per_dag"], innst["blokk_minutter"],
-                    innst["repetisjonsdager"], mestring_fra_quiz(db), sist_ovd, hoppes_over)
+                    innst["repetisjonsdager"], mestring_per_tema(db), sist_ovd, hoppes_over)
 
     db.execute("DELETE FROM plan WHERE status = 'planlagt' AND dato >= ?", (start.isoformat(),))
     db.executemany("INSERT INTO plan (dato, fag, tema, ovingsmate, minutter, status) VALUES (?, ?, ?, ?, ?, 'planlagt')",

@@ -1,11 +1,11 @@
 """Flashcards: begrep på forsiden, definisjon og kilde på baksiden. Du vurderer selv.
 
-Vurderingen styrer når kortet kommer igjen (enkel spaced repetition):
+Vurderingen styrer når kortet kommer igjen (spaced repetition, se repetisjon.py):
   1 igjen     → senere i samme økt
-  2 vanskelig → i morgen
-  3 greit     → om 3 dager
-  4 lett      → om 7 dager
-Fase 4 gjør intervallene smartere (de vokser når du kan kortet).
+  2 vanskelig → forrige intervall × 1,2 (minst 1 dag)
+  3 greit     → forrige intervall × 2,5 (minst 3 dager)
+  4 lett      → forrige intervall × 4   (minst 7 dager)
+Jo bedre du kan kortet, jo lenger blir det mellom hver gang.
 
 Kjør:  uv run python -m src.flashcards --fag MRK1001 --tema "merkevare" --nye 8
        uv run python -m src.flashcards --fag MRK1001           (bare kort som skal repeteres)
@@ -13,14 +13,15 @@ Kjør:  uv run python -m src.flashcards --fag MRK1001 --tema "merkevare" --nye 8
 """
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from src.database import koble, kort, lagre_forsok, lagre_sporsmal
+from src.database import koble, kort, lagre_sporsmal
 from src.henting import Bit
 from src.innlesing import standardfag
 from src.kontroll import Duplikatfilter, normaliser, sitat_finnes
 from src.llm import generer_json
 from src.quiz import kandidat_biter, modellnavn
+from src.repetisjon import lagre_resultat
 
 SYSTEM_KORT = """Du lager flashcards til en student som øver til eksamen. Du skal BARE bruke teksten du får.
 
@@ -49,8 +50,7 @@ SKJEMA_KORT = {
     "required": ["kort"],
 }
 
-VURDERINGER = {"1": ("igjen", timedelta(0)), "2": ("vanskelig", timedelta(days=1)),
-               "3": ("greit", timedelta(days=3)), "4": ("lett", timedelta(days=7))}
+VURDERINGER = {"1": "igjen", "2": "vanskelig", "3": "greit", "4": "lett"}
 
 
 def lag_kort(bit: Bit) -> tuple[list[dict], str]:
@@ -86,7 +86,8 @@ def lag_nye_kort(db, fag: str, tema: str, antall: int) -> int:
                 continue
             kjente.add(normaliser(k["begrep"]))
             lagre_sporsmal(db, fag=fag, tema=tema, ovingsmate="flashcard", sporsmal=k["begrep"],
-                           fasit=k["definisjon"], sitat=k["sitat"], kilde=f"{fag}/{bit.kilde}", modell=modellnavn())
+                           fasit=k["definisjon"], sitat=k["sitat"], kilde=f"{fag}/{bit.kilde}", modell=modellnavn(),
+                           kildetekst=bit.tekst)
             laget += 1
             print(f"  + {k['begrep']}")
     return laget
@@ -114,11 +115,12 @@ def ov(db, kortstokk: list):
             valg = input("  Hvor godt kunne du det? 1 igjen · 2 vanskelig · 3 greit · 4 lett: ").strip()
             if valg.lower() == "q":
                 return
-        navn, intervall = VURDERINGER[valg]
-        neste = (datetime.now() + intervall).isoformat(timespec="seconds")
-        lagre_forsok(db, k["id"], svar=navn, riktig=valg in ("3", "4"), neste_repetisjon=neste)
+        navn = VURDERINGER[valg]
+        neste = lagre_resultat(db, k["id"], svar=navn, riktig=valg in ("3", "4"), vurdering=navn)
         if navn == "igjen":
             ko.append(k)
+        else:
+            print(f"  Neste gang: {neste:%d.%m}")
     print(f"\nFerdig for nå ({vist} visninger). Lagret i data/studie.db.")
 
 
