@@ -17,6 +17,8 @@ os.environ.setdefault("HF_HUB_OFFLINE", "1")
 # Ellers skrives «Could not reach the Hub ... Using cached» for hver modell. Det er forventet offline.
 # huggingface_hub setter sitt eget loggnivå ved import, så det må styres med miljøvariabelen.
 os.environ.setdefault("HF_HUB_VERBOSITY", "error")
+os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")   # «Loading weights»-linjene fra transformers
 os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
-for navn in ("sentence_transformers", "transformers", "huggingface_hub"):
+for navn in ("sentence_transformers", "transformers", "huggingface_hub",
+             "torch.distributed.elastic.multiprocessing.redirects"):   # «Redirects are not supported in MacOs»
     logging.getLogger(navn).setLevel(logging.ERROR)

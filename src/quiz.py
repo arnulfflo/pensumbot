@@ -5,7 +5,7 @@ Flyt per spørsmål:
   → koden kontrollerer spørsmålet → du svarer → lagres i SQLite
 
 Kjør:  uv run python -m src.quiz --fag MRK1001 --tema "prisstrategi" --antall 5
-       uv run python -m src.quiz --fag MRK1001 --tema "lojalitet" --type kortsvar
+       uv run python -m src.quiz --fag MRK1001 --tema "lojalitet" --type kortsvar --stil case
        uv run python -m src.quiz --fag MRK1001 --tema "pris" --sjekk 20   (lag spørsmål til kontroll)
        uv run python -m src.quiz --resultater
 """
@@ -17,7 +17,7 @@ from datetime import datetime
 from src.database import koble, lagre_sporsmal, resultater
 from src.henting import Bit, hent
 from src.kontroll import Duplikatfilter, sitat_finnes
-from src.kortsvar import lag_kortsvar, vurder
+from src.kortsvar import REKKEFOLGE, STILER, lag_kortsvar, vurder
 from src.innlesing import standardfag
 from src.konfig import data_mappe, last_innstillinger
 from src.llm import generer_json
@@ -68,16 +68,19 @@ BOKSTAVER = "ABCD"
 
 
 def kandidat_biter(fag: str, tema: str, antall: int) -> list[Bit]:
-    """Biter om temaet, med nok tekst til å lage et spørsmål, én per kilde."""
-    biter, sett = [], set()
+    """Biter om temaet, med nok tekst til å lage et spørsmål.
+
+    Før var det bare én bit per kilde, men et Word-notat er én kilde uansett lengde, så et helt
+    kapittel ga bare én bit. Nå er hver bit en kandidat; duplikatfilteret stopper like spørsmål.
+    """
+    biter = []
     # Bare øvingskilder: løsninger og eksempelsvar skal aldri lekke inn i spørsmål (SPEC.md).
     typer = last_innstillinger()["innlesing"]["ovingskilder"]
     for bit in hent(tema, fag=fag, k=max(antall * 3, 12), typer=typer):
         # Emneoversikten handler om kurset (datoer, fremdriftsplan), ikke om faget.
         if "emneoversikt" in bit.metadata["fil"]:
             continue
-        if len(bit.tekst) >= 300 and bit.kilde not in sett:
-            sett.add(bit.kilde)
+        if len(bit.tekst) >= 300:
             biter.append(bit)
     return biter
 
@@ -123,17 +126,19 @@ def lag_flervalg(bit: Bit) -> tuple[dict | None, str]:
     return {**data, "alternativer": alternativer, "fasit": data["riktig_svar"]}, ""
 
 
-LAGERE = {"flervalg": lag_flervalg, "kortsvar": lag_kortsvar}
-
-
-def sporsmal_strom(fag: str, tema: str, antall: int, type_: str = "flervalg"):
+def sporsmal_strom(fag: str, tema: str, antall: int, type_: str = "flervalg", stil: str = "forklar"):
     """Gir ferdige spørsmål ett om gangen, og hopper over biter som ikke gir gode spørsmål."""
     duplikater = Duplikatfilter()
     laget = 0
     for bit in kandidat_biter(fag, tema, antall):
         if laget == antall:
             return
-        sporsmal, grunn = LAGERE[type_](bit)
+        if type_ == "flervalg":
+            sporsmal, grunn = lag_flervalg(bit)
+        else:
+            # «blandet» veksler mellom stilene, så én økt gir case, hvorfor, sammenlign og forklar.
+            denne = REKKEFOLGE[laget % len(REKKEFOLGE)] if stil == "blandet" else stil
+            sporsmal, grunn = lag_kortsvar(bit, denne)
         if sporsmal is None:
             print(f"  (hoppet over {bit.kilde}: {grunn})")
             continue
@@ -195,19 +200,20 @@ def still_kortsvar(q: dict, bit: Bit) -> tuple[str, bool, str | None] | None:
     return svar, v["riktig"], v["tilbakemelding"]
 
 
-def kjor_quiz(fag: str, tema: str, antall: int, type_: str = "flervalg"):
+def kjor_quiz(fag: str, tema: str, antall: int, type_: str = "flervalg", stil: str = "forklar"):
     db = koble()
     riktige = besvart = 0
     hjelp = "Svar med A, B, C eller D" if type_ == "flervalg" else "Svar med egne ord"
     print(f"\n{type_.capitalize()} i {fag} om «{tema}» ({antall} spørsmål). {hjelp}. Skriv q for å avslutte.\n")
-    for nr, (q, bit) in enumerate(sporsmal_strom(fag, tema, antall, type_), start=1):
+    for nr, (q, bit) in enumerate(sporsmal_strom(fag, tema, antall, type_, stil), start=1):
         kilde = f"{fag}/{bit.kilde}"
         sid = lagre_sporsmal(db, fag=fag, tema=tema, ovingsmate=type_, sporsmal=q["sporsmal"],
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],
                              forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=modellnavn(),
                              kildetekst=bit.tekst)
 
-        print(f"{nr}. {q['sporsmal']}")
+        etikett = f"[{q['stil']}] " if q.get("stil") and q["stil"] != "forklar" else ""
+        print(f"{nr}. {etikett}{q['sporsmal']}")
         resultat = (still_flervalg if type_ == "flervalg" else still_kortsvar)(q, bit)
         if resultat is None:
             break
@@ -222,15 +228,15 @@ def kjor_quiz(fag: str, tema: str, antall: int, type_: str = "flervalg"):
         print(f"Resultat: {riktige} av {besvart} riktige ({riktige / besvart:.0%}). Lagret i data/studie.db.")
 
 
-def lag_sjekkfil(fag: str, tema: str, antall: int, type_: str = "flervalg"):
+def lag_sjekkfil(fag: str, tema: str, antall: int, type_: str = "flervalg", stil: str = "forklar"):
     """Lag spørsmål og skriv dem til en fil sammen med kildeteksten, så du kan kontrollere fasiten."""
     sti = data_mappe() / f"quizsjekk_{fag}_{type_}_{datetime.now():%Y%m%d_%H%M}.md"
     linjer = [f"# Kontroll av {type_}spørsmål – {fag}, tema «{tema}»", "",
               f"Modell: {modellnavn()}. Sjekk for hvert spørsmål: er fasiten riktig ifølge kilden? "
               "Er det bare ett riktig svar? Er spørsmålet faglig nyttig?", ""]
-    for nr, (q, bit) in enumerate(sporsmal_strom(fag, tema, antall, type_), start=1):
+    for nr, (q, bit) in enumerate(sporsmal_strom(fag, tema, antall, type_, stil), start=1):
         print(f"  laget {nr}/{antall}")
-        linjer += [f"## {nr}. {q['sporsmal']}", ""]
+        linjer += [f"## {nr}. {'[' + q['stil'] + '] ' if q.get('stil') else ''}{q['sporsmal']}", ""]
         if type_ == "flervalg":
             linjer += [f"- {'**' if a == q['fasit'] else ''}{a}{' (fasit)**' if a == q['fasit'] else ''}"
                        for a in q["alternativer"]]
@@ -263,6 +269,8 @@ if __name__ == "__main__":
     parser.add_argument("--tema", help="hva quizen skal handle om, f.eks. «prisstrategi» eller «kap 9»")
     parser.add_argument("--antall", type=int, default=5)
     parser.add_argument("--type", choices=["flervalg", "kortsvar"], default="flervalg")
+    parser.add_argument("--stil", choices=[*STILER, "blandet"], default="forklar",
+                        help="for kortsvar: forklar, hvorfor, sammenlign, case eller blandet")
     parser.add_argument("--sjekk", type=int, metavar="N", help="lag N spørsmål til en kontrollfil i stedet for quiz")
     parser.add_argument("--resultater", action="store_true", help="vis tidligere resultater")
     args = parser.parse_args()
@@ -272,6 +280,6 @@ if __name__ == "__main__":
     elif not args.tema:
         parser.error("skriv --tema, f.eks. --tema \"prisstrategi\"")
     elif args.sjekk:
-        lag_sjekkfil(args.fag or standardfag(), args.tema, args.sjekk, args.type)
+        lag_sjekkfil(args.fag or standardfag(), args.tema, args.sjekk, args.type, args.stil)
     else:
-        kjor_quiz(args.fag or standardfag(), args.tema, args.antall, args.type)
+        kjor_quiz(args.fag or standardfag(), args.tema, args.antall, args.type, args.stil)

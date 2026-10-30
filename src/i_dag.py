@@ -20,8 +20,8 @@ from src.repetisjon import forfalte_sporsmal, repeter
 OVELSER = {
     "flashcards": "6 nye kort, så repetisjon av kortene i temaet",
     "flervalg": "5 flervalgsspørsmål",
-    "kortsvar": "3 kortsvarsoppgaver",
-    "repetisjon": "3 kortsvarsoppgaver (repetisjon før eksamen)",
+    "kortsvar": "4 oppgaver: case, hvorfor, sammenlign og forklar",
+    "repetisjon": "4 oppgaver i blandet stil (repetisjon før eksamen)",
 }
 
 
@@ -37,7 +37,7 @@ def start_ovelse(db, blokk):
     elif modus == "flervalg":
         kjor_quiz(fag, tema, 5, "flervalg")
     else:
-        kjor_quiz(fag, tema, 3, "kortsvar")
+        kjor_quiz(fag, tema, 4, "kortsvar", stil="blandet")
 
 
 def antall_til_repetisjon(db) -> tuple[int, int]:
