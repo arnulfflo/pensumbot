@@ -72,6 +72,9 @@ def kandidat_biter(fag: str, tema: str, antall: int) -> list[Bit]:
     # Bare øvingskilder: løsninger og eksempelsvar skal aldri lekke inn i spørsmål (SPEC.md).
     typer = last_innstillinger()["innlesing"]["ovingskilder"]
     for bit in hent(tema, fag=fag, k=max(antall * 3, 12), typer=typer):
+        # Emneoversikten handler om kurset (datoer, fremdriftsplan), ikke om faget.
+        if "emneoversikt" in bit.metadata["fil"]:
+            continue
         if len(bit.tekst) >= 300 and bit.kilde not in sett:
             sett.add(bit.kilde)
             biter.append(bit)

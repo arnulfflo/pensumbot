@@ -15,6 +15,8 @@ import os
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
 # Ellers skrives «Could not reach the Hub ... Using cached» for hver modell. Det er forventet offline.
+# huggingface_hub setter sitt eget loggnivå ved import, så det må styres med miljøvariabelen.
+os.environ.setdefault("HF_HUB_VERBOSITY", "error")
 os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
 for navn in ("sentence_transformers", "transformers", "huggingface_hub"):
     logging.getLogger(navn).setLevel(logging.ERROR)
