@@ -38,6 +38,9 @@ def _metadata(fil: Path, fag_mappe: Path) -> dict:
         "type": relativ.parts[0],               # første mappenivå: foiler, notater ...
         "fil": nfc(relativ.as_posix()),         # f.eks. foiler/goodnotes/Uke-34.pdf
         "goodnotes": "goodnotes" in relativ.parts[:-1],
+        # For eksamener: andre mappenivå sier om det er oppgave, løsning eller eksempelsvar.
+        # Chroma godtar ikke None, så andre filer får tom streng.
+        "del": relativ.parts[1] if relativ.parts[0] == "eksamener" and len(relativ.parts) > 2 else "",
     }
 
 

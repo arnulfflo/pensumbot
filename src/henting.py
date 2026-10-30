@@ -51,11 +51,19 @@ def reranker_modell(navn: str) -> CrossEncoder:
     return CrossEncoder(navn, model_kwargs={"torch_dtype": torch.float16 if halv else torch.float32})
 
 
-def vektorsok(sporsmal: str, fag: str, n: int) -> list[Bit]:
+def vektorsok(sporsmal: str, fag: str, n: int, typer: list[str] | None = None) -> list[Bit]:
+    # Metadatafilter: bare dette faget, eventuelt bare noen typer (foiler, notater ...), og aldri
+    # eksamensdeler som er utelatt i innstillingene (eksempelsvar er ikke fasit).
+    vilkar = [{"fag": fag}]
+    if typer:
+        vilkar.append({"type": {"$in": typer}})
+    if utelat := last_innstillinger()["henting"].get("utelat_deler"):
+        vilkar.append({"del": {"$nin": utelat}})
+    hvor = vilkar[0] if len(vilkar) == 1 else {"$and": vilkar}
     svar = hent_samling().query(
         query_embeddings=[embed_sporsmal(sporsmal)],
         n_results=n,
-        where={"fag": fag},          # metadatafilter: søk bare i dette faget
+        where=hvor,
     )
     # Chroma svarer med én liste per spørsmål. Vi sendte ett, så vi tar [0].
     return [
@@ -74,14 +82,15 @@ def rerank(sporsmal: str, biter: list[Bit], navn: str) -> list[Bit]:
 
 
 def hent(sporsmal: str, fag: str | None = None, k: int | None = None,
-         bruk_reranker: bool = True) -> list[Bit]:
+         bruk_reranker: bool = True, typer: list[str] | None = None) -> list[Bit]:
+    """typer: bare disse typene (f.eks. uten eksamener). None = alle."""
     innst = last_innstillinger()["henting"]
     fag = fag or standardfag()
     k = k or innst["antall_biter"]
 
     if not (bruk_reranker and innst.get("reranker")):
-        return vektorsok(sporsmal, fag, k)
-    kandidater = vektorsok(sporsmal, fag, max(k, innst["kandidater"]))
+        return vektorsok(sporsmal, fag, k, typer)
+    kandidater = vektorsok(sporsmal, fag, max(k, innst["kandidater"]), typer)
     return rerank(sporsmal, kandidater, innst["reranker"])[:k]
 
 

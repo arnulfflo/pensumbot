@@ -7,7 +7,8 @@ data_mappe: data
 innlesing:
   fag: [ORG1100, MRK1001, BOA1100]     # alle fag som legges i indeksen
   standardfag: ORG1100                 # brukes når du ikke skriver --fag
-  typer: [foiler, notater, oppgaver]   # eksamener tas inn i fase 2
+  typer: [foiler, notater, oppgaver, eksamener]
+  ovingskilder: [foiler, notater, oppgaver]   # quiz og flashcards lages bare fra disse (aldri løsninger)
   min_tegn_per_side: 20                # sider med mindre tekst enn dette hoppes over
   fjern_tekst:                         # støy som står på mange sider (bunntekst o.l.)
     - Kunnskap for en bedre verden
@@ -37,6 +38,7 @@ henting:
   reranker: BAAI/bge-reranker-v2-m3   # sorterer kandidatene på nytt; tom = av
   halv_presisjon: true         # float16: halvparten så mye minne (1,1 GB), ca. 4x raskere
   kandidater: 30               # så mange hentes med vektorsøk før rerankeren velger
+  utelat_deler: [eksempelsvar] # A-besvarelser er ikke fasit (SPEC.md), så de brukes ikke som kilde i svar
 
 testing:
   mal_andel: 0.8               # 80 % riktig kilde (12 av 15). Testsett: tester/testsett_<fag>.yaml

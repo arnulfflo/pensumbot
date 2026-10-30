@@ -69,7 +69,9 @@ BOKSTAVER = "ABCD"
 def kandidat_biter(fag: str, tema: str, antall: int) -> list[Bit]:
     """Biter om temaet, med nok tekst til å lage et spørsmål, én per kilde."""
     biter, sett = [], set()
-    for bit in hent(tema, fag=fag, k=max(antall * 3, 12)):
+    # Bare øvingskilder: løsninger og eksempelsvar skal aldri lekke inn i spørsmål (SPEC.md).
+    typer = last_innstillinger()["innlesing"]["ovingskilder"]
+    for bit in hent(tema, fag=fag, k=max(antall * 3, 12), typer=typer):
         if len(bit.tekst) >= 300 and bit.kilde not in sett:
             sett.add(bit.kilde)
             biter.append(bit)
