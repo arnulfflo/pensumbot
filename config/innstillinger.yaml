@@ -18,6 +18,8 @@ sprakmodell:
   ollama:
     modell: gemma4:e4b-it-qat  # 6,1 GB. gemma4:e4b (9,5 GB) ga swapping på 16 GB, se sjekk_maskin.py
     tenkning: false            # true = modellen resonnerer skjult før svaret (ca. 3x tregere)
+    maks_tokens: 1500          # øvre grense per svar, hindrer at modellen går i løkke
+    tidsgrense_sekunder: 90    # et kall som tar lengre tid, avbrytes (se kortsvar.py)
   anthropic:
     modell: claude-sonnet-5-5
     maks_tokens: 1024

@@ -85,7 +85,11 @@ def main(fag: str):
             continue
 
         start = time.time()
-        forrige = svar_pa(linje, fag=fag)
+        try:
+            forrige = svar_pa(linje, fag=fag)
+        except TimeoutError:
+            print("Språkmodellen brukte for lang tid. Prøv igjen, gjerne med et kortere spørsmål.\n")
+            continue
         print("\n" + vis(forrige))
         print(f"({time.time() - start:.1f} s)  Skriv /kilde <nr> for å lese en kilde.\n")
 

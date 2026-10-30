@@ -43,18 +43,22 @@ def generer_json(system: str, melding: str, skjema: dict) -> dict:
 
 
 def _ollama(system: str, melding: str, innst: dict, skjema: dict | None = None) -> str:
+    import httpx
     import ollama
 
     modell = innst["ollama"]["modell"]
+    # Tidsgrense: et kall som henger, skal gi en feil i stedet for å stoppe hele programmet.
+    klient = ollama.Client(timeout=innst["ollama"].get("tidsgrense_sekunder", 90))
     try:
-        svar = ollama.chat(
+        svar = klient.chat(
             model=modell,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": melding},
             ],
             # Lav temperatur = mindre tilfeldighet. Vi vil ha saklige svar, ikke kreative.
-            options={"temperature": innst["temperatur"]},
+            # num_predict: øvre grense for svarets lengde, så modellen aldri kan gå i løkke.
+            options={"temperature": innst["temperatur"], "num_predict": innst["ollama"].get("maks_tokens", 1500)},
             # Tenkende modeller skriver skjult resonnering før svaret. Det koster tid.
             think=innst["ollama"].get("tenkning"),
             format=skjema,   # None = fri tekst, ellers må svaret følge JSON-skjemaet
@@ -65,6 +69,8 @@ def _ollama(system: str, melding: str, innst: dict, skjema: dict | None = None) 
         raise
     except ConnectionError:
         raise SystemExit("Får ikke kontakt med Ollama. Start Ollama-appen og prøv igjen.") from None
+    except httpx.TimeoutException:
+        raise TimeoutError(f"{modell} svarte ikke innen tidsgrensen") from None
     return svar.message.content
 
 
