@@ -45,10 +45,11 @@ def bygg_melding(sporsmal: str, biter: list[Bit]) -> str:
 
 
 def svar_pa(sporsmal: str, fag: str | None = None, k: int | None = None,
-            bruk_reranker: bool = True, biter: list[Bit] | None = None) -> Svar:
+            bruk_reranker: bool = True, biter: list[Bit] | None = None,
+            med_eksempelsvar: bool = False) -> Svar:
     """biter: allerede hentede biter (testscriptet bruker det for å slippe å hente to ganger)."""
     if biter is None:
-        biter = hent(sporsmal, fag=fag, k=k, bruk_reranker=bruk_reranker)
+        biter = hent(sporsmal, fag=fag, k=k, bruk_reranker=bruk_reranker, med_eksempelsvar=med_eksempelsvar)
     tekst = generer(SYSTEM, bygg_melding(sporsmal, biter)).strip()
 
     finnes_ikke = "finnes ikke i materialet" in tekst.lower()
@@ -87,8 +88,9 @@ def vis(svar: Svar) -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Still et spørsmål til pensumboten.")
     parser.add_argument("--fag", help="fag å søke i (standard: standardfag i innstillingene)")
+    parser.add_argument("--eksempelsvar", action="store_true", help="ta med A-besvarelser som kilde")
     parser.add_argument("sporsmal", nargs="+")
     args = parser.parse_args()
     innst = last_innstillinger()["sprakmodell"]
     print(f"(fag: {args.fag or standardfag()}, modell: {innst[innst['leverandor']]['modell']})\n")
-    print(vis(svar_pa(" ".join(args.sporsmal), fag=args.fag)))
+    print(vis(svar_pa(" ".join(args.sporsmal), fag=args.fag, med_eksempelsvar=args.eksempelsvar)))

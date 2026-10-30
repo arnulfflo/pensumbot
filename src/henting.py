@@ -51,13 +51,17 @@ def reranker_modell(navn: str) -> CrossEncoder:
     return CrossEncoder(navn, model_kwargs={"torch_dtype": torch.float16 if halv else torch.float32})
 
 
-def vektorsok(sporsmal: str, fag: str, n: int, typer: list[str] | None = None) -> list[Bit]:
+def vektorsok(sporsmal: str, fag: str, n: int, typer: list[str] | None = None,
+              med_eksempelsvar: bool = False) -> list[Bit]:
     # Metadatafilter: bare dette faget, eventuelt bare noen typer (foiler, notater ...), og aldri
     # eksamensdeler som er utelatt i innstillingene (eksempelsvar er ikke fasit).
     vilkar = [{"fag": fag}]
     if typer:
         vilkar.append({"type": {"$in": typer}})
-    if utelat := last_innstillinger()["henting"].get("utelat_deler"):
+    utelat = list(last_innstillinger()["henting"].get("utelat_deler") or [])
+    if med_eksempelsvar and "eksempelsvar" in utelat:
+        utelat.remove("eksempelsvar")       # du har bedt om A-besvarelsen eksplisitt
+    if utelat:
         vilkar.append({"del": {"$nin": utelat}})
     hvor = vilkar[0] if len(vilkar) == 1 else {"$and": vilkar}
     svar = hent_samling().query(
@@ -82,15 +86,17 @@ def rerank(sporsmal: str, biter: list[Bit], navn: str) -> list[Bit]:
 
 
 def hent(sporsmal: str, fag: str | None = None, k: int | None = None,
-         bruk_reranker: bool = True, typer: list[str] | None = None) -> list[Bit]:
-    """typer: bare disse typene (f.eks. uten eksamener). None = alle."""
+         bruk_reranker: bool = True, typer: list[str] | None = None,
+         med_eksempelsvar: bool = False) -> list[Bit]:
+    """typer: bare disse typene (f.eks. uten eksamener). None = alle.
+    med_eksempelsvar: ta med A-besvarelser (utelatt som standard, de er ikke fasit)."""
     innst = last_innstillinger()["henting"]
     fag = fag or standardfag()
     k = k or innst["antall_biter"]
 
     if not (bruk_reranker and innst.get("reranker")):
-        return vektorsok(sporsmal, fag, k, typer)
-    kandidater = vektorsok(sporsmal, fag, max(k, innst["kandidater"]), typer)
+        return vektorsok(sporsmal, fag, k, typer, med_eksempelsvar)
+    kandidater = vektorsok(sporsmal, fag, max(k, innst["kandidater"]), typer, med_eksempelsvar)
     return rerank(sporsmal, kandidater, innst["reranker"])[:k]
 
 

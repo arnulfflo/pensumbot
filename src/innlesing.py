@@ -61,14 +61,21 @@ def fjern_stoy(tekst: str) -> str:
 
 def _les_pdf(fil: Path, meta: dict, min_tegn: int) -> tuple[list[Document], int]:
     sider = PyPDFLoader(str(fil)).load()        # én Document per side
+    bruk_ocr = last_innstillinger()["innlesing"].get("ocr") and not meta["goodnotes"]
     docs = []
     for side in sider:
         tekst = fjern_stoy(side.page_content)
+        # PyPDFLoader teller fra 0. Vi lagrer sidetallet slik PDF-leseren viser det.
+        nr = side.metadata["page"] + 1
+        ocr = False
+        if len(tekst) < min_tegn and bruk_ocr:
+            # Skannet side uten tekstlag. GoodNotes-sider hoppes over: der er det håndskrift (fase 1b).
+            from src.ocr import les_side
+            tekst, ocr = fjern_stoy(les_side(fil, nr)), True
         if len(tekst) < min_tegn:
             continue                            # tom side, eller bare bilde/håndskrift
-        # PyPDFLoader teller fra 0. Vi lagrer sidetallet slik PDF-leseren viser det.
         docs.append(Document(page_content=tekst, metadata={
-            **meta, "side": side.metadata["page"] + 1, "tittel": finn_tittel(tekst)}))
+            **meta, "side": nr, "tittel": finn_tittel(tekst), "ocr": ocr}))
     return docs, len(sider)
 
 

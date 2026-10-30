@@ -10,6 +10,7 @@ innlesing:
   typer: [foiler, notater, oppgaver, eksamener]
   ovingskilder: [foiler, notater, oppgaver]   # quiz og flashcards lages bare fra disse (aldri løsninger)
   min_tegn_per_side: 20                # sider med mindre tekst enn dette hoppes over
+  ocr: true                            # les skannede sider med Apple Vision (ikke goodnotes/, se src/ocr.py)
   fjern_tekst:                         # støy som står på mange sider (bunntekst o.l.)
     - Kunnskap for en bedre verden
 

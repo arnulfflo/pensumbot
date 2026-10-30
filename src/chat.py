@@ -23,6 +23,7 @@ from src.svar import svar_pa, vis
 HJELP = """Kommandoer:
   /fag <fag>     bytt fag, f.eks. /fag MRK1001  (fag: {fag})
   /kilde <nr>    vis hele teksten i en bit fra forrige svar, f.eks. /kilde 2
+  /eksempelsvar  slå A-besvarelser som kilde av/på (av som standard, de er ikke fasit)
   /hjelp         vis denne teksten
   /avslutt       avslutt (eller Ctrl+D)
 Alt annet du skriver, blir sendt som et spørsmål."""
@@ -56,6 +57,7 @@ def main(fag: str):
     varm_opp(fag)
 
     forrige = None
+    eksempelsvar = False
     while True:
         try:
             linje = input(f"{fag} > ").strip()
@@ -80,13 +82,16 @@ def main(fag: str):
                     print(f"Ukjent fag. Velg mellom: {', '.join(alle_fag())}\n")
             elif kommando == "/kilde":
                 vis_kilde(forrige, argument)
+            elif kommando == "/eksempelsvar":
+                eksempelsvar = not eksempelsvar
+                print(f"A-besvarelser som kilde: {'på' if eksempelsvar else 'av'}.\n")
             else:
                 print("Ukjent kommando. Skriv /hjelp.\n")
             continue
 
         start = time.time()
         try:
-            forrige = svar_pa(linje, fag=fag)
+            forrige = svar_pa(linje, fag=fag, med_eksempelsvar=eksempelsvar)
         except TimeoutError:
             print("Språkmodellen brukte for lang tid. Prøv igjen, gjerne med et kortere spørsmål.\n")
             continue
