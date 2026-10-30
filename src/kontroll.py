@@ -36,8 +36,9 @@ def sitat_finnes(sitat: str, kildetekst: str) -> bool:
 class Duplikatfilter:
     """Husker spørsmålene i en økt og sier fra om et nytt spørsmål likner et tidligere."""
 
-    def __init__(self):
-        self.vektorer = []
+    def __init__(self, tidligere: list[str] | None = None):
+        """tidligere: tekster som allerede finnes (f.eks. kortene i databasen), som nye skal sammenlignes med."""
+        self.vektorer = [embed_sporsmal(t) for t in tidligere or []]
 
     def er_duplikat(self, tekst: str) -> bool:
         vektor = embed_sporsmal(tekst)

@@ -63,12 +63,28 @@ def lagre_sporsmal(db, *, fag, tema, ovingsmate, sporsmal, fasit, kilde,
     return rad.lastrowid
 
 
-def lagre_forsok(db, sporsmal_id: int, svar: str, riktig: bool, tilbakemelding: str | None = None):
+def lagre_forsok(db, sporsmal_id: int, svar: str, riktig: bool, tilbakemelding: str | None = None,
+                 neste_repetisjon: str | None = None):
     db.execute(
-        "INSERT INTO forsok (sporsmal_id, tidspunkt, svar, riktig, tilbakemelding) VALUES (?, ?, ?, ?, ?)",
-        (sporsmal_id, naa(), svar, int(riktig), tilbakemelding),
+        "INSERT INTO forsok (sporsmal_id, tidspunkt, svar, riktig, tilbakemelding, neste_repetisjon)"
+        " VALUES (?, ?, ?, ?, ?, ?)",
+        (sporsmal_id, naa(), svar, int(riktig), tilbakemelding, neste_repetisjon),
     )
     db.commit()
+
+
+def kort(db, fag: str, tema: str | None = None) -> list[sqlite3.Row]:
+    """Alle flashcards i faget (eventuelt ett tema), med tidspunktet de skal repeteres.
+
+    neste er NULL for kort som aldri er øvd. Et kort forfaller når neste <= nå.
+    """
+    return db.execute(
+        "SELECT s.*, (SELECT f.neste_repetisjon FROM forsok f WHERE f.sporsmal_id = s.id"
+        "             ORDER BY f.id DESC LIMIT 1) AS neste"
+        " FROM sporsmal s WHERE s.ovingsmate = 'flashcard' AND s.fag = ? AND (? IS NULL OR s.tema = ?)"
+        " ORDER BY s.id",
+        (fag, tema, tema),
+    ).fetchall()
 
 
 def resultater(db, fag: str | None = None) -> list[sqlite3.Row]:
