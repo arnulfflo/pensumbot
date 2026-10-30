@@ -36,6 +36,15 @@ CREATE TABLE IF NOT EXISTS forsok (
     tilbakemelding   TEXT,
     neste_repetisjon TEXT                -- brukes i fase 4
 );
+CREATE TABLE IF NOT EXISTS plan (
+    id          INTEGER PRIMARY KEY,
+    dato        TEXT NOT NULL,           -- ÅÅÅÅ-MM-DD
+    fag         TEXT NOT NULL,
+    tema        TEXT NOT NULL,
+    ovingsmate  TEXT NOT NULL,           -- flashcards, flervalg, kortsvar, repetisjon
+    minutter    INTEGER NOT NULL,
+    status      TEXT NOT NULL            -- planlagt, fullfort, hoppet_over
+);
 """
 
 

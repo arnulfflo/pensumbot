@@ -14,3 +14,12 @@ dependencies = [
     "pyyaml>=6.0.3",
     "sentence-transformers>=6.2.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]       # så testene finner src/
+testpaths = ["tester"]

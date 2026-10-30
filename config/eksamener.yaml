@@ -1,20 +1,73 @@
-# Eksamensdatoer og temaer per fag. Brukes først i fase 3.
+# Eksamensdatoer og temaer per fag. Brukes av planleggeren (fase 3).
 # Fyll inn fra emnebeskrivelse eller pensumliste – ikke gjett.
+#
+# Fylt inn 30.10.2026 fra notater/<fag>_emneoversikt.docx:
+# - datoer fra «2. Eksamen»
+# - temaer fra fremdriftsplanen/undervisningsplanen (ett tema per kapittel)
+# Rediger fritt: legg til, fjern eller slå sammen temaer. Temanavnet brukes også som
+# søk når planleggeren starter en quiz, så skriv det slik at det beskriver innholdet.
+
+timer_per_dag: 6           # alle fag til sammen (svar fra deg 30.10.2026)
+blokk_minutter: 45         # én øvingsøkt; dagen deles i blokker av denne lengden
+repetisjonsdager: 2        # de siste dagene før en eksamen brukes bare på det faget
 
 ORG1100:
-  dato: UKJENT                 # format: 2026-12-10
-  temaer: []                   # f.eks. ["Organisasjonsstruktur", "Ledelse"]
+  dato: 2026-12-15         # kl. 09:00
+  temaer:                  # fra forelesningsplanen, uke 34–46 (kap. 5 og 16 er ikke med i planen)
+    - "Individuelle forskjeller og personlighet (kap. 1)"
+    - "Hvordan vi opplever, tenker og føler på jobb (kap. 2)"
+    - "Motivasjon og arbeidsprestasjon (kap. 3)"
+    - "Jobbtilfredshet og engasjement (kap. 4)"
+    - "Læring (kap. 6)"
+    - "Problemløsing, beslutninger og kreativitet (kap. 7)"
+    - "Grupper og teamarbeid (kap. 8)"
+    - "Mellommenneskelig atferd og samspill (kap. 9)"
+    - "Kommunikasjon og kommunikasjonsprosesser (kap. 10)"
+    - "Makt og påvirkning (kap. 11)"
+    - "God og dårlig ledelse (kap. 12)"
+    - "Organisasjonsstruktur (kap. 13)"
+    - "Organisasjonskultur (kap. 14)"
+    - "Endring og omstilling (kap. 15)"
+    - "Juridiske rammer i arbeidslivet (kap. 17)"
+    - "Samfunnsansvar, etikk og bærekraft (kap. 18)"
 
 MRK1001:
-  dato: UKJENT
-  temaer: []
+  dato: 2026-11-23         # kl. 15:00
+  temaer:                  # fra fremdriftsplanen, kap. 1–15
+    # Avvik: fremdriftsplanen sier kap. 10 = merkevareledelse og kap. 11 = markedskommunikasjon.
+    # Notatene dine (og boka) har kap. 10 = markedskommunikasjon og kap. 11 = posisjonering/merkevare.
+    # Her følges notatene.
+    - "Markedsføringens oppgaver og rolle, markedsorientering (kap. 1)"
+    - "Markedsføringens omgivelser og bransjeanalyse (kap. 2)"
+    - "Markedsføringsstrategi (kap. 3)"
+    - "Kjøpsatferd i forbrukermarkedet (kap. 4)"
+    - "Kjøpsatferd i bedriftsmarkedet (kap. 5)"
+    - "Segmentering, målgruppevalg og STP (kap. 6)"
+    - "Produkt og sortiment (kap. 7)"
+    - "Distribusjon (kap. 8)"
+    - "Prispolitikk (kap. 9)"
+    - "Markedskommunikasjon (kap. 10)"
+    - "Posisjonering og merkevarestrategi (kap. 11)"
+    - "Relasjonsmarkedsføring og lojalitet (kap. 12)"
+    - "Tjenestemarkedsføring (kap. 13)"
+    - "Markedsanalyser og prognoser (kap. 14)"
+    - "Markedsføring av høyteknologi (kap. 15)"
 
 BOA1100:
-  dato: UKJENT
-  temaer: []
+  dato: 2027-01-07         # kl. 09:00, ingen hjelpemidler (kode E, heller ikke kalkulator)
+  temaer:                  # fra undervisningsplanen (Canvas)
+    - "Innledning til økonomistyring"
+    - "Kostnader og kostnadsbegreper"
+    - "Regnskap: innledning og balanseligningen"
+    - "Bokføring og det dobbelte bokholderi"
+    - "Periodisering og regnskapsoppsummering"
+    - "Kostnadsfordeling"
+    - "Kalkulasjon"
+    - "Nullpunktsanalyser"
+    - "Markedstilpasning"
+    - "Kortsiktige beslutningsproblemer"
+    - "Langsiktige beslutningsproblemer og investeringsanalyse"
 
 MET1001:
-  dato: UKJENT
+  dato: UKJENT             # ikke med i planen før dato og temaer er fylt inn
   temaer: []
-
-timer_per_dag: UKJENT
