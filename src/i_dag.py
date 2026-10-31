@@ -15,6 +15,7 @@ from src.innlesing import alle_fag
 from src.planlegger import UKEDAGER, blokker_for, lag_og_lagre, marker_fullfort
 from src.quiz import kjor_quiz
 from src.repetisjon import forfalte_sporsmal, repeter
+from src.terminal import les
 
 # Hvor mye hver øvingsmåte gjør på én blokk (ca. 45 minutter med lesing av kildene).
 OVELSER = {
@@ -81,7 +82,7 @@ def main():
 
     while True:
         vis(blokker, db)
-        valg = input("\nVelg en blokk (nummer), r for repetisjon, eller q for å avslutte: ").strip().lower()
+        valg = les("\nVelg en blokk (nummer), r for repetisjon, eller q for å avslutte: ").lower()
         if valg == "q" or valg == "":
             break
         if valg == "r":
@@ -95,12 +96,14 @@ def main():
         start_ovelse(db, blokk)
 
         svar = ""
-        while svar not in ("j", "n"):
-            svar = input("\nMarker blokken som fullført? (j/n): ").strip().lower()
+        while svar not in ("j", "n", "q"):
+            svar = les("\nMarker blokken som fullført? (j/n): ").lower()
         if svar == "j":
             marker_fullfort(db, blokk["id"])
             # Planlegg fra i morgen på nytt, med mestringen fra økten du nettopp hadde.
             lag_og_lagre(db, date.today() + timedelta(days=1))
+        if svar == "q":
+            break
         blokker = [b for b in blokker_for(db, date.today()) if b["fag"] != "-"]
 
 

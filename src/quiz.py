@@ -22,6 +22,7 @@ from src.innlesing import standardfag
 from src.konfig import data_mappe, last_innstillinger
 from src.llm import generer_json
 from src.repetisjon import lagre_resultat
+from src.terminal import les
 
 SYSTEM_FLERVALG = """Du lager flervalgsspørsmål til en student som øver til eksamen. Du skal BARE bruke teksten du får.
 
@@ -161,9 +162,9 @@ def still_flervalg(q: dict, bit: Bit) -> tuple[str, bool, str | None] | None:
     for bokstav, alt in zip(BOKSTAVER, q["alternativer"]):
         print(f"   {bokstav}) {alt}")
     # Merk: "" in "ABCD" er True i Python, så sjekk lengden også.
-    svar = input("Svar: ").strip().upper()
+    svar = les("Svar: ").upper()
     while not (len(svar) == 1 and svar in BOKSTAVER + "Q"):
-        svar = input("Skriv A, B, C, D (eller q for å avslutte): ").strip().upper()
+        svar = les("Skriv A, B, C, D (eller q for å avslutte): ").upper()
     if svar == "Q":
         return None
     riktig_bokstav = BOKSTAVER[q["alternativer"].index(q["fasit"])]
@@ -176,7 +177,7 @@ def still_flervalg(q: dict, bit: Bit) -> tuple[str, bool, str | None] | None:
 def still_kortsvar(q: dict, bit: Bit) -> tuple[str, bool, str | None] | None:
     svar = ""
     while len(svar.split()) < 3:
-        svar = input("Svaret ditt (2–4 setninger, q for å avslutte): ").strip()
+        svar = les("Svaret ditt (2–4 setninger, q for å avslutte): ")
         if svar.lower() == "q":
             return None
     print("   (vurderer ...)")
@@ -187,7 +188,9 @@ def still_kortsvar(q: dict, bit: Bit) -> tuple[str, bool, str | None] | None:
         print(f"   Vurderingen feilet. Sammenlign selv med modellsvaret:\n   {q['modellsvar']}")
         egen = ""
         while egen not in ("j", "n"):
-            egen = input("   Var svaret ditt riktig? (j/n): ").strip().lower()
+            egen = les("   Var svaret ditt riktig? (j/n): ").lower()
+            if egen == "q":
+                return None
         return svar, egen == "j", "egenvurdering (modellen svarte ikke)"
     print(f"{'✓ Godkjent' if v['riktig'] else '✗ Ikke godkjent'}: {sum(v['dekket'])} av {len(v['dekket'])} nøkkelpunkter")
     for punkt, dekket in zip(q["nokkelpunkter"], v["dekket"]):

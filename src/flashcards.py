@@ -22,6 +22,7 @@ from src.kontroll import Duplikatfilter, normaliser, sitat_finnes
 from src.llm import generer_json
 from src.quiz import kandidat_biter, modellnavn
 from src.repetisjon import lagre_resultat
+from src.terminal import les
 
 SYSTEM_KORT = """Du lager flashcards til en student som øver til eksamen. Du skal BARE bruke teksten du får.
 
@@ -106,13 +107,13 @@ def ov(db, kortstokk: list):
         k = ko.pop(0)
         vist += 1
         print(f"\n[{len(ko) + 1} igjen]  {k['sporsmal']}")
-        if input("  (Enter for å snu, q for å avslutte) ").strip().lower() == "q":
+        if les("  (Enter for å snu, q for å avslutte) ").lower() == "q":
             return
         print(f"  {k['fasit']}")
         print(f"  Kilde: {k['kilde']}")
         valg = ""
         while valg not in VURDERINGER:
-            valg = input("  Hvor godt kunne du det? 1 igjen · 2 vanskelig · 3 greit · 4 lett: ").strip()
+            valg = les("  Hvor godt kunne du det? 1 igjen · 2 vanskelig · 3 greit · 4 lett: ")
             if valg.lower() == "q":
                 return
         navn = VURDERINGER[valg]
