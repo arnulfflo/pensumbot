@@ -108,3 +108,16 @@ def test_flashcard_intervall_vokser(db):
         intervaller.append(_dager_til(neste))
         _gjor_forfalt(db, kid)
     assert intervaller == pytest.approx([3, 7.5, 18.75], abs=0.01)    # 3 × 2,5 × 2,5
+
+
+def test_angre_hopp_over_gir_dagen_tilbake(db):
+    from src.planlegger import angre_hopp_over, blokker_for, hopp_over
+    i_dag = date.today()
+    lag_og_lagre(db, i_dag)
+    for_ = [(b["fag"], b["tema"]) for b in blokker_for(db, i_dag)]
+    hopp_over(db, i_dag)
+    assert all(b["status"] == "hoppet_over" for b in blokker_for(db, i_dag))
+    angre_hopp_over(db, i_dag)
+    etter = blokker_for(db, i_dag)
+    assert [(b["fag"], b["tema"]) for b in etter] == for_
+    assert all(b["status"] == "planlagt" for b in etter)

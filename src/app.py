@@ -19,7 +19,7 @@ from src.henting import Bit, hent
 from src.innlesing import alle_fag, standardfag
 from src.kortsvar import STILER, vurder
 from src.llm import generer
-from src.planlegger import UKEDAGER, blokker_for, hopp_over, lag_og_lagre, last_eksamener, marker_fullfort
+from src.planlegger import UKEDAGER, angre_hopp_over, blokker_for, hopp_over, lag_og_lagre, last_eksamener, marker_fullfort
 from src.quiz import modellnavn, sporsmal_strom
 from src.repetisjon import forfalte_sporsmal, lagre_resultat
 from src.svar import svar_pa
@@ -320,6 +320,11 @@ def hopp_over_i_dag():
     return vis_plan()
 
 
+def angre_i_dag():
+    angre_hopp_over(koble(), date.today())
+    return vis_plan()
+
+
 def forklar_plan():
     from src.planlegger import forklar
     import contextlib
@@ -398,6 +403,7 @@ def lag_app() -> gr.Blocks:
 
                 with gr.Row():
                     hopp_knapp = gr.Button("Hopp over i dag", size="sm")
+                    angre_knapp = gr.Button("↩ Angre hopp over", size="sm")
                     forklar_knapp = gr.Button("💡 Forklar planen", size="sm")
                 forklaring = gr.Markdown()
                 gr.Markdown("#### Neste 7 dager")
@@ -458,6 +464,7 @@ def lag_app() -> gr.Blocks:
         app.load(vis_plan, outputs=plan_ut)
         app.load(vis_mestring, outputs=mestring)
         hopp_knapp.click(hopp_over_i_dag, outputs=plan_ut)
+        angre_knapp.click(angre_i_dag, outputs=plan_ut)
         forklar_knapp.click(forklar_plan, outputs=forklaring)
 
         spor_ut = [chat, samtale, spor_tekst]

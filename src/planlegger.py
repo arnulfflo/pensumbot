@@ -181,6 +181,13 @@ def hopp_over(db, dato: date):
     return lag_og_lagre(db, date.today())
 
 
+def angre_hopp_over(db, dato: date):
+    """Gjør dagen planlagt igjen etter «hopp over», og planlegger resten på nytt fra dagen etter."""
+    db.execute("DELETE FROM plan WHERE dato = ? AND fag = '-'", (dato.isoformat(),))
+    db.execute("UPDATE plan SET status = 'planlagt' WHERE dato = ? AND status = 'hoppet_over'", (dato.isoformat(),))
+    db.commit()
+    return lag_og_lagre(db, dato + timedelta(days=1))
+
 def marker_fullfort(db, blokk_id: int):
     db.execute("UPDATE plan SET status = 'fullfort' WHERE id = ?", (blokk_id,))
     db.commit()
