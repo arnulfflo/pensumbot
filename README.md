@@ -54,6 +54,8 @@ I BØA-chatten svarer en **agent**: språkmodellen bestemmer selv hvilke verktø
 - Veilederen bare leser. Den endrer aldri planen eller databasen
 - Kjør også i terminalen: `uv run python -m src.veileder "Hva bør jeg øve på i kveld? Jeg har to timer."`
 
+<img src="docs/bilder/veileder.png" width="75%" alt="Studieveilederen setter opp en økt på to timer">
+
 <p>
   <img src="docs/bilder/chat.png" width="49%" alt="Chat med kilder og oppfølgingsspørsmål">
   <img src="docs/bilder/quiz.png" width="49%" alt="Flervalgsquiz med tilbakemelding">

@@ -9,6 +9,7 @@ Kjør:  uv run python -m src.app      (åpner http://127.0.0.1:7860 i nettlesere
 import json
 import queue
 import random
+import re
 import threading
 from datetime import date, timedelta
 from html import escape
@@ -561,7 +562,8 @@ def spor_veileder(melding):
     if not svar:
         yield "Veilederen stoppet uventet. Prøv igjen.", []
         return
-    tekst = (f"{svar.tekst}\n\n<details><summary>Slik jobbet veilederen ({len(svar.steg)} steg)</summary>\n\n"
+    linjer = re.sub(r"(?<!\n)\n(?!\n)", "  \n", svar.tekst)      # behold linjeskiftene i listen over økter
+    tekst = (f"{linjer}\n\n<details><summary>Slik jobbet veilederen ({len(svar.steg)} steg)</summary>\n\n"
              f"{_agentsteg(svar.steg)}\n\n</details>")
     okt = [{"fag": b.fag, "tema": b.tema, "ovingsmate": b.ovingsmate, "minutter": b.minutter, "status": "planlagt",
             "grunn": b.grunn} for b in svar.okt]
