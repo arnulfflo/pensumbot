@@ -8,6 +8,7 @@ Kjør:  uv run python -m src.app      (åpner http://127.0.0.1:7860 i nettlesere
 
 import json
 import queue
+import random
 import threading
 from datetime import date, timedelta
 from html import escape
@@ -147,7 +148,7 @@ def _ny_strom(fag, tema, type_, stil):
 def _start_okt(fag, tema, type_, stil) -> dict:
     """Lager spørsmål i en bakgrunnstråd, to foran det du svarer på, så «Nytt spørsmål» går fort."""
     okt = {"nokkel": (fag, tema, type_, stil), "ko": queue.Queue(maxsize=2), "stopp": threading.Event(),
-           "besvart": 0, "riktige": 0, "nr": 0}
+           "besvart": 0, "riktige": 0, "nr": 0, "feil": [], "runde": []}
 
     def legg_i_ko(element) -> bool:
         while not okt["stopp"].is_set():
@@ -194,41 +195,90 @@ def _melding(tekst) -> str:
     return f'<div class="tom">{escape(tekst)}</div>'
 
 
+def _ny_okt(request, fag, tema, type_, stil) -> dict:
+    """Ny økt for nytt valg. Stopper den gamle bakgrunnstråden, men tar med feilsvarene du ikke har tatt på nytt."""
+    gammel = OKTER.get(request.session_hash)
+    okt = _start_okt(fag, tema, type_, stil)
+    if gammel:
+        gammel["stopp"].set()
+        okt["feil"], okt["runde"], okt["runde_fag"] = gammel["feil"], gammel["runde"], gammel.get("runde_fag")
+    OKTER[request.session_hash] = okt
+    return okt
+
+
 def forbered_quiz(fag, tema, type_, stil, request: gr.Request):
     """Begynner å lage spørsmål så snart temaet er valgt, før du trykker «Nytt spørsmål»."""
     tema = (tema or "").strip()
     okt = OKTER.get(request.session_hash)
     if (tema or type_ == "repetisjon") and not (okt and okt["nokkel"] == (fag, tema, type_, stil)):
-        if okt:
-            okt["stopp"].set()
-        OKTER[request.session_hash] = _start_okt(fag, tema, type_, stil)
+        _ny_okt(request, fag, tema, type_, stil)
+
+
+def _knapper(okt, besvart: bool, kortsvar: bool = False):
+    """Svar · Nytt spørsmål · Prøv igjen · Ta feilsvarene på nytt. Etter svar blir «Nytt spørsmål» hovedknappen."""
+    feil = len(okt["feil"]) if okt else 0
+    return (gr.update(interactive=not besvart, variant="secondary" if besvart else "primary"),
+            gr.update(variant="primary" if besvart else "secondary"),
+            gr.update(visible=besvart and kortsvar),
+            gr.update(visible=besvart and feil > 0, value=f"🔁 Ta feilsvarene på nytt nå ({feil})"))
+
+
+INGEN_ENDRING = (gr.update(),) * 4
+
+
+def _vis(okt, fag, element):
+    """Viser et spørsmål (fra køen eller fra en øvingsrunde med feilsvar)."""
+    q, bit, sid, kilde = element
+    okt.update(q=q, bit=bit, sid=sid, kilde=kilde, nr=okt["nr"] + 1)
+    kort = _sporsmalskort(fag, q, okt["nr"])
+    if okt.get("ovelse"):
+        kort = kort.replace('<div class="topplinje">', '<div class="topplinje"><span class="varsel">🔁 Øvingsrunde – teller ikke</span>', 1)
+    skjul = gr.update(visible=False)
+    if q["type"] == "flervalg":
+        valg = [f"{b}) {a}" for b, a in zip(BOKSTAVER, q["alternativer"])]
+        felter = (gr.update(choices=valg, value=None, visible=True), skjul)
+    else:
+        felter = (skjul, gr.update(value="", visible=True))
+    return (kort, *felter, "", _poeng(okt), *_knapper(okt, besvart=False))
 
 
 def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
     skjul = gr.update(visible=False)
+    okt = OKTER.get(request.session_hash)
+    if okt and okt["runde"]:                # øvingsrunde med feilsvar går først
+        okt["ovelse"] = True
+        return _vis(okt, okt["runde_fag"], okt["runde"].pop(0))
     tema = (tema or "").strip()
     if type_ != "repetisjon" and not tema:
-        return _melding("Velg et tema først, eller skriv ditt eget, f.eks. «prisstrategi»."), skjul, skjul, "", ""
-    okt = OKTER.get(request.session_hash)
+        return (_melding("Velg et tema først, eller skriv ditt eget, f.eks. «prisstrategi»."), skjul, skjul, "", "",
+                *INGEN_ENDRING)
     nokkel = (fag, tema, type_, stil)
     if not okt or okt["nokkel"] != nokkel:
-        if okt:
-            okt["stopp"].set()             # gammel økt: stopp bakgrunnstråden
-        okt = OKTER[request.session_hash] = _start_okt(fag, tema, type_, stil)
+        okt = _ny_okt(request, fag, tema, type_, stil)
+    okt["ovelse"] = False
     element = okt["ko"].get()
     if element is SLUTT:
         okt["stopp"].set()
         okt["nokkel"] = None
         tekst = ("Ingen spørsmål skal repeteres nå. 🎉" if type_ == "repetisjon"
                  else f"Fant ikke flere gode spørsmål om «{tema}». Prøv et bredere tema.")
-        return _melding(tekst), skjul, skjul, "", _poeng(okt)
-    q, bit, sid, kilde = element
-    okt.update(q=q, bit=bit, sid=sid, kilde=kilde, nr=okt["nr"] + 1)
-    kort = _sporsmalskort(fag, q, okt["nr"])
-    if q["type"] == "flervalg":
-        valg = [f"{b}) {a}" for b, a in zip(BOKSTAVER, q["alternativer"])]
-        return kort, gr.update(choices=valg, value=None, visible=True), skjul, "", _poeng(okt)
-    return kort, skjul, gr.update(value="", visible=True), "", _poeng(okt)
+        return _melding(tekst), skjul, skjul, "", _poeng(okt), *_knapper(okt, besvart=True)
+    return _vis(okt, fag, element)
+
+
+def ta_feil_paa_nytt(fag, request: gr.Request):
+    """Stiller feilsvarene fra denne økten på nytt med en gang. Teller ikke: de kommer i repetisjonen som før."""
+    okt = OKTER.get(request.session_hash)
+    if not okt or not okt["feil"]:
+        return (_melding("Ingen feilsvar å ta på nytt."), gr.update(), gr.update(), "", _poeng(okt), *INGEN_ENDRING)
+    for q, bit, sid, kilde in okt["feil"]:
+        if q["type"] == "flervalg":          # stokk på nytt, så du ikke bare husker bokstaven
+            q = {**q, "alternativer": random.sample(q["alternativer"], len(q["alternativer"]))}
+        okt["runde"].append((q, bit, sid, kilde))
+    okt["feil"] = []
+    okt["runde_fag"] = fag
+    okt["ovelse"] = True
+    return _vis(okt, fag, okt["runde"].pop(0))
 
 
 def _tilbakemelding(riktig: bool, dom: str, innhold: str) -> str:
@@ -236,44 +286,74 @@ def _tilbakemelding(riktig: bool, dom: str, innhold: str) -> str:
             f'<div class="dom">{"✅" if riktig else "❌"} {dom}</div>{innhold}</div>')
 
 
+def _vurdering_html(q, v) -> tuple[str, str]:
+    """(dom, innhold) for et vurdert kortsvar."""
+    dom = f"{'Godkjent' if v['riktig'] else 'Ikke godkjent'} · {sum(v['dekket'])} av {len(v['dekket'])} nøkkelpunkter"
+    punkter = "".join(f"<li>{'✓' if d else '·'} {escape(p)}</li>" for p, d in zip(q["nokkelpunkter"], v["dekket"]))
+    punkter += "".join(f"<li>✗ Stemmer ikke med kilden: {escape(f)}</li>" for f in v["feil"])
+    innhold = (f"<ul>{punkter}</ul><p>{escape(v['tilbakemelding'])}</p>"
+               f'<div class="modellsvar"><b>Modellsvar:</b> {escape(q["modellsvar"])}</div>'
+               f'<p class="notis">Vurderingen er en indikasjon fra en liten modell, ikke en karakter.</p>')
+    return dom, innhold
+
+
 def svar_quiz(valgt, tekst, request: gr.Request):
     okt = OKTER.get(request.session_hash)
     if not okt or "q" not in okt:
-        return _melding("Trykk «Nytt spørsmål» først."), _poeng(okt)
+        return _melding("Trykk «Nytt spørsmål» først."), _poeng(okt), *INGEN_ENDRING
     q, bit, sid = okt["q"], okt["bit"], okt["sid"]
     if q["type"] == "flervalg":
         if not valgt:
-            return _melding("Velg et alternativ."), _poeng(okt)
+            return _melding("Velg et alternativ."), _poeng(okt), *INGEN_ENDRING
         svar = valgt[3:]
         riktig = svar == q["fasit"]
         dom = "Riktig!" if riktig else f"Feil. Riktig svar: {escape(q['fasit'])}"
         innhold = f"<p>{escape(q.get('forklaring') or '')}</p>"
         tilbakemelding = None
     else:
-        if len(tekst.split()) < 3:
-            return _melding("Skriv et svar på 2–4 setninger."), _poeng(okt)
+        if len((tekst or "").split()) < 3:
+            return _melding("Skriv et svar på 2–4 setninger."), _poeng(okt), *INGEN_ENDRING
         svar = tekst
         try:
             v = vurder(q, svar, bit.tekst)
         except (TimeoutError, ValueError):
             return (_tilbakemelding(False, "Vurderingen feilet",
                                     f'<div class="modellsvar"><b>Sammenlign selv med modellsvaret:</b><br>'
-                                    f'{escape(q["modellsvar"])}</div>'), _poeng(okt))
+                                    f'{escape(q["modellsvar"])}</div>'), _poeng(okt), *INGEN_ENDRING)
         riktig, tilbakemelding = v["riktig"], v["tilbakemelding"]
-        dom = f"{'Godkjent' if riktig else 'Ikke godkjent'} · {sum(v['dekket'])} av {len(v['dekket'])} nøkkelpunkter"
-        punkter = "".join(f"<li>{'✓' if d else '·'} {escape(p)}</li>" for p, d in zip(q["nokkelpunkter"], v["dekket"]))
-        punkter += "".join(f"<li>✗ Stemmer ikke med kilden: {escape(f)}</li>" for f in v["feil"])
-        innhold = (f"<ul>{punkter}</ul><p>{escape(v['tilbakemelding'])}</p>"
-                   f'<div class="modellsvar"><b>Modellsvar:</b> {escape(q["modellsvar"])}</div>'
-                   f'<p class="notis">Vurderingen er en indikasjon fra en liten modell, ikke en karakter.</p>')
-    neste = lagre_resultat(koble(), sid, svar, riktig, tilbakemelding)
-    okt["besvart"] += 1
-    okt["riktige"] += int(riktig)
+        dom, innhold = _vurdering_html(q, v)
+
+    element = (q, bit, sid, okt["kilde"])
     sitat = f" «{escape(q['sitat'])}»" if q.get("sitat") else ""
     innhold += f'<div class="kilde">Kilde: {escape(okt["kilde"])}{sitat}'
-    innhold += f"<br>Kommer igjen {neste:%d.%m} for repetisjon.</div>" if neste else "</div>"
+    if okt.get("ovelse"):
+        innhold += "<br>Øvingsrunde: teller ikke. Spørsmålet kommer fortsatt i repetisjonen.</div>"
+    else:
+        neste = lagre_resultat(koble(), sid, svar, riktig, tilbakemelding)
+        okt["besvart"] += 1
+        okt["riktige"] += int(riktig)
+        innhold += f"<br>Kommer igjen {neste:%d.%m} for repetisjon.</div>" if neste else "</div>"
+    if not riktig:
+        okt["feil"].append(element)
+    okt["forrige"] = (q, bit)                 # til «Prøv igjen»
     del okt["q"]
-    return _tilbakemelding(riktig, dom, innhold), _poeng(okt)
+    return _tilbakemelding(riktig, dom, innhold), _poeng(okt), *_knapper(okt, True, q["type"] == "kortsvar")
+
+
+def prov_igjen(tekst, request: gr.Request):
+    """Nytt forsøk på et kortsvar etter at du har sett nøkkelpunktene. Vurderes, men lagres ikke."""
+    okt = OKTER.get(request.session_hash)
+    if not okt or "forrige" not in okt:
+        return _melding("Svar på et kortsvar først.")
+    q, bit = okt["forrige"]
+    if len((tekst or "").split()) < 3:
+        return _melding("Skriv det nye svaret ditt i feltet over, og trykk «Prøv igjen».")
+    try:
+        v = vurder(q, tekst, bit.tekst)
+    except (TimeoutError, ValueError):
+        return _melding("Vurderingen feilet. Prøv igjen.")
+    dom, innhold = _vurdering_html(q, v)
+    return _tilbakemelding(v["riktig"], "Nytt forsøk (teller ikke) · " + dom, innhold)
 
 
 # ---------- Flashcards ----------
@@ -527,8 +607,10 @@ def lag_app() -> gr.Blocks:
                 quiz_tekst = gr.Textbox(label="Ditt svar (2–4 setninger)", lines=4, visible=False)
                 with gr.Row():
                     svar_knapp = gr.Button("Svar", variant="primary")
+                    prov_knapp = gr.Button("✍️ Prøv igjen (teller ikke)", visible=False)
                     nytt_knapp = gr.Button("Nytt spørsmål ➜")
                 quiz_resultat = gr.HTML()
+                feil_knapp = gr.Button("🔁 Ta feilsvarene på nytt nå", visible=False, size="sm")
 
             with gr.Tab("🗂️ Flashcards", id="kort"):
                 ko = gr.State([])
@@ -569,10 +651,13 @@ def lag_app() -> gr.Blocks:
         quiz_valg_inn = [quiz_fag, quiz_tema, quiz_type, quiz_stil]
         for felt in (quiz_tema, quiz_type, quiz_stil):
             felt.change(forbered_quiz, quiz_valg_inn, None, show_progress="hidden")
-        nytt_knapp.click(nytt_sporsmal, [quiz_fag, quiz_tema, quiz_type, quiz_stil],
-                         [quiz_sporsmal, quiz_valg, quiz_tekst, quiz_resultat, poeng])
+        knapper = [svar_knapp, nytt_knapp, prov_knapp, feil_knapp]
+        sporsmal_ut = [quiz_sporsmal, quiz_valg, quiz_tekst, quiz_resultat, poeng, *knapper]
+        nytt_knapp.click(nytt_sporsmal, [quiz_fag, quiz_tema, quiz_type, quiz_stil], sporsmal_ut)
+        feil_knapp.click(ta_feil_paa_nytt, quiz_fag, sporsmal_ut)
+        prov_knapp.click(prov_igjen, quiz_tekst, quiz_resultat)
         quiz_type.change(lambda t: gr.update(visible=t == "kortsvar"), quiz_type, quiz_stil)
-        svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst], [quiz_resultat, poeng])
+        svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst], [quiz_resultat, poeng, *knapper])
 
         # .input (ikke .change): bare når du selv bytter fag, så «Øv nå» ikke nullstiller temaet
         kort_fag.input(lambda f: gr.update(choices=temaer_for(f), value=ALLE_KORT), kort_fag, kort_temavalg)
