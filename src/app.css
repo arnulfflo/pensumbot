@@ -74,6 +74,8 @@ footer { display: none !important; }
 .poeng b { font-size: 1.05rem; }
 
 .panel { border-radius: 14px !important; }
+.veileder { margin-top: 18px; padding: 10px 14px 14px !important; }
+.veileder h4 { margin: 0 0 8px !important; }
 .svaralternativer label { padding: 12px 14px !important; border-radius: 10px !important; font-size: 1rem !important; }
 
 /* vurderingsknappene på flashcards */

@@ -23,8 +23,9 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - 📅 **Adaptiv eksamensplan** for flere fag samtidig, med nedtelling, prioritering og forklaring
 - ⚡ **Neste spørsmål lages i bakgrunnen** mens du svarer, så quizen går nesten momentant
 - 🤖 **BØA-agent** som selv velger når den skal søke i pensum og regne, mens koden kontrollerer hvert tall
+- 🧭 **Studieveileder-agent**: «Jeg har to timer i kveld, hva bør jeg øve på?» gir en ferdig økt med «Øv nå»-knapper
 - 🔒 **100 % lokalt og privat**, og ett konfigurasjonsvalg fra å bruke Claude i stedet
-- 🧪 **Målt kvalitet** med eget testsett og 46 automatiske tester
+- 🧪 **Målt kvalitet** med eget testsett og 56 automatiske tester
 
 ## 🧩 Funksjoner
 
@@ -44,6 +45,14 @@ I BØA-chatten svarer en **agent**: språkmodellen bestemmer selv hvilke verktø
 - Virker med både Ollama og Claude (verktøybruk via `chat_med_verktoy` i `src/llm.py`)
 
 Ærlig status med den lille lokale modellen: 4 av 5 testoppgaver riktige. Den femte (nåverdi) regnet modellen feil, og kontrollen merket svaret i stedet for å vise et feil tall som sikkert. Koden kan sjekke regning, men ikke om metoden er riktig, så agenten er laget for å bli mye sterkere med Claude.
+
+### 🧭 Studieveilederen
+Øverst i «I dag» kan du spørre med vanlige ord, for eksempel «Jeg har 45 min til BØA, hva gjør jeg?». En agent ser på dine egne data og setter opp en økt.
+- **Verktøy:** `se_status` (eksamener, dagens plan, feilsvar og kort som venter), `se_mestring` (per tema, svakest først) og `lag_okt`. Python velger temaene ut fra eksamensdato og mestring og regner minuttene, så økten aldri blir lengre enn tiden du har
+- **Kontroll i koden:** oppgir du tid eller fag og agenten ikke bruker det, sendes den tilbake med riktige verdier. Tall og fagkoder i svaret må komme fra dataene
+- Hver blokk i økten har en **«Øv nå»-knapp** som åpner quiz eller flashcards med riktig fag og tema
+- Veilederen bare leser. Den endrer aldri planen eller databasen
+- Kjør også i terminalen: `uv run python -m src.veileder "Hva bør jeg øve på i kveld? Jeg har to timer."`
 
 <p>
   <img src="docs/bilder/chat.png" width="49%" alt="Chat med kilder og oppfølgingsspørsmål">
@@ -149,7 +158,7 @@ Målt mot håndlagde testsett (`tester/testsett_*.yaml`) med `uv run python -m s
 | Organisasjon og ledelse | 14 av 15 | 0,882 | 3 av 3 | 0 |
 | Markedsføring | 15 av 15 | 0,967 | 3 av 3 | 0 |
 
-Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **46 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien og agentens kalkulator og kontroller (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
+Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **56 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, og hvordan veilederen setter opp økter (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
 
 ## 🛠️ Teknologi
 
@@ -170,7 +179,7 @@ Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue O
 | **PyYAML** · **python-dotenv** | Innstillinger, eksamensdatoer og API-nøkkel |
 | **pytest** | Enhetstester |
 
-Rundt 3 600 linjer Python fordelt på 22 filer. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
+Rundt 4 000 linjer Python fordelt på 23 filer. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
 
 ## 🚀 Kom i gang
 

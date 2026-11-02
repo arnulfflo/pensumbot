@@ -27,14 +27,16 @@ from src.quiz import modellnavn, sporsmal_strom
 from src.repetisjon import forfalte_sporsmal, lagre_resultat
 from src.agent import FAG as AGENTFAG, kildeliste as agentkilder, kjor_agent
 from src.svar import selvstendig_sporsmal, svar_pa
+from src.veileder import kjor_veileder
 
 FAG = alle_fag()
 BOKSTAVER = "ABCD"
 FARGER = {"MRK1001": "#ea7a1a", "ORG1100": "#2f6fde", "BOA1100": "#1f9d63", "MET1001": "#8b5cf6"}
 NAVN = {"MRK1001": "Markedsføring", "ORG1100": "Organisasjon og ledelse", "BOA1100": "Bedriftsøkonomi",
         "MET1001": "Metode"}
-IKONER = {"flashcards": "🗂️", "flervalg": "🎯", "kortsvar": "✍️", "repetisjon": "🔁"}
-OVINGSNAVN = {"flashcards": "Flashcards", "flervalg": "Flervalg", "kortsvar": "Kortsvar", "repetisjon": "Repetisjon"}
+IKONER = {"flashcards": "🗂️", "flervalg": "🎯", "kortsvar": "✍️", "repetisjon": "🔁", "feilsvar": "🔁"}
+OVINGSNAVN = {"flashcards": "Flashcards", "flervalg": "Flervalg", "kortsvar": "Kortsvar", "repetisjon": "Repetisjon",
+              "feilsvar": "Feilsvar på nytt"}
 
 # Quizøkter per nettleserfane. Generatorer kan ikke ligge i gr.State (den kopierer verdiene),
 # så de lagres her med Gradios økt-ID som nøkkel.
@@ -97,7 +99,9 @@ def svar_som_markdown(s, tolket: str | None = None) -> str:
 
 
 STEGTEKST = {"sok_i_pensum": "🔎 Søkte i pensum: «{inn}» → {ut}", "regn_ut": "🧮 Regnet ut: {ut}",
-             "kontrollregning": "✔ Koden kontrollregnet: {ut}", "kontroll": "↩ Sendt tilbake: {ut}"}
+             "kontrollregning": "✔ Koden kontrollregnet: {ut}", "kontroll": "↩ Sendt tilbake: {ut}",
+             "se_status": "📋 Sjekket status: {ut}", "se_mestring": "📈 Så på mestringen i {inn}: {ut}",
+             "lag_okt": "🗓️ Satte opp en økt ({inn}): {ut}"}
 
 
 def _agentsteg(steg) -> str:
@@ -454,7 +458,8 @@ def _blokk_html(b) -> str:
     return (f'<div class="blokk {klasse}" style="--fag:{farge(b["fag"])}">'
             f'<div class="ikon">{IKONER.get(b["ovingsmate"], "📘")}</div>'
             f'<div class="tekst"><div class="tema">{escape(kort_tema(b["tema"]))}</div>'
-            f'<div class="meta">{merke(b["fag"], lys=True)} &nbsp;{OVINGSNAVN.get(b["ovingsmate"], b["ovingsmate"])}</div></div>'
+            f'<div class="meta">{merke(b["fag"], lys=True)} &nbsp;{OVINGSNAVN.get(b["ovingsmate"], b["ovingsmate"])}'
+            f'{" · " + escape(b["grunn"]) if b.get("grunn") else ""}</div></div>'
             f'<div class="status">{tekst}</div></div>')
 
 
@@ -486,13 +491,18 @@ def vis_plan():
 def ov_paa_blokk(blokk_id):
     """Fyller ut riktig fane med fag og tema fra blokken, og bytter til den."""
     b = koble().execute("SELECT * FROM plan WHERE id = ?", (blokk_id,)).fetchone()
-    if b["ovingsmate"] == "flashcards":
+    return ov_paa(b["fag"], b["tema"], b["ovingsmate"])
+
+
+def ov_paa(fag, tema, ovingsmate):
+    """Tom tema betyr alle kort som skal repeteres (flashcards) eller feilsvarene (feilsvar)."""
+    if ovingsmate == "flashcards":
         return (gr.Tabs(selected="kort"), gr.update(), gr.update(), gr.update(), gr.update(),
-                gr.update(value=b["fag"]), gr.update(choices=temaer_for(b["fag"]), value=b["tema"]))
-    type_ = "flervalg" if b["ovingsmate"] == "flervalg" else "kortsvar"
+                gr.update(value=fag), gr.update(choices=temaer_for(fag), value=tema or ALLE_KORT))
+    type_ = {"flervalg": "flervalg", "feilsvar": "repetisjon"}.get(ovingsmate, "kortsvar")
     stil = "blandet" if type_ == "kortsvar" else "forklar"
-    return (gr.Tabs(selected="quiz"), gr.update(value=b["fag"]),
-            gr.update(choices=temaer_for(b["fag"], med_alle=False), value=b["tema"]),
+    return (gr.Tabs(selected="quiz"), gr.update(value=fag),
+            gr.update(choices=temaer_for(fag, med_alle=False), value=tema or None),
             gr.update(value=type_), gr.update(value=stil), gr.update(), gr.update())
 
 
@@ -532,6 +542,30 @@ def _forklaring_html(f, oppsummering) -> str:
     return (f'<div class="planforklaring"><h3>De neste {f["dager"]} dagene · {f["blokker"]} blokker à '
             f'{f["blokk_minutter"]} min</h3>{rader}<h4>Slik er planen laget</h4>{regler}'
             f'<h4>Oppsummering</h4><p>{oppsummering}</p></div>')
+
+
+def spor_veileder(melding):
+    """Kjører studieveilederen i en egen tråd og viser stegene etter hvert. Returnerer svaret og øktene."""
+    if not melding.strip():
+        melding = "Hva bør jeg øve på nå?"
+    steg, ferdig = [], {}
+    trad = threading.Thread(target=lambda: ferdig.update(svar=kjor_veileder(melding, steg.append)), daemon=True)
+    trad.start()
+    vist = -1
+    while trad.is_alive():
+        if len(steg) != vist:
+            vist = len(steg)
+            yield "*Veilederen ser på dataene dine …*\n\n" + _agentsteg(steg), []
+        trad.join(0.3)
+    svar = ferdig.get("svar")
+    if not svar:
+        yield "Veilederen stoppet uventet. Prøv igjen.", []
+        return
+    tekst = (f"{svar.tekst}\n\n<details><summary>Slik jobbet veilederen ({len(svar.steg)} steg)</summary>\n\n"
+             f"{_agentsteg(svar.steg)}\n\n</details>")
+    okt = [{"fag": b.fag, "tema": b.tema, "ovingsmate": b.ovingsmate, "minutter": b.minutter, "status": "planlagt",
+            "grunn": b.grunn} for b in svar.okt]
+    yield tekst, okt
 
 
 def forklar_plan():
@@ -617,6 +651,27 @@ def lag_app() -> gr.Blocks:
                     angre_knapp = gr.Button("↩ Angre hopp over", size="sm")
                     forklar_knapp = gr.Button("💡 Forklar planen", size="sm")
                 forklaring = gr.HTML()
+
+                with gr.Group(elem_classes="panel veileder"):
+                    gr.Markdown("#### 🧭 Studieveileder")
+                    with gr.Row():
+                        veileder_tekst = gr.Textbox(placeholder="Hva bør jeg øve på i kveld? Jeg har to timer.",
+                                                    show_label=False, scale=6, container=False)
+                        veileder_knapp = gr.Button("Spør", variant="primary", scale=1, min_width=80)
+                veileder_ut = gr.Markdown(elem_classes="veileder-svar")
+                veileder_okt = gr.State([])
+
+                @gr.render(inputs=veileder_okt)
+                def tegn_okt(okt):
+                    for b in okt:
+                        with gr.Row(elem_classes="blokk-rad"):
+                            with gr.Column(scale=8, min_width=240):
+                                gr.HTML(_blokk_html({**b, "tema": b["tema"] or OVINGSNAVN[b["ovingsmate"]]}))
+                            ov = gr.Button("Øv nå", variant="primary", size="sm", scale=0, min_width=84,
+                                           elem_classes="blokk-knapp")
+                            ov.click(lambda f=b["fag"], t=b["tema"], m=b["ovingsmate"]: ov_paa(f, t, m), None,
+                                     [faner, quiz_fag, quiz_tema, quiz_type, quiz_stil, kort_fag, kort_temavalg])
+
                 gr.Markdown("#### Neste 7 dager")
                 uke = gr.HTML()
 
@@ -687,6 +742,8 @@ def lag_app() -> gr.Blocks:
         hopp_knapp.click(hopp_over_i_dag, outputs=plan_ut)
         angre_knapp.click(angre_i_dag, outputs=plan_ut)
         forklar_knapp.click(forklar_plan, outputs=forklaring)
+        veileder_knapp.click(spor_veileder, veileder_tekst, [veileder_ut, veileder_okt])
+        veileder_tekst.submit(spor_veileder, veileder_tekst, [veileder_ut, veileder_okt])
 
         spor_inn = [spor_tekst, samtale, utveksling, spor_fag, spor_eksempel, spor_agent]
         spor_fag.change(lambda f: gr.update(visible=f == AGENTFAG), spor_fag, spor_agent)

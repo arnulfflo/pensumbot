@@ -64,3 +64,76 @@ def test_fanger_verktoykall_skrevet_som_tekst():
     assert [k["argumenter"] for k in _kall_i_tekst("regn_ut((300 - 180) * 5000)")] == [{"uttrykk": "(300 - 180) * 5000"}]
     assert [k["argumenter"] for k in _kall_i_tekst('[regn_ut{uttrykk: "0.50 * 80"}]')] == [{"uttrykk": "0.50 * 80"}]
     assert _kall_i_tekst("Vi bruker regn_ut for dette.") == []
+
+
+# ---------- studieveilederen ----------
+
+@pytest.mark.parametrize("tekst, minutter", [
+    ("Jeg har to timer i kveld", 120),
+    ("1,5 time", 90),
+    ("har 45 min", 45),
+    ("en halvtime før middag", 30),
+    ("halvannen time", 90),
+    ("Hva bør jeg øve på?", None),
+    ("hva gjør jeg den timen", None),          # «den timen» er ikke «en time»
+])
+def test_finner_tid_i_sporsmalet(tekst, minutter):
+    from src.veileder import minutter_i
+    assert minutter_i(tekst) == minutter
+
+
+def test_finner_faget_i_sporsmalet():
+    from src.veileder import fag_i
+    assert fag_i("Jeg har 45 min til BØA") == "BOA1100"
+    assert fag_i("litt markedsføring i kveld") == "MRK1001"
+    assert fag_i("hva bør jeg gjøre i dag?") is None
+    assert fag_i("BØA eller MRK?") is None
+
+
+@pytest.fixture
+def db(tmp_path, monkeypatch):
+    import src.database
+    monkeypatch.setattr(src.database, "data_mappe", lambda: tmp_path)
+    return src.database.koble()
+
+
+def test_okt_holder_seg_innenfor_tiden_og_tar_svake_temaer_forst(db):
+    from datetime import date
+    from src.database import lagre_sporsmal
+    from src.repetisjon import lagre_resultat
+    from src.veileder import lag_okt
+
+    idag = date(2026, 11, 1)                                  # fast dato, så eksamenene alltid ligger frem i tid
+    svakt = "Prispolitikk (kap. 9)"
+    for _ in range(3):
+        sid = lagre_sporsmal(db, fag="MRK1001", tema=svakt, ovingsmate="flervalg", sporsmal="?", fasit="a", kilde="x")
+        lagre_resultat(db, sid, svar="feil", riktig=False)
+
+    for minutter in (20, 100, 120, 135):
+        okt = lag_okt(db, minutter, idag=idag)
+        assert sum(b.minutter for b in okt) <= minutter
+        assert all(b.minutter >= 15 for b in okt)
+    okt = lag_okt(db, 120, idag=idag)
+    assert all(b.ovingsmate != "feilsvar" for b in okt)       # feilsvarene forfaller først i morgen
+    temaer = [b.tema for b in okt if b.tema]
+    assert temaer[0] == svakt                                 # lav mestring + nærmeste eksamen først
+    assert all(b.fag == "BOA1100" for b in lag_okt(db, 90, fag="BØA1100", idag=idag))
+    assert lag_okt(db, 10, idag=idag) == []
+
+
+def test_veilederkontrollen(db):
+    from src.agent import Steg
+    from src.veileder import Veiledersvar, _kall_i_tekst, _mangler
+
+    svar = Veiledersvar("Jeg har to timer", "")
+    assert "minutter=120" in _mangler(svar, [], "Øv på MRK.")
+    svar.steg.append(Steg("lag_okt", "120", "3 blokker"))
+    data = ["MRK1001: eksamen 23.11 om 21 dager.", "Økt på 120 av 120 minutter:\n1. MRK1001 flervalg, 45 min"]
+    assert _mangler(svar, data, "MRK1001 har eksamen 23. november, om 21 dager. Start med 45 minutter, 2 timer totalt.") is None
+    assert "37" in _mangler(svar, data, "Du har 37 feilsvar.")
+    assert "XYZ1234" in _mangler(svar, data, "Øv på XYZ1234.")
+    assert "fag=BOA1100" in _mangler(Veiledersvar("45 min til BØA", "", steg=[Steg("lag_okt", "45", "")]), [], "")
+    assert _mangler(Veiledersvar("45 min til BØA", "", steg=[Steg("lag_okt", "45, BOA1100", "")]),
+                    ["45"], "Øv 45 minutter.") is None
+    assert _kall_i_tekst("lag_okt(90, BOA1100)") == [{"id": "tekst0", "navn": "lag_okt",
+                                                       "argumenter": {"fag": "BOA1100", "minutter": 90}}]
