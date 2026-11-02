@@ -7,6 +7,8 @@ Kjør:  uv run python -m src.app      (åpner http://127.0.0.1:7860 i nettlesere
 """
 
 import json
+import queue
+import threading
 from datetime import date, timedelta
 from html import escape
 from pathlib import Path
@@ -35,6 +37,8 @@ OVINGSNAVN = {"flashcards": "Flashcards", "flervalg": "Flervalg", "kortsvar": "K
 # Quizøkter per nettleserfane. Generatorer kan ikke ligge i gr.State (den kopierer verdiene),
 # så de lagres her med Gradios økt-ID som nøkkel.
 OKTER: dict[str, dict] = {}
+SPORSMAL_PER_TEMA = 15   # gir 45 kandidatbiter; flere enn det handler sjelden om temaet
+SLUTT = object()         # markerer at bakgrunnstråden ikke finner flere spørsmål
 
 
 # ---------- små HTML-hjelpere ----------
@@ -126,13 +130,43 @@ def _ny_strom(fag, tema, type_, stil):
         yield from _repetisjonsstrom(fag)
         return
     db = koble()
-    for q, bit in sporsmal_strom(fag, tema, 50, type_, stil):
+    for q, bit in sporsmal_strom(fag, tema, SPORSMAL_PER_TEMA, type_, stil):
         kilde = f"{fag}/{bit.kilde}"
         sid = lagre_sporsmal(db, fag=fag, tema=tema, ovingsmate=type_, sporsmal=q["sporsmal"],
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],
                              forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=modellnavn(),
                              kildetekst=bit.tekst)
         yield {**q, "type": type_, "tema": tema}, bit, sid, kilde
+
+
+def _start_okt(fag, tema, type_, stil) -> dict:
+    """Lager spørsmål i en bakgrunnstråd, to foran det du svarer på, så «Nytt spørsmål» går fort."""
+    okt = {"nokkel": (fag, tema, type_, stil), "ko": queue.Queue(maxsize=2), "stopp": threading.Event(),
+           "besvart": 0, "riktige": 0, "nr": 0}
+
+    def legg_i_ko(element) -> bool:
+        while not okt["stopp"].is_set():
+            try:
+                okt["ko"].put(element, timeout=1)
+                return True
+            except queue.Full:
+                continue
+        return False
+
+    def arbeid():
+        # Vent litt: skriver du et eget tema eller bytter valg, stoppes denne før den rekker å bruke modellen.
+        if okt["stopp"].wait(1.5):
+            return
+        try:
+            for element in _ny_strom(fag, tema, type_, stil):
+                if okt["stopp"].is_set() or not legg_i_ko(element):
+                    return
+        except Exception as feil:          # f.eks. Ollama som ikke svarer: vis det i stedet for å henge
+            print(f"Feil under laging av spørsmål: {feil}")
+        legg_i_ko(SLUTT)
+
+    threading.Thread(target=arbeid, daemon=True).start()
+    return okt
 
 
 def _poeng(okt) -> str:
@@ -155,6 +189,16 @@ def _melding(tekst) -> str:
     return f'<div class="tom">{escape(tekst)}</div>'
 
 
+def forbered_quiz(fag, tema, type_, stil, request: gr.Request):
+    """Begynner å lage spørsmål så snart temaet er valgt, før du trykker «Nytt spørsmål»."""
+    tema = (tema or "").strip()
+    okt = OKTER.get(request.session_hash)
+    if (tema or type_ == "repetisjon") and not (okt and okt["nokkel"] == (fag, tema, type_, stil)):
+        if okt:
+            okt["stopp"].set()
+        OKTER[request.session_hash] = _start_okt(fag, tema, type_, stil)
+
+
 def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
     skjul = gr.update(visible=False)
     tema = (tema or "").strip()
@@ -163,15 +207,17 @@ def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
     okt = OKTER.get(request.session_hash)
     nokkel = (fag, tema, type_, stil)
     if not okt or okt["nokkel"] != nokkel:
-        okt = OKTER[request.session_hash] = {"nokkel": nokkel, "strom": _ny_strom(fag, tema, type_, stil),
-                                             "besvart": 0, "riktige": 0, "nr": 0}
-    try:
-        q, bit, sid, kilde = next(okt["strom"])
-    except StopIteration:
+        if okt:
+            okt["stopp"].set()             # gammel økt: stopp bakgrunnstråden
+        okt = OKTER[request.session_hash] = _start_okt(fag, tema, type_, stil)
+    element = okt["ko"].get()
+    if element is SLUTT:
+        okt["stopp"].set()
         okt["nokkel"] = None
         tekst = ("Ingen spørsmål skal repeteres nå. 🎉" if type_ == "repetisjon"
                  else f"Fant ikke flere gode spørsmål om «{tema}». Prøv et bredere tema.")
         return _melding(tekst), skjul, skjul, "", _poeng(okt)
+    q, bit, sid, kilde = element
     okt.update(q=q, bit=bit, sid=sid, kilde=kilde, nr=okt["nr"] + 1)
     kort = _sporsmalskort(fag, q, okt["nr"])
     if q["type"] == "flervalg":
@@ -512,6 +558,9 @@ def lag_app() -> gr.Blocks:
         tom_knapp.click(lambda: ([], []), outputs=[chat, samtale])
 
         quiz_fag.input(lambda f: gr.update(choices=temaer_for(f, med_alle=False), value=None), quiz_fag, quiz_tema)
+        quiz_valg_inn = [quiz_fag, quiz_tema, quiz_type, quiz_stil]
+        for felt in (quiz_tema, quiz_type, quiz_stil):
+            felt.change(forbered_quiz, quiz_valg_inn, None, show_progress="hidden")
         nytt_knapp.click(nytt_sporsmal, [quiz_fag, quiz_tema, quiz_type, quiz_stil],
                          [quiz_sporsmal, quiz_valg, quiz_tekst, quiz_resultat, poeng])
         quiz_type.change(lambda t: gr.update(visible=t == "kortsvar"), quiz_type, quiz_stil)
