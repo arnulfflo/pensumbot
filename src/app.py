@@ -52,6 +52,14 @@ def kort_tema(tema: str) -> str:
     return tema.split(" (")[0]
 
 
+ALLE_KORT = "Alle kort som skal repeteres"
+
+
+def temaer_for(fag: str) -> list[str]:
+    """Temaene fra config/eksamener.yaml, til rullemenyen på flashcards."""
+    return [ALLE_KORT, *last_eksamener()[1].get(fag, [])]
+
+
 def topp() -> str:
     datoer, _, _ = last_eksamener()
     eks = "".join(
@@ -223,7 +231,7 @@ def _kort(kid):
 
 def _flashcard(ko, vis_svar=False) -> str:
     if not ko:
-        return _melding("Ingen kort å øve på nå. Skriv et tema og trykk «Start» for å lage nye kort.")
+        return _melding("Ingen kort å øve på nå. Velg et tema og trykk «Start» for å lage nye kort.")
     k = _kort(ko[0])
     svar = (f'<div class="svar">{escape(k["fasit"])}<div class="kilde">Kilde: {escape(k["kilde"])}</div></div>'
             if vis_svar else "")
@@ -234,6 +242,7 @@ def _flashcard(ko, vis_svar=False) -> str:
 
 def hent_kort(fag, tema, nye):
     db = koble()
+    tema = "" if not tema or tema == ALLE_KORT else tema
     if nye and tema.strip():
         lag_nye_kort(db, fag, tema, int(nye))
     ko = [k["id"] for k in forfalte(db, fag, tema.strip() or None)]
@@ -301,7 +310,7 @@ def ov_paa_blokk(blokk_id):
     b = koble().execute("SELECT * FROM plan WHERE id = ?", (blokk_id,)).fetchone()
     if b["ovingsmate"] == "flashcards":
         return (gr.Tabs(selected="kort"), gr.update(), gr.update(), gr.update(), gr.update(),
-                gr.update(value=b["fag"]), gr.update(value=b["tema"]))
+                gr.update(value=b["fag"]), gr.update(choices=temaer_for(b["fag"]), value=b["tema"]))
     type_ = "flervalg" if b["ovingsmate"] == "flervalg" else "kortsvar"
     stil = "blandet" if type_ == "kortsvar" else "forklar"
     return (gr.Tabs(selected="quiz"), gr.update(value=b["fag"]), gr.update(value=b["tema"]),
@@ -421,7 +430,7 @@ def lag_app() -> gr.Blocks:
                                 ov = gr.Button("Øv nå", variant="primary", size="sm", scale=0, min_width=84, elem_classes="blokk-knapp")
                                 ferdig = gr.Button("✓ Ferdig", size="sm", scale=0, min_width=84, elem_classes="blokk-knapp")
                                 ov.click(lambda bid=b["id"]: ov_paa_blokk(bid), None,
-                                         [faner, quiz_fag, quiz_tema, quiz_type, quiz_stil, kort_fag, kort_tema])
+                                         [faner, quiz_fag, quiz_tema, quiz_type, quiz_stil, kort_fag, kort_temavalg])
                                 ferdig.click(lambda bid=b["id"]: fullfort(bid), None, plan_ut)
 
                 with gr.Row():
@@ -468,7 +477,9 @@ def lag_app() -> gr.Blocks:
                 with gr.Group(elem_classes="panel"):
                     with gr.Row():
                         kort_fag = gr.Dropdown(FAG, value=standardfag(), label="Fag")
-                        kort_tema = gr.Textbox(label="Tema (tomt = alle kort som skal repeteres)")
+                        kort_temavalg = gr.Dropdown(temaer_for(standardfag()), value=ALLE_KORT, label="Tema",
+                                                    allow_custom_value=True, scale=2,
+                                                    info="Velg fra listen, eller skriv ditt eget tema")
                         kort_nye = gr.Number(value=6, precision=0, label="Lag nye kort først")
                 hent_knapp = gr.Button("Start", variant="primary")
                 flashcard = gr.HTML(_melding("Velg fag og tema, og trykk «Start»."))
@@ -500,7 +511,9 @@ def lag_app() -> gr.Blocks:
         quiz_type.change(lambda t: gr.update(visible=t == "kortsvar"), quiz_type, quiz_stil)
         svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst], [quiz_resultat, poeng])
 
-        hent_knapp.click(hent_kort, [kort_fag, kort_tema, kort_nye], [ko, flashcard, snu_rad, vurder_rad])
+        # .input (ikke .change): bare når du selv bytter fag, så «Øv nå» ikke nullstiller temaet
+        kort_fag.input(lambda f: gr.update(choices=temaer_for(f), value=ALLE_KORT), kort_fag, kort_temavalg)
+        hent_knapp.click(hent_kort, [kort_fag, kort_temavalg, kort_nye], [ko, flashcard, snu_rad, vurder_rad])
         snu_knapp.click(snu, ko, [flashcard, snu_rad, vurder_rad])
         for knapp in vurderingsknapper:
             knapp.click(vurder_kort, [knapp, ko], [ko, flashcard, snu_rad, vurder_rad])
