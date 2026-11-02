@@ -1,0 +1,107 @@
+/* Utseendet til Pensumboten (src/app.py). Fargene per fag settes i FARGER i app.py. */
+
+.gradio-container { width: 100% !important; max-width: 1080px !important; margin: 0 auto !important; }
+.gradio-container > .main, .gradio-container > .main > .wrap { width: 100% !important; }
+footer { display: none !important; }
+
+/* ---------- topp ---------- */
+.topp { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 2px 4px; }
+.topp h1 { margin: 0; font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em; }
+.topp .under { color: var(--body-text-color-subdued); font-size: 0.9rem; }
+.nedtelling { display: flex; flex-wrap: wrap; gap: 8px; }
+.nedtelling .eks { border: 1px solid var(--border-color-primary); border-left: 4px solid var(--fag); border-radius: 10px;
+                   padding: 6px 12px; background: var(--block-background-fill); font-size: 0.85rem; line-height: 1.25; }
+.nedtelling .eks b { display: block; font-size: 1.05rem; }
+
+/* ---------- små byggeklosser ---------- */
+.merke { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+         letter-spacing: 0.02em; color: #fff; background: var(--fag); white-space: nowrap; }
+.merke.lys { background: color-mix(in srgb, var(--fag) 16%, transparent); color: var(--fag); }
+.tom { padding: 28px; text-align: center; color: var(--body-text-color-subdued); border: 1px dashed var(--border-color-primary);
+       border-radius: 14px; }
+.overskrift { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; margin: 4px 0 2px; }
+.overskrift h2 { margin: 0; font-size: 1.3rem; }
+.overskrift .info { color: var(--body-text-color-subdued); }
+.varsel { display: inline-block; padding: 3px 10px; border-radius: 8px; background: color-mix(in srgb, #e5484d 14%, transparent);
+          color: #e5484d; font-size: 0.85rem; font-weight: 600; }
+
+/* ---------- dagsplan ---------- */
+.blokk-rad { align-items: center !important; gap: 8px !important; margin-bottom: -18px; }
+.blokk { display: flex; align-items: center; gap: 14px; padding: 11px 16px; border-radius: 14px;
+         background: var(--block-background-fill); border: 1px solid var(--border-color-primary); border-left: 6px solid var(--fag); }
+.blokk .ikon { font-size: 1.5rem; width: 2rem; text-align: center; }
+.blokk .tekst { flex: 1; min-width: 0; }
+.blokk .tema { font-weight: 600; font-size: 1rem; }
+.blokk .meta { color: var(--body-text-color-subdued); font-size: 0.85rem; margin-top: 3px; }
+.blokk.fullfort { opacity: 0.55; }
+.blokk.fullfort .tema { text-decoration: line-through; }
+.blokk .status { font-size: 0.85rem; font-weight: 600; color: var(--fag); }
+.blokk-knapp { height: 38px !important; }
+
+.uke { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 760px) { .uke { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.dag { border: 1px solid var(--border-color-primary); border-radius: 12px; padding: 10px; background: var(--block-background-fill); }
+.dag .navn { font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
+.dag .navn span { color: var(--body-text-color-subdued); font-weight: 400; }
+.dag .bit { font-size: 0.72rem; padding: 3px 6px; margin-bottom: 4px; border-radius: 6px; line-height: 1.25;
+            background: color-mix(in srgb, var(--fag) 14%, transparent); border-left: 3px solid var(--fag);
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------- quiz og flashcards ---------- */
+.kort { border-radius: 18px; padding: 26px 28px; background: var(--block-background-fill);
+        border: 1px solid var(--border-color-primary); border-top: 6px solid var(--fag);
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.06); }
+.kort .topplinje { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px;
+                   color: var(--body-text-color-subdued); font-size: 0.85rem; }
+.kort .sporsmal { font-size: 1.25rem; font-weight: 600; line-height: 1.45; }
+.flashcard { min-height: 260px; display: flex; flex-direction: column; }
+.flashcard .sporsmal { font-size: 1.45rem; text-align: center; margin: auto 0; padding: 18px 0; }
+.flashcard .svar { border-top: 1px dashed var(--border-color-primary); padding-top: 16px; font-size: 1.1rem;
+                   line-height: 1.5; text-align: center; }
+.flashcard .kilde, .tilbakemelding .kilde { color: var(--body-text-color-subdued); font-size: 0.8rem; margin-top: 12px; }
+
+.tilbakemelding { border-radius: 14px; padding: 16px 20px; line-height: 1.5;
+                  border: 1px solid var(--border-color-primary); background: var(--block-background-fill); }
+.tilbakemelding.riktig { border-color: #2fa36b; background: color-mix(in srgb, #2fa36b 10%, transparent); }
+.tilbakemelding.feil { border-color: #e5484d; background: color-mix(in srgb, #e5484d 9%, transparent); }
+.tilbakemelding .dom { font-weight: 700; font-size: 1.1rem; margin-bottom: 6px; }
+.tilbakemelding ul { margin: 6px 0 6px 2px; padding-left: 18px; }
+.tilbakemelding .modellsvar { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--background-fill-secondary); }
+.tilbakemelding .notis { color: var(--body-text-color-subdued); font-size: 0.8rem; font-style: italic; }
+
+.poeng { display: flex; gap: 10px; flex-wrap: wrap; }
+.poeng div { padding: 6px 14px; border-radius: 10px; background: var(--background-fill-secondary); font-size: 0.9rem; }
+.poeng b { font-size: 1.05rem; }
+
+.panel { border-radius: 14px !important; }
+.svaralternativer label { padding: 12px 14px !important; border-radius: 10px !important; font-size: 1rem !important; }
+
+/* vurderingsknappene på flashcards */
+.v-igjen { background: #e5484d !important; color: #fff !important; border: none !important; }
+.v-vanskelig { background: #f08c2c !important; color: #fff !important; border: none !important; }
+.v-greit { background: #2fa36b !important; color: #fff !important; border: none !important; }
+.v-lett { background: #3b82f6 !important; color: #fff !important; border: none !important; }
+.v-igjen, .v-vanskelig, .v-greit, .v-lett { font-weight: 600 !important; }
+
+/* ---------- mestring ---------- */
+.fliser { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.flis { border-radius: 14px; padding: 14px 16px; background: var(--block-background-fill);
+        border: 1px solid var(--border-color-primary); border-top: 5px solid var(--fag); }
+.flis .tall { font-size: 1.8rem; font-weight: 700; line-height: 1.1; }
+.flis .tekst { color: var(--body-text-color-subdued); font-size: 0.85rem; }
+.fagseksjon { margin-bottom: 18px; }
+.fagseksjon h3 { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.temarad { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.6fr) 3.2rem 5.5rem; align-items: center;
+           gap: 12px; padding: 7px 4px; border-bottom: 1px solid var(--border-color-primary); font-size: 0.9rem; }
+@media (max-width: 640px) { .temarad { grid-template-columns: minmax(0, 1fr) 6rem 3rem; } .temarad .sist { display: none; } }
+.stolpe { height: 9px; border-radius: 99px; background: var(--background-fill-secondary); overflow: hidden; }
+.stolpe div { height: 100%; border-radius: 99px; background: var(--fag); }
+.temarad .prosent { text-align: right; font-weight: 600; }
+.temarad .sist { color: var(--body-text-color-subdued); font-size: 0.8rem; text-align: right; }
+.temarad.uovd { color: var(--body-text-color-subdued); }
+
+/* ---------- chat ---------- */
+.chat details { margin-top: 8px; }
+.chat summary { cursor: pointer; color: var(--body-text-color-subdued); font-size: 0.85rem; }
+.chat blockquote { font-size: 0.85rem; margin: 6px 0; }
+@media (max-width: 760px) { .blokk-rad { margin-bottom: 4px; } }
