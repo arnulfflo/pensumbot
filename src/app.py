@@ -55,9 +55,10 @@ def kort_tema(tema: str) -> str:
 ALLE_KORT = "Alle kort som skal repeteres"
 
 
-def temaer_for(fag: str) -> list[str]:
-    """Temaene fra config/eksamener.yaml, til rullemenyen på flashcards."""
-    return [ALLE_KORT, *last_eksamener()[1].get(fag, [])]
+def temaer_for(fag: str, med_alle: bool = True) -> list[str]:
+    """Temaene fra config/eksamener.yaml, til rullemenyene på quiz og flashcards."""
+    temaer = last_eksamener()[1].get(fag, [])
+    return [ALLE_KORT, *temaer] if med_alle else temaer
 
 
 def topp() -> str:
@@ -156,8 +157,9 @@ def _melding(tekst) -> str:
 
 def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
     skjul = gr.update(visible=False)
-    if type_ != "repetisjon" and not tema.strip():
-        return _melding("Skriv et tema først, f.eks. «prisstrategi» eller «kap 9»."), skjul, skjul, "", ""
+    tema = (tema or "").strip()
+    if type_ != "repetisjon" and not tema:
+        return _melding("Velg et tema først, eller skriv ditt eget, f.eks. «prisstrategi»."), skjul, skjul, "", ""
     okt = OKTER.get(request.session_hash)
     nokkel = (fag, tema, type_, stil)
     if not okt or okt["nokkel"] != nokkel:
@@ -313,7 +315,8 @@ def ov_paa_blokk(blokk_id):
                 gr.update(value=b["fag"]), gr.update(choices=temaer_for(b["fag"]), value=b["tema"]))
     type_ = "flervalg" if b["ovingsmate"] == "flervalg" else "kortsvar"
     stil = "blandet" if type_ == "kortsvar" else "forklar"
-    return (gr.Tabs(selected="quiz"), gr.update(value=b["fag"]), gr.update(value=b["tema"]),
+    return (gr.Tabs(selected="quiz"), gr.update(value=b["fag"]),
+            gr.update(choices=temaer_for(b["fag"], med_alle=False), value=b["tema"]),
             gr.update(value=type_), gr.update(value=stil), gr.update(), gr.update())
 
 
@@ -459,7 +462,9 @@ def lag_app() -> gr.Blocks:
                 with gr.Group(elem_classes="panel"):
                     with gr.Row():
                         quiz_fag = gr.Dropdown(FAG, value=standardfag(), label="Fag")
-                        quiz_tema = gr.Textbox(label="Tema", placeholder="prisstrategi")
+                        quiz_tema = gr.Dropdown(temaer_for(standardfag(), med_alle=False), value=None, label="Tema",
+                                                allow_custom_value=True, scale=2,
+                                                info="Velg fra listen, eller skriv ditt eget tema")
                         quiz_type = gr.Radio(["flervalg", "kortsvar", "repetisjon"], value="flervalg", label="Type",
                                              scale=2)
                         quiz_stil = gr.Dropdown([*STILER, "blandet"], value="forklar", label="Stil", visible=False)
@@ -506,6 +511,7 @@ def lag_app() -> gr.Blocks:
         spor_tekst.submit(spor, [spor_tekst, samtale, spor_fag, spor_eksempel], spor_ut)
         tom_knapp.click(lambda: ([], []), outputs=[chat, samtale])
 
+        quiz_fag.input(lambda f: gr.update(choices=temaer_for(f, med_alle=False), value=None), quiz_fag, quiz_tema)
         nytt_knapp.click(nytt_sporsmal, [quiz_fag, quiz_tema, quiz_type, quiz_stil],
                          [quiz_sporsmal, quiz_valg, quiz_tekst, quiz_resultat, poeng])
         quiz_type.change(lambda t: gr.update(visible=t == "kortsvar"), quiz_type, quiz_stil)
