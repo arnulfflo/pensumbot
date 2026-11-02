@@ -18,7 +18,7 @@ from src.henting import hent
 from src.innlesing import alle_fag, standardfag
 from src.konfig import last_innstillinger
 from src.llm import generer
-from src.svar import svar_pa, vis
+from src.svar import selvstendig_sporsmal, svar_pa, vis
 
 HJELP = """Kommandoer:
   /fag <fag>     bytt fag, f.eks. /fag MRK1001  (fag: {fag})
@@ -58,6 +58,7 @@ def main(fag: str):
 
     forrige = None
     eksempelsvar = False
+    utveksling = []          # [(spørsmål, svar)], så «forklar enklere» forstås
     while True:
         try:
             linje = input(f"{fag} > ").strip()
@@ -77,6 +78,7 @@ def main(fag: str):
             elif kommando == "/fag":
                 if argument.upper() in alle_fag():
                     fag = argument.upper()
+                    utveksling = []
                     print(f"Bytter til {fag}.\n")
                 else:
                     print(f"Ukjent fag. Velg mellom: {', '.join(alle_fag())}\n")
@@ -91,7 +93,11 @@ def main(fag: str):
 
         start = time.time()
         try:
-            forrige = svar_pa(linje, fag=fag, med_eksempelsvar=eksempelsvar)
+            sporsmal = selvstendig_sporsmal(linje, utveksling)
+            if sporsmal.strip().lower() != linje.strip().lower():
+                print(f"(tolket som: {sporsmal})")
+            forrige = svar_pa(sporsmal, fag=fag, med_eksempelsvar=eksempelsvar)
+            utveksling.append((sporsmal, forrige.tekst))
         except TimeoutError:
             print("Språkmodellen brukte for lang tid. Prøv igjen, gjerne med et kortere spørsmål.\n")
             continue

@@ -27,6 +27,31 @@ Regler:
 5. Svar kort og presist, med egne ord."""
 
 
+SYSTEM_OMSKRIV = """Du får en samtale mellom en student og en studieassistent, og et nytt spørsmål fra studenten.
+Skriv om det nye spørsmålet slik at det kan forstås uten samtalen: bytt ut ord som «det», «den», «dette»,
+«de» og «hva med ...» med det de viser til i samtalen.
+Behold ønsker om form, som «enklere», «med et eksempel» eller «i punkter».
+Er spørsmålet allerede forståelig alene, skriv det uendret.
+Svar bare med det omskrevne spørsmålet på norsk, uten forklaring og uten anførselstegn."""
+
+
+def selvstendig_sporsmal(sporsmal: str, historikk: list[tuple[str, str]]) -> str:
+    """Gjør et oppfølgingsspørsmål («forklar enklere», «hva med pull?») om til et spørsmål som kan
+    brukes til å søke i pensum. historikk: [(spørsmål, svartekst), ...], eldste først."""
+    if not historikk:
+        return sporsmal
+    linjer = []
+    for tidligere, svar in historikk[-3:]:
+        svar = re.sub(r"\[\d+\]", "", svar)[:500]      # numrene [1] betyr ingenting her
+        linjer.append(f"Student: {tidligere}\nAssistent: {svar}")
+    try:
+        ny = generer(SYSTEM_OMSKRIV, "Samtale:\n" + "\n\n".join(linjer) + f"\n\nNytt spørsmål: {sporsmal}")
+    except TimeoutError:
+        return sporsmal
+    ny = ny.strip().strip('"«»').splitlines()[0].strip() if ny.strip() else ""
+    return ny or sporsmal
+
+
 @dataclass
 class Svar:
     sporsmal: str

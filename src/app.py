@@ -24,7 +24,7 @@ from src.llm import generer
 from src.planlegger import UKEDAGER, angre_hopp_over, blokker_for, hopp_over, lag_og_lagre, last_eksamener, marker_fullfort
 from src.quiz import modellnavn, sporsmal_strom
 from src.repetisjon import forfalte_sporsmal, lagre_resultat
-from src.svar import svar_pa
+from src.svar import selvstendig_sporsmal, svar_pa
 
 FAG = alle_fag()
 BOKSTAVER = "ABCD"
@@ -77,8 +77,8 @@ def topp() -> str:
 
 # ---------- Spør ----------
 
-def svar_som_markdown(s) -> str:
-    deler = [s.tekst]
+def svar_som_markdown(s, tolket: str | None = None) -> str:
+    deler = [f"<small><i>Tolket som: {escape(tolket)}</i></small>\n\n" if tolket else "", s.tekst]
     if s.finnes_ikke:
         vist = s.biter[:3]
         deler.append("\n\n**Nærmeste treff i materialet:**")
@@ -94,19 +94,24 @@ def svar_som_markdown(s) -> str:
     return "".join(deler)
 
 
-def spor(melding, samtale, fag, eksempelsvar):
+def spor(melding, samtale, utveksling, fag, eksempelsvar):
+    """samtale: meldingene som vises. utveksling: [(spørsmål, svartekst)] som oppfølgingsspørsmål tolkes ut fra."""
     if not melding.strip():
-        yield samtale, samtale, melding
+        yield samtale, samtale, utveksling, melding
         return
     samtale = samtale + [{"role": "user", "content": melding},
                          {"role": "assistant", "content": f"*Leter i {fag} …*"}]
-    yield samtale, samtale, ""
+    yield samtale, samtale, utveksling, ""
     try:
-        s = svar_pa(melding, fag=fag, med_eksempelsvar=eksempelsvar)
-        samtale[-1] = {"role": "assistant", "content": svar_som_markdown(s)}
+        # «forklar enklere», «hva med pull?» → et spørsmål som kan søkes på alene
+        sporsmal = selvstendig_sporsmal(melding, utveksling)
+        s = svar_pa(sporsmal, fag=fag, med_eksempelsvar=eksempelsvar)
+        tolket = sporsmal if sporsmal.strip().lower() != melding.strip().lower() else None
+        samtale[-1] = {"role": "assistant", "content": svar_som_markdown(s, tolket)}
+        utveksling = utveksling + [(sporsmal, s.tekst)]
     except TimeoutError:
         samtale[-1] = {"role": "assistant", "content": "Språkmodellen brukte for lang tid. Prøv igjen."}
-    yield samtale, samtale, ""
+    yield samtale, samtale, utveksling, ""
 
 
 # ---------- Quiz ----------
@@ -492,12 +497,14 @@ def lag_app() -> gr.Blocks:
 
             with gr.Tab("💬 Spør", id="spor"):
                 samtale = gr.State([])
+                utveksling = gr.State([])
                 with gr.Row():
                     spor_fag = gr.Dropdown(FAG, value=standardfag(), label="Fag", scale=1)
                     spor_eksempel = gr.Checkbox(label="Ta med A-besvarelser (ikke fasit)", scale=2)
                 chat = gr.Chatbot(height=480, elem_classes="chat", show_label=False,
                                   placeholder="**Spør om hva som helst i pensumet ditt.**<br>"
-                                              "Svarene kommer bare fra dine egne filer, med kilde.")
+                                              "Svarene kommer bare fra dine egne filer, med kilde.<br>"
+                                              "Du kan følge opp: «forklar enklere», «gi et eksempel», «hva med pull?»")
                 with gr.Row():
                     spor_tekst = gr.Textbox(placeholder="Hva er en pull-strategi?", show_label=False, scale=6,
                                             container=False)
@@ -552,10 +559,11 @@ def lag_app() -> gr.Blocks:
         angre_knapp.click(angre_i_dag, outputs=plan_ut)
         forklar_knapp.click(forklar_plan, outputs=forklaring)
 
-        spor_ut = [chat, samtale, spor_tekst]
-        spor_knapp.click(spor, [spor_tekst, samtale, spor_fag, spor_eksempel], spor_ut)
-        spor_tekst.submit(spor, [spor_tekst, samtale, spor_fag, spor_eksempel], spor_ut)
-        tom_knapp.click(lambda: ([], []), outputs=[chat, samtale])
+        spor_inn = [spor_tekst, samtale, utveksling, spor_fag, spor_eksempel]
+        spor_ut = [chat, samtale, utveksling, spor_tekst]
+        spor_knapp.click(spor, spor_inn, spor_ut)
+        spor_tekst.submit(spor, spor_inn, spor_ut)
+        tom_knapp.click(lambda: ([], [], []), outputs=[chat, samtale, utveksling])
 
         quiz_fag.input(lambda f: gr.update(choices=temaer_for(f, med_alle=False), value=None), quiz_fag, quiz_tema)
         quiz_valg_inn = [quiz_fag, quiz_tema, quiz_type, quiz_stil]
