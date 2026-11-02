@@ -22,8 +22,9 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - 📈 **Mestring per tema** som oppdateres etter hvert svar og styrer planen
 - 📅 **Adaptiv eksamensplan** for flere fag samtidig, med nedtelling, prioritering og forklaring
 - ⚡ **Neste spørsmål lages i bakgrunnen** mens du svarer, så quizen går nesten momentant
+- 🤖 **BØA-agent** som selv velger når den skal søke i pensum og regne, mens koden kontrollerer hvert tall
 - 🔒 **100 % lokalt og privat**, og ett konfigurasjonsvalg fra å bruke Claude i stedet
-- 🧪 **Målt kvalitet** med eget testsett og 32 automatiske tester
+- 🧪 **Målt kvalitet** med eget testsett og 46 automatiske tester
 
 ## 🧩 Funksjoner
 
@@ -33,6 +34,16 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - Følger ønsket form: **enklere** språk, **punktliste** eller **eksempel**, men fortsatt bare fra pensum
 - Kildeliste fra metadata, og hele kildeteksten kan foldes ut under hvert svar
 - A-besvarelser holdes utenfor som standard (de er ikke fasit), men kan slås på
+
+### 🤖 BØA-agenten (bedriftsøkonomi uten kalkulator)
+I BØA-chatten svarer en **agent**: språkmodellen bestemmer selv hvilke verktøy den bruker og i hvilken rekkefølge, i en løkke til oppgaven er løst.
+- **Verktøy:** `sok_i_pensum` (samme søk og reranker som chatten) og `regn_ut`, en trygg kalkulator som leser uttrykket som et syntakstre og aldri kjører kode
+- **Kontroll i koden før svaret vises:** hvert regnestykke i svaret regnes ut på nytt i Python, hvert tall må komme fra oppgaven, pensum eller en utregning, og hver kilde må finnes. Ellers sendes agenten tilbake med beskjed om hva som er feil
+- Verktøykall som den lille modellen skriver som tekst i stedet for å kalle, fanges opp og kjøres likevel
+- «Slik jobbet agenten» viser hvert steg: søk, utregninger og kontroller
+- Virker med både Ollama og Claude (verktøybruk via `chat_med_verktoy` i `src/llm.py`)
+
+Ærlig status med den lille lokale modellen: 4 av 5 testoppgaver riktige. Den femte (nåverdi) regnet modellen feil, og kontrollen merket svaret i stedet for å vise et feil tall som sikkert. Koden kan sjekke regning, men ikke om metoden er riktig, så agenten er laget for å bli mye sterkere med Claude.
 
 <p>
   <img src="docs/bilder/chat.png" width="49%" alt="Chat med kilder og oppfølgingsspørsmål">
@@ -138,7 +149,7 @@ Målt mot håndlagde testsett (`tester/testsett_*.yaml`) med `uv run python -m s
 | Organisasjon og ledelse | 14 av 15 | 0,882 | 3 av 3 | 0 |
 | Markedsføring | 15 av 15 | 0,967 | 3 av 3 | 0 |
 
-Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **32 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen og sikkerhetskopien. Hver endring testes også i nettleseren før den committes.
+Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **46 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien og agentens kalkulator og kontroller (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
 
 ## 🛠️ Teknologi
 
@@ -159,7 +170,7 @@ Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue O
 | **PyYAML** · **python-dotenv** | Innstillinger, eksamensdatoer og API-nøkkel |
 | **pytest** | Enhetstester |
 
-Rundt 3 300 linjer Python fordelt på 18 moduler. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
+Rundt 3 700 linjer Python fordelt på 19 moduler. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
 
 ## 🚀 Kom i gang
 

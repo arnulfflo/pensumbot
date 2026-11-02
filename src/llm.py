@@ -87,6 +87,82 @@ def _anthropic(system: str, melding: str, innst: dict) -> str:
     return "".join(blokk.text for blokk in svar.content if blokk.type == "text")
 
 
+# ---------- verktøybruk (agenter) ----------
+#
+# En agent er en løkke der modellen selv velger verktøy. Samtalen lagres i et nøytralt format,
+# så agenten virker likt med Ollama og Claude:
+#   {"rolle": "bruker", "tekst": ...}
+#   {"rolle": "assistent", "tekst": ..., "kall": [{"id", "navn", "argumenter"}]}
+#   {"rolle": "verktoy", "id": ..., "navn": ..., "resultat": ...}
+# Verktøy beskrives som {"navn", "beskrivelse", "parametre": JSON-skjema}.
+
+def chat_med_verktoy(system: str, samtale: list[dict], verktoy: list[dict]) -> dict:
+    """Ett steg i en agent. Returnerer {"tekst": ..., "kall": [...]}; tom «kall» betyr at modellen vil svare."""
+    innst = last_innstillinger()["sprakmodell"]
+    if innst["leverandor"] == "ollama":
+        return _ollama_verktoy(system, samtale, verktoy, innst)
+    if innst["leverandor"] == "anthropic":
+        return _anthropic_verktoy(system, samtale, verktoy, innst)
+    raise ValueError(f"Ukjent leverandør i innstillinger.yaml: {innst['leverandor']!r}")
+
+
+def _ollama_verktoy(system, samtale, verktoy, innst) -> dict:
+    import httpx
+    import ollama
+
+    meldinger = [{"role": "system", "content": system}]
+    for m in samtale:
+        if m["rolle"] == "bruker":
+            meldinger.append({"role": "user", "content": m["tekst"]})
+        elif m["rolle"] == "assistent":
+            meldinger.append({"role": "assistant", "content": m["tekst"] or "",
+                              "tool_calls": [{"function": {"name": k["navn"], "arguments": k["argumenter"]}}
+                                             for k in m["kall"]]})
+        else:
+            meldinger.append({"role": "tool", "content": m["resultat"], "tool_name": m["navn"]})
+    klient = ollama.Client(timeout=innst["ollama"].get("tidsgrense_sekunder", 90))
+    try:
+        svar = klient.chat(
+            model=innst["ollama"]["modell"], messages=meldinger,
+            tools=[{"type": "function", "function": {"name": v["navn"], "description": v["beskrivelse"],
+                                                     "parameters": v["parametre"]}} for v in verktoy],
+            options={"temperature": innst["temperatur"], "num_predict": innst["ollama"].get("maks_tokens", 1500)},
+            think=innst["ollama"].get("tenkning"),
+        )
+    except httpx.TimeoutException:
+        raise TimeoutError(f"{innst['ollama']['modell']} svarte ikke innen tidsgrensen") from None
+    kall = [{"id": f"kall{i}", "navn": k.function.name, "argumenter": dict(k.function.arguments or {})}
+            for i, k in enumerate(svar.message.tool_calls or [])]
+    return {"tekst": svar.message.content or "", "kall": kall}
+
+
+def _anthropic_verktoy(system, samtale, verktoy, innst) -> dict:
+    import anthropic
+
+    meldinger = []
+    for m in samtale:
+        if m["rolle"] == "bruker":
+            meldinger.append({"role": "user", "content": m["tekst"]})
+        elif m["rolle"] == "assistent":
+            innhold = [{"type": "text", "text": m["tekst"]}] if m["tekst"] else []
+            innhold += [{"type": "tool_use", "id": k["id"], "name": k["navn"], "input": k["argumenter"]} for k in m["kall"]]
+            meldinger.append({"role": "assistant", "content": innhold})
+        else:
+            blokk = {"type": "tool_result", "tool_use_id": m["id"], "content": m["resultat"]}
+            # Claude vil ha alle verktøysvar etter ett steg samlet i én brukermelding.
+            if meldinger and meldinger[-1]["role"] == "user" and isinstance(meldinger[-1]["content"], list):
+                meldinger[-1]["content"].append(blokk)
+            else:
+                meldinger.append({"role": "user", "content": [blokk]})
+    svar = anthropic.Anthropic().messages.create(
+        model=innst["anthropic"]["modell"], max_tokens=innst["anthropic"]["maks_tokens"], system=system,
+        messages=meldinger,
+        tools=[{"name": v["navn"], "description": v["beskrivelse"], "input_schema": v["parametre"]} for v in verktoy],
+    )
+    return {"tekst": "".join(b.text for b in svar.content if b.type == "text"),
+            "kall": [{"id": b.id, "navn": b.name, "argumenter": dict(b.input)} for b in svar.content if b.type == "tool_use"]}
+
+
 if __name__ == "__main__":
     melding = " ".join(sys.argv[1:]) or "Si hei på norsk, i én setning."
     innst = last_innstillinger()["sprakmodell"]

@@ -25,6 +25,7 @@ from src.llm import generer
 from src.planlegger import UKEDAGER, angre_hopp_over, blokker_for, hopp_over, lag_og_lagre, last_eksamener, marker_fullfort
 from src.quiz import modellnavn, sporsmal_strom
 from src.repetisjon import forfalte_sporsmal, lagre_resultat
+from src.agent import FAG as AGENTFAG, kildeliste as agentkilder, kjor_agent
 from src.svar import selvstendig_sporsmal, svar_pa
 
 FAG = alle_fag()
@@ -95,8 +96,46 @@ def svar_som_markdown(s, tolket: str | None = None) -> str:
     return "".join(deler)
 
 
-def spor(melding, samtale, utveksling, fag, eksempelsvar):
-    """samtale: meldingene som vises. utveksling: [(spørsmål, svartekst)] som oppfølgingsspørsmål tolkes ut fra."""
+STEGTEKST = {"sok_i_pensum": "🔎 Søkte i pensum: «{inn}» → {ut}", "regn_ut": "🧮 Regnet ut: {ut}",
+             "kontrollregning": "✔ Koden kontrollregnet: {ut}", "kontroll": "↩ Sendt tilbake: {ut}"}
+
+
+def _agentsteg(steg) -> str:
+    return "\n".join(f"{nr}. " + STEGTEKST.get(st.verktoy, "{ut}").format(inn=escape(st.inn[:120]), ut=escape(st.ut))
+                     for nr, st in enumerate(steg, start=1))
+
+
+def agent_som_markdown(svar, tolket: str | None = None) -> str:
+    deler = [f"<small><i>Tolket som: {escape(tolket)}</i></small>\n\n" if tolket else "", svar.tekst]
+    if kilder := agentkilder(svar):
+        deler.append("\n\n**Kilder:**" + "".join(f"\n- {k}" for k in kilder))
+    deler.append(f"\n\n<details><summary>Slik jobbet agenten ({len(svar.steg)} steg)</summary>\n\n"
+                 f"{_agentsteg(svar.steg)}\n\n</details>")
+    return "".join(deler)
+
+
+def _spor_agent(sporsmal, samtale, tolket):
+    """Kjører BØA-agenten i en egen tråd og viser stegene etter hvert som de kommer."""
+    steg, ferdig = [], {}
+    trad = threading.Thread(target=lambda: ferdig.update(svar=kjor_agent(sporsmal, steg.append)), daemon=True)
+    trad.start()
+    vist = -1
+    while trad.is_alive():
+        if len(steg) != vist:
+            vist = len(steg)
+            samtale[-1] = {"role": "assistant", "content": "*BØA-agenten jobber …*\n\n" + _agentsteg(steg)}
+            yield
+        trad.join(0.3)
+    svar = ferdig.get("svar")
+    samtale[-1] = {"role": "assistant", "content": agent_som_markdown(svar, tolket) if svar
+                   else "Agenten stoppet uventet. Prøv igjen."}
+    yield svar
+
+
+def spor(melding, samtale, utveksling, fag, eksempelsvar, agent=True):
+    """samtale: meldingene som vises. utveksling: [(spørsmål, svartekst)] som oppfølgingsspørsmål tolkes ut fra.
+
+    For BØA brukes agenten (søk + kalkulator) når «agent» er på."""
     if not melding.strip():
         yield samtale, samtale, utveksling, melding
         return
@@ -106,10 +145,16 @@ def spor(melding, samtale, utveksling, fag, eksempelsvar):
     try:
         # «forklar enklere», «hva med pull?» → et spørsmål som kan søkes på alene
         sporsmal = selvstendig_sporsmal(melding, utveksling)
-        s = svar_pa(sporsmal, fag=fag, med_eksempelsvar=eksempelsvar)
         tolket = sporsmal if sporsmal.strip().lower() != melding.strip().lower() else None
-        samtale[-1] = {"role": "assistant", "content": svar_som_markdown(s, tolket)}
-        utveksling = utveksling + [(sporsmal, s.tekst)]
+        if agent and fag == AGENTFAG:
+            for svar in _spor_agent(sporsmal, samtale, tolket):
+                yield samtale, samtale, utveksling, ""
+            if svar:
+                utveksling = utveksling + [(sporsmal, svar.tekst)]
+        else:
+            s = svar_pa(sporsmal, fag=fag, med_eksempelsvar=eksempelsvar)
+            samtale[-1] = {"role": "assistant", "content": svar_som_markdown(s, tolket)}
+            utveksling = utveksling + [(sporsmal, s.tekst)]
     except TimeoutError:
         samtale[-1] = {"role": "assistant", "content": "Språkmodellen brukte for lang tid. Prøv igjen."}
     yield samtale, samtale, utveksling, ""
@@ -581,6 +626,8 @@ def lag_app() -> gr.Blocks:
                 with gr.Row():
                     spor_fag = gr.Dropdown(FAG, value=standardfag(), label="Fag", scale=1)
                     spor_eksempel = gr.Checkbox(label="Ta med A-besvarelser (ikke fasit)", scale=2)
+                    spor_agent = gr.Checkbox(label="BØA-agent: søker i pensum og regner med kalkulator", value=True,
+                                             scale=2, visible=standardfag() == AGENTFAG)
                 chat = gr.Chatbot(height=480, elem_classes="chat", show_label=False,
                                   placeholder="**Spør om hva som helst i pensumet ditt.**<br>"
                                               "Svarene kommer bare fra dine egne filer, med kilde.<br>"
@@ -641,7 +688,8 @@ def lag_app() -> gr.Blocks:
         angre_knapp.click(angre_i_dag, outputs=plan_ut)
         forklar_knapp.click(forklar_plan, outputs=forklaring)
 
-        spor_inn = [spor_tekst, samtale, utveksling, spor_fag, spor_eksempel]
+        spor_inn = [spor_tekst, samtale, utveksling, spor_fag, spor_eksempel, spor_agent]
+        spor_fag.change(lambda f: gr.update(visible=f == AGENTFAG), spor_fag, spor_agent)
         spor_ut = [chat, samtale, utveksling, spor_tekst]
         spor_knapp.click(spor, spor_inn, spor_ut)
         spor_tekst.submit(spor, spor_inn, spor_ut)
