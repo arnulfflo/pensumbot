@@ -207,6 +207,18 @@ def ukjente_tall(svar: Agentsvar, tekst: str) -> list[float]:
                   if not any(abs(x - k) <= 1e-6 * max(1, abs(k)) for k in kjente))
 
 
+_LATEX = {r"\times": "×", r"\cdot": "·", r"\div": "/", r"\approx": "≈", r"\%": "%", r"\,": " "}
+
+
+def uten_latex(tekst: str) -> str:
+    """Små modeller skriver LaTeX selv om de blir bedt om å la være: «120 $\\times$ 5000» → «120 × 5000»."""
+    for kode, tegn in _LATEX.items():
+        tekst = tekst.replace(kode, tegn)
+    tekst = re.sub(r"\\frac\{([^{}]*)\}\{([^{}]*)\}", r"(\1) / (\2)", tekst)
+    tekst = re.sub(r"\\text\{([^{}]*)\}", r"\1", tekst)
+    return re.sub(r"\$\$?([^$]*)\$?\$", r"\1", tekst)
+
+
 # regn_ut(120 * 0.15), regn_ut{uttrykk: "120 + 80"}, sok_i_pensum("nullpunkt") – én per linje
 _TEKSTKALL = re.compile(r"(sok_i_pensum|regn_ut)\s*[({]\s*(?:\w+\s*[:=]\s*)?[\"«']?(.+?)[\"»']?\s*[)}][\]`*.]*\s*$", re.M)
 
@@ -252,6 +264,7 @@ def kjor_agent(sporsmal: str, vis_steg=None) -> Agentsvar:
                 samtale.append({"rolle": "verktoy", "id": k["id"], "navn": k["navn"], "resultat": kjor(k)})
             continue
 
+        svar["tekst"] = uten_latex(svar["tekst"])
         beskjed = _mangler(resultat, svar["tekst"])          # modellen vil svare: kontroller først
         tilbake = sum(s.verktoy == "kontroll" for s in resultat.steg)
         if beskjed is None or tilbake >= MAKS_TILBAKE:

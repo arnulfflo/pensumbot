@@ -25,7 +25,7 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - 🤖 **BØA-agent** som selv velger når den skal søke i pensum og regne, mens koden kontrollerer hvert tall
 - 🧭 **Studieveileder-agent**: «Jeg har to timer i kveld, hva bør jeg øve på?» gir en ferdig økt med «Øv nå»-knapper
 - 🔒 **100 % lokalt og privat**, og ett konfigurasjonsvalg fra å bruke Claude i stedet
-- 🧪 **Målt kvalitet** med eget testsett og 56 automatiske tester
+- 🧪 **Målt kvalitet** med eget testsett og 57 automatiske tester
 
 ## 🧩 Funksjoner
 
@@ -158,7 +158,7 @@ Målt mot håndlagde testsett (`tester/testsett_*.yaml`) med `uv run python -m s
 | Organisasjon og ledelse | 14 av 15 | 0,882 | 3 av 3 | 0 |
 | Markedsføring | 15 av 15 | 0,967 | 3 av 3 | 0 |
 
-Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **56 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, og hvordan veilederen setter opp økter (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
+Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **57 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, og hvordan veilederen setter opp økter (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
 
 ## 🛠️ Teknologi
 

@@ -66,6 +66,13 @@ def test_fanger_verktoykall_skrevet_som_tekst():
     assert _kall_i_tekst("Vi bruker regn_ut for dette.") == []
 
 
+def test_fjerner_latex():
+    from src.agent import uten_latex
+    assert uten_latex("120 $\\times$ 5000 = 600 000") == "120 × 5000 = 600 000"
+    assert uten_latex("$NPV = \\frac{70000}{1,1}$") == "NPV = (70000) / (1,1)"
+    assert uten_latex("Pris 400 kr, 25 \\% rabatt") == "Pris 400 kr, 25 % rabatt"
+
+
 # ---------- studieveilederen ----------
 
 @pytest.mark.parametrize("tekst, minutter", [
