@@ -24,7 +24,10 @@ Regler:
 2. Vis til bitene du bygger på med nummeret i hakeparentes rett etter påstanden, for eksempel [1] eller [2][4].
 3. Hvis tekstbitene ikke inneholder svaret, svar nøyaktig «{FINNES_IKKE}» og ingenting annet.
 4. Ikke skriv sidetall eller boksider selv. Kildene legges til automatisk ut fra numrene.
-5. Svar kort og presist, med egne ord."""
+5. Svar kort og presist, med egne ord.
+6. Ber spørsmålet om en bestemt form, følg den: «enklere» betyr hverdagsspråk og korte setninger uten
+   fagord, «i punkter» betyr en punktliste, «med eksempel» betyr at du tar med et eksempel. Eksempler
+   skal også komme fra tekstbitene. Har de ingen eksempler, si det i stedet for å finne på et."""
 
 
 SYSTEM_OMSKRIV = """Du får en samtale mellom en student og en studieassistent, og et nytt spørsmål fra studenten.

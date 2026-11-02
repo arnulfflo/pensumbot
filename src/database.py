@@ -8,7 +8,7 @@ Tabellene følger SPEC.md. Eksamensdatoene ligger i config/eksamener.yaml i sted
 
 import json
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 
 from src.konfig import data_mappe
 
@@ -70,7 +70,30 @@ def koble() -> sqlite3.Connection:
         for navn, type_ in kolonner.items():
             if navn not in finnes:
                 db.execute(f"ALTER TABLE {tabell} ADD COLUMN {navn} {type_}")
+    ta_sikkerhetskopi(db)
     return db
+
+
+SIKKERHETSKOPIER = 14      # antall dager som beholdes i data/sikkerhetskopi/
+
+
+def ta_sikkerhetskopi(db: sqlite3.Connection):
+    """Første gang databasen åpnes hver dag: kopi til data/sikkerhetskopi/studie-ÅÅÅÅ-MM-DD.db.
+
+    Kopien tas før dagens øving, så den inneholder alt fram til i går. De 14 nyeste beholdes.
+    Gjenopprett ved å kopiere en av filene tilbake til data/studie.db (mens appen er lukket).
+    """
+    mappe = data_mappe() / "sikkerhetskopi"
+    fil = mappe / f"studie-{date.today():%Y-%m-%d}.db"
+    if fil.exists():
+        return None
+    mappe.mkdir(exist_ok=True)
+    kopi = sqlite3.connect(fil)
+    db.backup(kopi)            # SQLites egen kopi: trygg selv om databasen er i bruk
+    kopi.close()
+    for gammel in sorted(mappe.glob("studie-*.db"))[:-SIKKERHETSKOPIER]:
+        gammel.unlink()
+    return fil
 
 
 def naa() -> str:

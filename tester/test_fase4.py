@@ -121,3 +121,18 @@ def test_angre_hopp_over_gir_dagen_tilbake(db):
     etter = blokker_for(db, i_dag)
     assert [(b["fag"], b["tema"]) for b in etter] == for_
     assert all(b["status"] == "planlagt" for b in etter)
+
+
+def test_sikkerhetskopi_en_per_dag_og_bare_de_nyeste(db, tmp_path):
+    from src.database import SIKKERHETSKOPIER, ta_sikkerhetskopi
+    mappe = tmp_path / "sikkerhetskopi"
+    dagens = mappe / f"studie-{date.today():%Y-%m-%d}.db"
+    assert dagens.exists()                                   # koble() tok kopi
+    nytt_sporsmal(db)
+    assert ta_sikkerhetskopi(db) is None                     # bare én per dag
+    for i in range(1, 20):                                   # eldre kopier fra tidligere dager
+        (mappe / f"studie-{date.today() - timedelta(days=i):%Y-%m-%d}.db").touch()
+    dagens.unlink()
+    assert ta_sikkerhetskopi(db) == dagens                   # ny dag: ny kopi, og de eldste slettes
+    filer = sorted(mappe.glob("studie-*.db"))
+    assert len(filer) == SIKKERHETSKOPIER and filer[-1] == dagens
