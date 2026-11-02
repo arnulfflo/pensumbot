@@ -105,3 +105,14 @@ footer { display: none !important; }
 .chat summary { cursor: pointer; color: var(--body-text-color-subdued); font-size: 0.85rem; }
 .chat blockquote { font-size: 0.85rem; margin: 6px 0; }
 @media (max-width: 760px) { .blokk-rad { margin-bottom: 4px; } }
+
+/* ---------- forklaring av planen ---------- */
+.planforklaring { border-radius: 14px; padding: 18px 22px; background: var(--block-background-fill);
+                  border: 1px solid var(--border-color-primary); line-height: 1.5; }
+.planforklaring h3 { margin: 0 0 12px; font-size: 1.1rem; }
+.planforklaring h4 { margin: 16px 0 4px; font-size: 0.95rem; }
+.planforklaring ul { margin: 0; padding-left: 20px; }
+.planfag { margin-bottom: 12px; }
+.planfag .topp-linje { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 5px; font-size: 0.9rem; }
+.planfag .timer { margin-left: auto; font-weight: 600; }
+.planfag .fase { color: var(--body-text-color-subdued); font-size: 0.82rem; margin-top: 4px; }

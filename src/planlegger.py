@@ -221,21 +221,51 @@ def oppsummer(plan: list[Blokk]):
               f"hvert tema {min(dekning.values(), default=0)}–{max(dekning.values(), default=0)} ganger")
 
 
-def forklar(db):
-    """Språkmodellen forklarer planen. Tallene kommer fra Python, ikke fra modellen."""
-    from src.llm import generer
+FASER = {"flashcards": "gjenkjenne begreper (flashcards og flervalg)", "flervalg": "hente frem (flervalg)",
+         "kortsvar": "forklare med egne ord (kortsvar)", "repetisjon": "blandet repetisjon"}
 
+
+def planfakta(db, dager: int = 7) -> dict:
+    """Tallene bak planen for de neste dagene, regnet ut i Python (ikke av språkmodellen)."""
     eksamener, _, innst = last_eksamener()
-    neste = [r for i in range(7) for r in blokker_for(db, date.today() + timedelta(days=i))
+    neste = [r for i in range(dager) for r in blokker_for(db, date.today() + timedelta(days=i))
              if r["status"] == "planlagt"]
     per_fag = Counter(r["fag"] for r in neste)
-    fakta = (f"I dag er {date.today():%d.%m.%Y}. Eksamener: "
-             + ", ".join(f"{f} {d:%d.%m.%Y} ({(d - date.today()).days} dager)" for f, d in eksamener.items())
-             + f". Timer per dag: {innst['timer_per_dag']}. Neste 7 dager, blokker per fag: {dict(per_fag)}. "
-             + "Øvingsmåter neste 7 dager: " + str(dict(Counter(r["ovingsmate"] for r in neste))) + ".")
-    print(generer("Forklar en studieplan for en student på norsk, kort og konkret (maks 6 setninger). "
-                  "Bruk bare tallene du får. Ikke regn ut noe nytt.", fakta))
+    mestring = mestring_per_tema(db)
+    fag = []
+    for navn, dato in sorted(eksamener.items(), key=lambda x: x[1]):
+        igjen = (dato - date.today()).days
+        if igjen < 0:
+            continue
+        svake = sorted((m, t) for (f, t), m in mestring.items() if f == navn and m < 0.5)
+        fag.append({"fag": navn, "dato": dato, "dager_igjen": igjen, "blokker": per_fag.get(navn, 0),
+                    "timer": per_fag.get(navn, 0) * innst["blokk_minutter"] / 60,
+                    "fase": FASER[ovingsmate_for(igjen, innst["repetisjonsdager"])],
+                    "svake": [t.split(" (")[0] for _, t in svake[:3]]})
+    return {"dager": dager, "fag": fag, "timer_per_dag": innst["timer_per_dag"],
+            "blokk_minutter": innst["blokk_minutter"], "repetisjonsdager": innst["repetisjonsdager"],
+            "blokker": len(neste)}
 
+
+def fakta_som_tekst(f: dict) -> str:
+    linjer = [f"I dag er {date.today():%d.%m.%Y}. Du øver {f['timer_per_dag']} timer per dag i blokker på "
+              f"{f['blokk_minutter']} minutter. De neste {f['dager']} dagene er det {f['blokker']} blokker."]
+    for x in f["fag"]:
+        linje = (f"{x['fag']}: eksamen {x['dato']:%d.%m} om {x['dager_igjen']} dager, {x['blokker']} blokker "
+                 f"({x['timer']:.0f} timer) de neste {f['dager']} dagene, fase: {x['fase']}.")
+        if x["svake"]:
+            linje += " Svake temaer som prioriteres: " + ", ".join(x["svake"]) + "."
+        linjer.append(linje)
+    return "\n".join(linjer)
+
+
+def forklar(db) -> str:
+    """Språkmodellen oppsummerer planen. Tallene kommer fra Python, ikke fra modellen."""
+    from src.llm import generer
+
+    return generer("Du er en studieveileder. Oppsummer studieplanen for studenten på norsk i 2–3 korte setninger, "
+                   "og si hva som er viktigst nå. Bruk bare tallene du får, og ikke regn ut noe nytt.",
+                   fakta_som_tekst(planfakta(db)))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Eksamensplanleggeren.")
@@ -262,6 +292,6 @@ if __name__ == "__main__":
     if args.vis:
         skriv_dager(db, date.today(), args.dager)
     if args.forklar:
-        forklar(db)
+        print(fakta_som_tekst(planfakta(db)) + "\n\n" + forklar(db))
     if not (args.lag or args.vis or args.hopp_over or args.forklar):
         parser.print_help()

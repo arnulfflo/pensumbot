@@ -325,14 +325,37 @@ def angre_i_dag():
     return vis_plan()
 
 
+def _forklaring_html(f, oppsummering) -> str:
+    totalt = sum(x["blokker"] for x in f["fag"]) or 1
+    rader = "".join(
+        f'<div class="planfag" style="--fag:{farge(x["fag"])}"><div class="topp-linje">{merke(x["fag"])}'
+        f'<span>eksamen {x["dato"]:%d.%m} · om <b>{x["dager_igjen"]} dager</b></span>'
+        f'<span class="timer">{x["blokker"]} blokker · {x["timer"]:.0f} t</span></div>'
+        f'<div class="stolpe"><div style="width:{x["blokker"] / totalt:.0%}"></div></div>'
+        f'<div class="fase">Fase: {escape(x["fase"])}'
+        + (f' · svake temaer først: {escape(", ".join(x["svake"]))}' if x["svake"] else "") + "</div></div>"
+        for x in f["fag"])
+    regler = (f"<ul><li>Faget med nærmest eksamen får mest tid. Andelen øker jo færre dager som er igjen.</li>"
+              f"<li>De siste {f['repetisjonsdager']} dagene før en eksamen brukes bare på det faget.</li>"
+              f"<li>Øvingen endrer seg mot eksamen: først gjenkjenne (flashcards), så hente frem (flervalg), "
+              f"siste uke forklare med egne ord (kortsvar).</li>"
+              f"<li>Temaer du ikke har øvd på eller er svak på, kommer oftere. Temaer du nettopp har øvd på, venter litt.</li>"
+              f"<li>Når du trykker «Ferdig», legges planen på nytt fra i morgen ut fra mestringen din.</li></ul>")
+    return (f'<div class="planforklaring"><h3>De neste {f["dager"]} dagene · {f["blokker"]} blokker à '
+            f'{f["blokk_minutter"]} min</h3>{rader}<h4>Slik er planen laget</h4>{regler}'
+            f'<h4>Oppsummering</h4><p>{oppsummering}</p></div>')
+
+
 def forklar_plan():
-    from src.planlegger import forklar
-    import contextlib
-    import io
-    buffer = io.StringIO()
-    with contextlib.redirect_stdout(buffer):
-        forklar(koble())
-    return buffer.getvalue()
+    from src.planlegger import forklar, planfakta
+    db = koble()
+    f = planfakta(db)
+    yield _forklaring_html(f, "<i>Språkmodellen skriver en oppsummering …</i>")
+    try:
+        tekst = escape(forklar(db))
+    except Exception:   # tidsavbrudd eller Ollama ikke startet: tallene over står uansett
+        tekst = "<i>Språkmodellen svarte ikke. Tallene over er likevel riktige.</i>"
+    yield _forklaring_html(f, tekst)
 
 
 # ---------- Mestring ----------
@@ -405,7 +428,7 @@ def lag_app() -> gr.Blocks:
                     hopp_knapp = gr.Button("Hopp over i dag", size="sm")
                     angre_knapp = gr.Button("↩ Angre hopp over", size="sm")
                     forklar_knapp = gr.Button("💡 Forklar planen", size="sm")
-                forklaring = gr.Markdown()
+                forklaring = gr.HTML()
                 gr.Markdown("#### Neste 7 dager")
                 uke = gr.HTML()
 
