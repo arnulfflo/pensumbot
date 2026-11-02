@@ -170,7 +170,7 @@ Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue O
 | **PyYAML** · **python-dotenv** | Innstillinger, eksamensdatoer og API-nøkkel |
 | **pytest** | Enhetstester |
 
-Rundt 3 700 linjer Python fordelt på 19 moduler. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
+Rundt 3 600 linjer Python fordelt på 22 filer. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
 
 ## 🚀 Kom i gang
 
