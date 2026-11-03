@@ -19,6 +19,7 @@ import gradio as gr
 
 from src.database import koble, lagre_sporsmal
 from src.flashcards import forfalte, lag_nye_kort
+from src import formler
 from src.henting import Bit, hent
 from src.innlesing import alle_fag, standardfag
 from src.kortsvar import STILER, vurder
@@ -584,6 +585,80 @@ def forklar_plan():
     yield _forklaring_html(f, tekst)
 
 
+# ---------- Formler (BØA) ----------
+
+ALLE_TEMAER = "Alle temaer"
+FORMELTYPER = {"Blandet": "blandet", **{navn: t for t, navn in formler.TYPER.items()}}
+
+
+def _md(tekst: str) -> str:
+    """Forklaringene fra formler.py: **fet** og avsnitt, ellers ren tekst."""
+    html = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", escape(tekst))
+    return "".join(f"<p>{a.replace(chr(10), '<br>')}</p>" for a in html.split("\n\n"))
+
+
+def vis_formelark() -> str:
+    seksjoner = []
+    for tema, rader in formler.formelark():
+        kort = []
+        for r in rader:
+            snudd = "".join(f"<span>{escape(t)}</span>" for t in r["snudd"])
+            naboer = f'<div class="naboer">Henger sammen med: {escape(", ".join(r["henger_sammen"]))}</div>' \
+                if r["henger_sammen"] else ""
+            kort.append(f'<div class="formel"><div class="navn">{escape(r["navn"])}</div>'
+                        f'<div class="uttrykk">{escape(r["formel"])}</div>'
+                        f'<div class="bruk">{escape(r["bruk"])}</div>'
+                        f'{f"<div class=snudd><b>Snudd:</b> {snudd}</div>" if snudd else ""}'
+                        f'<div class="ordliste">{escape(r["variabler"])}</div>{naboer}'
+                        f'<div class="kilde">📖 {escape(r["kilde"])}</div></div>')
+        seksjoner.append(f'<h3>{escape(tema)}</h3><div class="formler">{"".join(kort)}</div>')
+    antall = sum(len(r) for _, r in formler.formelark())
+    return (f'<div class="formelark" style="--fag:{farge(formler.FAG)}"><p class="info">{antall} formler fra '
+            f'BØA-pensumet, med kilde. «Snudd» viser formelen løst for hver av de andre størrelsene.</p>'
+            f'{"".join(seksjoner)}</div>')
+
+
+def _formelkort(o, nr) -> str:
+    return (f'<div class="kort" style="--fag:{farge(formler.FAG)}"><div class="topplinje">'
+            f'<span>{merke(formler.FAG)} &nbsp;{escape(o.tema)}</span>'
+            f'<span>Oppgave {nr} · {escape(formler.TYPER[o.type])}</span></div>'
+            f'<div class="sporsmal">{escape(o.tekst)}</div></div>')
+
+
+def ny_formeloppgave(tema, type_, okt):
+    okt = dict(okt or {"besvart": 0, "riktige": 0, "nr": 0})
+    o = formler.ny_oppgave(FORMELTYPER.get(type_, "blandet"), None if tema in (None, ALLE_TEMAER) else tema)
+    okt.update(oppgave=o, nr=okt["nr"] + 1, svart=False)
+    valg = gr.update(choices=o.alternativer, value=None, visible=bool(o.alternativer))
+    tekst = gr.update(value="", visible=o.tallsvar,
+                      label="Ditt svar" + (" (i %)" if o.mal and formler.VARIABLER[o.mal].prosent else ""))
+    return _formelkort(o, okt["nr"]), valg, tekst, "", _poeng(okt), okt
+
+
+def svar_formel(valgt, tekst, okt):
+    o = (okt or {}).get("oppgave")
+    if not o:
+        return _melding("Trykk «Ny oppgave» først."), gr.update(), okt
+    svar = (tekst if o.tallsvar else valgt) or ""
+    if not svar.strip():
+        return _melding("Skriv eller velg et svar først."), gr.update(), okt
+    riktig = formler.sjekk(o, svar)
+    if not okt.get("svart"):                   # bare første forsøk teller i mestringen
+        okt = {**okt, "svart": True, "besvart": okt["besvart"] + 1, "riktige": okt["riktige"] + riktig}
+        db = koble()
+        fasit = formler.med_enhet(o.fasit, o.mal) if o.tallsvar else o.fasit
+        sid = lagre_sporsmal(db, fag=formler.FAG, tema=o.tema, ovingsmate="formel", sporsmal=o.tekst, fasit=fasit,
+                             kilde=f"{formler.FAG}/{o.kilder[0]}", alternativer=o.alternativer or None,
+                             forklaring=o.forklaring)
+        lagre_resultat(db, sid, svar, riktig)
+    fasit = formler.med_enhet(o.fasit, o.mal) if o.tallsvar else o.fasit
+    dom = "✅ Riktig!" if riktig else f"❌ Riktig svar: {escape(fasit)}"
+    kilder = "".join(f"<div>📖 {escape(formler.FAG)}/{escape(k)}</div>" for k in dict.fromkeys(o.kilder))
+    html = (f'<div class="tilbakemelding {"riktig" if riktig else "feil"}"><div class="dom">{dom}</div>'
+            f'{_md(o.forklaring)}<div class="kilde">{kilder}</div></div>')
+    return html, _poeng(okt), okt
+
+
 # ---------- Mestring ----------
 
 def vis_mestring():
@@ -735,6 +810,29 @@ def lag_app() -> gr.Blocks:
                     vurderingsknapper = [gr.Button(v, size="lg", elem_classes=f"v-{v}")
                                          for v in ("igjen", "vanskelig", "greit", "lett")]
 
+            with gr.Tab("🧮 BØA-formler", id="formler"):
+                with gr.Tabs():
+                    with gr.Tab("Trening"):
+                        formel_okt = gr.State(None)
+                        with gr.Group(elem_classes="panel"):
+                            with gr.Row():
+                                formel_tema = gr.Dropdown([ALLE_TEMAER, *[t for t in formler.TEMAREKKEFOLGE
+                                                          if any(f.tema == t for f in formler.FORMLER)]],
+                                                          value=ALLE_TEMAER, label="Tema", scale=2)
+                                formel_type = gr.Dropdown(list(FORMELTYPER), value="Blandet", label="Type", scale=1)
+                        formel_poeng = gr.HTML()
+                        formel_kort = gr.HTML(_melding("Velg tema og type, og trykk «Ny oppgave». "
+                                                       "Fasiten er regnet ut i Python, så den er alltid riktig."))
+                        formel_valg = gr.Radio(show_label=False, visible=False, elem_classes="svaralternativer")
+                        formel_tekst = gr.Textbox(label="Ditt svar", visible=False,
+                                                  placeholder="f.eks. 750 000 eller 40 %")
+                        with gr.Row():
+                            formel_svar = gr.Button("Svar", variant="primary")
+                            formel_ny = gr.Button("Ny oppgave ➜")
+                        formel_resultat = gr.HTML()
+                    with gr.Tab("Formelark"):
+                        gr.HTML(vis_formelark())
+
             with gr.Tab("📈 Mestring", id="mestring"):
                 mestring = gr.HTML()
                 oppdater_knapp = gr.Button("Oppdater", size="sm")
@@ -776,6 +874,13 @@ def lag_app() -> gr.Blocks:
             knapp.click(vurder_kort, [knapp, ko], [ko, flashcard, snu_rad, vurder_rad])
 
         oppdater_knapp.click(vis_mestring, outputs=mestring)
+
+        formel_ut = [formel_kort, formel_valg, formel_tekst, formel_resultat, formel_poeng, formel_okt]
+        formel_ny.click(ny_formeloppgave, [formel_tema, formel_type, formel_okt], formel_ut)
+        formel_svar.click(svar_formel, [formel_valg, formel_tekst, formel_okt],
+                          [formel_resultat, formel_poeng, formel_okt])
+        formel_tekst.submit(svar_formel, [formel_valg, formel_tekst, formel_okt],
+                            [formel_resultat, formel_poeng, formel_okt])
     return app
 
 

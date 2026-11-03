@@ -120,3 +120,17 @@ footer { display: none !important; }
 .planfag .fase { color: var(--body-text-color-subdued); font-size: 0.82rem; margin-top: 4px; }
 
 .kort .fra { margin-top: 10px; font-size: .85em; opacity: .7; }
+
+/* BØA-formler */
+.formelark h3 { margin: 22px 0 10px; color: var(--fag); }
+.formelark .info { color: var(--body-text-color-subdued); }
+.formler { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.formel { border: 1px solid var(--border-color-primary); border-left: 4px solid var(--fag); border-radius: 12px;
+          padding: 14px 16px; background: var(--block-background-fill); }
+.formel .navn { font-weight: 600; margin-bottom: 6px; }
+.formel .uttrykk { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.formel .bruk { font-size: .9rem; margin-bottom: 8px; }
+.formel .snudd { font-size: .85rem; margin-bottom: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.formel .snudd span { background: color-mix(in srgb, var(--fag) 12%, transparent); border-radius: 8px; padding: 2px 8px; }
+.formel .ordliste, .formel .naboer, .formel .kilde { font-size: .75rem; color: var(--body-text-color-subdued); margin-top: 4px; }
+.tilbakemelding .kilde { font-size: .8rem; color: var(--body-text-color-subdued); margin-top: 8px; }

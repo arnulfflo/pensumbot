@@ -154,6 +154,9 @@ def test_stopper_sporsmal_om_en_oppgave_i_pensum():
     assert viser_til_ukjent("Hva er den laveste prisen Virksomheten AS kan akseptere for éngangsordren?", kilde)
     assert viser_til_ukjent("Hva blir dekningsbidraget i tabellen?", "")
     assert viser_til_ukjent("Løs oppgave 3 med bidragsmetoden.", "")
+    assert viser_til_ukjent("Hva er det sentrale i motivasjonsprosessen, basert på teksten?", "")
+    assert viser_til_ukjent("Hva er funksjonen til kostnader i prisfastsettelsen, ifølge teksten?", "")
+    assert viser_til_ukjent("Hvordan føres et lån i regnskapet?", "") is None
     # oppdiktet case i selve spørsmålet (kortsvar, stil «case») og vanlige fagspørsmål er greit
     assert viser_til_ukjent("Fjordkaffe AS vurderer å senke prisen. Bruk nullpunktanalyse til å vurdere det.", kilde) is None
     assert viser_til_ukjent("Hva er laveste akseptable pris for en engangsordre ved ledig kapasitet?", kilde) is None

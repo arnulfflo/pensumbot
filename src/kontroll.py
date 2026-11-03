@@ -33,8 +33,9 @@ def sitat_finnes(sitat: str, kildetekst: str) -> bool:
     return sum(o in kilde for o in ord_) / len(ord_) >= 0.9
 
 
-# «i tabellen», «oppgave 3», «se figuren», «ovenfor»: viser til noe studenten ikke ser
-_HENVISNING = re.compile(r"\b((i|fra|se|av) (tabellen|figuren|oppgaven|caset|eksempelet|grafen|regnskapet)|"
+# «i tabellen», «oppgave 3», «ifølge teksten», «ovenfor»: viser til noe studenten ikke ser
+_HENVISNING = re.compile(r"\b((i|fra|se|av) (tabellen|figuren|oppgaven|caset|eksempelet|grafen)|"
+                         r"(ifølge|basert på|i|fra|av) (teksten|tekstutdraget|kilden|notatet|foilen|lysbildet)|"
                          r"oppgave \d+|ovenfor|nedenfor)\b", re.I)
 _FIRMA = re.compile(r"\b([A-ZÆØÅ][\wæøå-]*(?: [A-ZÆØÅ][\wæøå-]*)*) (AS|ASA|A/S)\b")
 
