@@ -15,7 +15,7 @@ uten sensorveiledning (SPEC.md).
 """
 
 from src.henting import Bit
-from src.kontroll import sitat_finnes
+from src.kontroll import sitat_finnes, viser_til_ukjent
 from src.llm import generer_json
 
 STILER = {
@@ -36,7 +36,8 @@ SYSTEM_KORTSVAR = """Du lager kortsvarsoppgaver til en student som øver til eks
 Regler:
 1. {stil}
 2. Spørsmålet skal kunne stå alene som en eksamensoppgave. Studenten ser ikke teksten, så ikke skriv
-   «ifølge teksten» eller «i teksten».
+   «ifølge teksten» eller «i teksten». Er teksten en oppgave om en bestemt bedrift eller med egne tall,
+   ikke spør om den bedriften eller de tallene. Spør om prinsippet eller metoden i stedet.
 3. «nokkelpunkter»: 2–4 korte punkter som et godt svar MÅ få med. Alle skal stå i teksten.
    Hvert punkt skal være en konkret faglig påstand (f.eks. «høy pris signaliserer høy kvalitet»),
    ikke en generell setning (f.eks. «det finnes prinsipper for prispolitikk»).
@@ -89,6 +90,8 @@ def lag_kortsvar(bit: Bit, stil: str = "forklar") -> tuple[dict | None, str]:
         return None, "manglende nøkkelpunkter eller modellsvar"
     if not sitat_finnes(data["sitat"], bit.tekst):
         return None, "sitatet står ikke i kilden"
+    if grunn := viser_til_ukjent(data["sporsmal"], bit.tekst):
+        return None, grunn
     return {**data, "nokkelpunkter": punkter, "fasit": data["modellsvar"], "stil": stil}, ""
 
 

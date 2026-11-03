@@ -16,7 +16,7 @@ from datetime import datetime
 
 from src.database import koble, lagre_sporsmal, resultater
 from src.henting import Bit, hent
-from src.kontroll import Duplikatfilter, sitat_finnes
+from src.kontroll import Duplikatfilter, sitat_finnes, viser_til_ukjent
 from src.kortsvar import REKKEFOLGE, STILER, lag_kortsvar, vurder
 from src.innlesing import standardfag
 from src.konfig import data_mappe, last_innstillinger
@@ -29,7 +29,8 @@ SYSTEM_FLERVALG = """Du lager flervalgsspørsmål til en student som øver til e
 Regler:
 1. Spørsmålet skal teste forståelse av et faglig begrep, en modell eller en sammenheng i teksten.
 2. Spørsmålet skal kunne stå alene som en eksamensoppgave. Studenten ser ikke teksten, så ikke skriv
-   «ifølge teksten» eller «i teksten».
+   «ifølge teksten» eller «i teksten». Er teksten en oppgave om en bestemt bedrift eller med egne tall,
+   ikke spør om den bedriften eller de tallene. Spør om prinsippet eller metoden i stedet.
 3. Nøyaktig ett svar er riktig. De tre gale svarene skal være troverdige, men tydelig feil.
    Hvis teksten er en liste der flere punkter passer på spørsmålet, må de gale svarene IKKE hentes fra den listen.
 4. Alle fire svar skal ha samme form og omtrent samme lengde. Ikke gjenta ord fra spørsmålet bare i det riktige
@@ -101,6 +102,8 @@ def lag_flervalg(bit: Bit) -> tuple[dict | None, str]:
         return None, "manglende eller like alternativer"
     if not sitat_finnes(data["sitat"], bit.tekst):
         return None, "sitatet står ikke i kilden"
+    if grunn := viser_til_ukjent(data["sporsmal"], bit.tekst):
+        return None, grunn
     # Er det riktige svaret mye lengre enn de gale, kan man gjette det uten å kunne stoffet.
     if len(data["riktig_svar"]) > 1.6 * sum(len(g) for g in gale) / 3:
         return None, "riktig svar skiller seg ut ved å være mye lengre"

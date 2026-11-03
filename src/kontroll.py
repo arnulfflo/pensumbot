@@ -33,6 +33,28 @@ def sitat_finnes(sitat: str, kildetekst: str) -> bool:
     return sum(o in kilde for o in ord_) / len(ord_) >= 0.9
 
 
+# «i tabellen», «oppgave 3», «se figuren», «ovenfor»: viser til noe studenten ikke ser
+_HENVISNING = re.compile(r"\b((i|fra|se|av) (tabellen|figuren|oppgaven|caset|eksempelet|grafen|regnskapet)|"
+                         r"oppgave \d+|ovenfor|nedenfor)\b", re.I)
+_FIRMA = re.compile(r"\b([A-ZÆØÅ][\wæøå-]*(?: [A-ZÆØÅ][\wæøå-]*)*) (AS|ASA|A/S)\b")
+
+
+def viser_til_ukjent(sporsmal: str, kildetekst: str) -> str | None:
+    """Spør spørsmålet om en bestemt oppgave eller case fra pensum som studenten ikke har foran seg?
+
+    Eksempel: «Hva er den laveste prisen Virksomheten AS kan akseptere for ordren fra kunden i Danmark?»
+    Tallene står i oppgaven, ikke i spørsmålet, så det kan ikke besvares uten boka. En oppdiktet
+    case i selve spørsmålet (kortsvar, stil «case») er greit: da står firmanavnet ikke i kilden.
+    Returnerer grunnen, eller None hvis spørsmålet kan stå alene.
+    """
+    if treff := _HENVISNING.search(sporsmal):
+        return f"viser til «{treff.group()}», som studenten ikke ser"
+    for navn, form in _FIRMA.findall(sporsmal):
+        if normaliser(navn) in normaliser(kildetekst):
+            return f"spør om {navn} {form} fra en oppgave i pensum, uten opplysningene fra oppgaven"
+    return None
+
+
 class Duplikatfilter:
     """Husker spørsmålene i en økt og sier fra om et nytt spørsmål likner et tidligere."""
 

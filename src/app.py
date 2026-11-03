@@ -233,12 +233,14 @@ def _poeng(okt) -> str:
             f'<div>Riktige <b>{okt["riktige"]}</b></div><div>Treff <b>{andel:.0%}</b></div></div>')
 
 
-def _sporsmalskort(fag, q, nr) -> str:
+def _sporsmalskort(fag, q, nr, kilde: str = "") -> str:
+    """kilde: hvor i pensum spørsmålet er laget fra, så du kan slå det opp hvis du står fast."""
     stil = f' · {escape(q["stil"])}' if q.get("stil") and q["stil"] != "forklar" else ""
     return (f'<div class="kort" style="--fag:{farge(fag)}"><div class="topplinje">'
             f'<span>{merke(fag)} &nbsp;{escape(kort_tema(q.get("tema") or ""))}</span>'
             f'<span>Spørsmål {nr} · {OVINGSNAVN[q["type"]]}{stil}</span></div>'
-            f'<div class="sporsmal">{escape(q["sporsmal"])}</div></div>')
+            f'<div class="sporsmal">{escape(q["sporsmal"])}</div>'
+            f'{f"<div class=fra>📖 Laget fra: {escape(kilde)}</div>" if kilde else ""}</div>')
 
 
 def _melding(tekst) -> str:
@@ -280,7 +282,7 @@ def _vis(okt, fag, element):
     """Viser et spørsmål (fra køen eller fra en øvingsrunde med feilsvar)."""
     q, bit, sid, kilde = element
     okt.update(q=q, bit=bit, sid=sid, kilde=kilde, nr=okt["nr"] + 1)
-    kort = _sporsmalskort(fag, q, okt["nr"])
+    kort = _sporsmalskort(fag, q, okt["nr"], kilde)
     if okt.get("ovelse"):
         kort = kort.replace('<div class="topplinje">', '<div class="topplinje"><span class="varsel">🔁 Øvingsrunde – teller ikke</span>', 1)
     skjul = gr.update(visible=False)

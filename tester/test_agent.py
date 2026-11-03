@@ -144,3 +144,16 @@ def test_veilederkontrollen(db):
                     ["45"], "Øv 45 minutter.") is None
     assert _kall_i_tekst("lag_okt(90, BOA1100)") == [{"id": "tekst0", "navn": "lag_okt",
                                                        "argumenter": {"fag": "BOA1100", "minutter": 90}}]
+
+
+# ---------- quiz: spørsmål som krever en oppgave studenten ikke ser ----------
+
+def test_stopper_sporsmal_om_en_oppgave_i_pensum():
+    from src.kontroll import viser_til_ukjent
+    kilde = "Oppgave 4. Virksomheten AS produserer 10 000 enheter. En kunde i Danmark ber om en engangsordre ..."
+    assert viser_til_ukjent("Hva er den laveste prisen Virksomheten AS kan akseptere for éngangsordren?", kilde)
+    assert viser_til_ukjent("Hva blir dekningsbidraget i tabellen?", "")
+    assert viser_til_ukjent("Løs oppgave 3 med bidragsmetoden.", "")
+    # oppdiktet case i selve spørsmålet (kortsvar, stil «case») og vanlige fagspørsmål er greit
+    assert viser_til_ukjent("Fjordkaffe AS vurderer å senke prisen. Bruk nullpunktanalyse til å vurdere det.", kilde) is None
+    assert viser_til_ukjent("Hva er laveste akseptable pris for en engangsordre ved ledig kapasitet?", kilde) is None

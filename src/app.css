@@ -118,3 +118,5 @@ footer { display: none !important; }
 .planfag .topp-linje { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 5px; font-size: 0.9rem; }
 .planfag .timer { margin-left: auto; font-weight: 600; }
 .planfag .fase { color: var(--body-text-color-subdued); font-size: 0.82rem; margin-top: 4px; }
+
+.kort .fra { margin-top: 10px; font-size: .85em; opacity: .7; }
