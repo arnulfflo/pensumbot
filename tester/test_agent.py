@@ -160,3 +160,23 @@ def test_stopper_sporsmal_om_en_oppgave_i_pensum():
     # oppdiktet case i selve spørsmålet (kortsvar, stil «case») og vanlige fagspørsmål er greit
     assert viser_til_ukjent("Fjordkaffe AS vurderer å senke prisen. Bruk nullpunktanalyse til å vurdere det.", kilde) is None
     assert viser_til_ukjent("Hva er laveste akseptable pris for en engangsordre ved ledig kapasitet?", kilde) is None
+
+
+def test_stopper_sporsmal_der_svaret_star_i_sporsmalet():
+    from src.kontroll import avslorer_svaret
+    assert avslorer_svaret(
+        "Hvilken type distribusjonsstrategisk tilnærming innebærer å selge produktet hos så mange forhandlere som mulig?",
+        "Selg overalt, hos så mange forhandlere som mulig.",
+        ["Fokuser på å selge kun i spesialiserte, lukkede miljøer.", "Begrens salget til et lite antall utvalgte "
+         "utsalgssteder.", "Selg kun gjennom utvalgte, spesifikke partnere."])
+    assert avslorer_svaret("Hva innebærer markedsføringens mål i sammenheng med markedsstrategien?",
+                           "Markedsføringsmål", ["Kommunikasjonsmål", "Kommunikasjonstaktikker", "Markedsstrategi"])
+    # spør etter navnet, svarene er navn: greit
+    assert avslorer_svaret("Hvilken type distribusjon innebærer å selge hos så mange forhandlere som mulig?",
+                           "Intensiv distribusjon", ["Selektiv distribusjon", "Eksklusiv distribusjon",
+                                                     "Direkte distribusjon"]) is None
+    assert avslorer_svaret("Hva er det sentrale utgangspunktet i behovsteorier?",
+                           "Mennesker har grunnleggende behov, og disse driver atferden vår.",
+                           ["Motivasjon er en prosess som påvirker intensiteten i handlinger.",
+                            "Retning, varighet og intensitet er de viktigste elementene.",
+                            "Indre motivasjon er alltid sterkt styrt mot mål."]) is None

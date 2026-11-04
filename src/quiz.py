@@ -16,7 +16,7 @@ from datetime import datetime
 
 from src.database import koble, lagre_sporsmal, resultater
 from src.henting import Bit, hent
-from src.kontroll import Duplikatfilter, sitat_finnes, viser_til_ukjent
+from src.kontroll import Duplikatfilter, avslorer_svaret, sitat_finnes, viser_til_ukjent
 from src.kortsvar import REKKEFOLGE, STILER, lag_kortsvar, vurder
 from src.innlesing import standardfag
 from src.konfig import data_mappe, last_innstillinger
@@ -39,7 +39,10 @@ Regler:
 6. «sitat» skal være en hel setning eller en lang del av en setning, kopiert ORDRETT fra teksten,
    som viser at svaret er riktig.
 7. «forklaring» forklarer kort med egne ord hvorfor svaret er riktig.
-8. Hvis teksten bare er stikkord uten sammenheng, uleselig, eller handler om hva som mangler i notatene,
+8. Det riktige svaret skal ikke gjenta ord fra spørsmålet. Spør du etter et begrep eller en type
+   («Hvilken type distribusjon …»), skal alle fire svar være navn på begreper (f.eks. «Intensiv distribusjon»),
+   ikke beskrivelser. Spør du hva et begrep innebærer, skal svarene være beskrivelser, og begrepet skal stå i spørsmålet.
+9. Hvis teksten bare er stikkord uten sammenheng, uleselig, eller handler om hva som mangler i notatene,
    sett «kan_lages» til false og la de andre feltene være tomme.
 Skriv på norsk."""
 
@@ -103,6 +106,8 @@ def lag_flervalg(bit: Bit) -> tuple[dict | None, str]:
     if not sitat_finnes(data["sitat"], bit.tekst):
         return None, "sitatet står ikke i kilden"
     if grunn := viser_til_ukjent(data["sporsmal"], bit.tekst):
+        return None, grunn
+    if grunn := avslorer_svaret(data["sporsmal"], data["riktig_svar"], gale):
         return None, grunn
     # Er det riktige svaret mye lengre enn de gale, kan man gjette det uten å kunne stoffet.
     if len(data["riktig_svar"]) > 1.6 * sum(len(g) for g in gale) / 3:

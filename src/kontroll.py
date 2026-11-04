@@ -56,6 +56,41 @@ def viser_til_ukjent(sporsmal: str, kildetekst: str) -> str | None:
     return None
 
 
+_SMAAORD = {"hvilken", "hvilket", "hvilke", "innebærer", "betyr", "beskriver", "kalles", "hvordan", "hvorfor",
+            "eller", "ikke", "også", "slik", "sammenheng", "forhold", "mellom", "denne", "dette", "disse", "mest"}
+# «Hvilken type …», «Hva kalles …»: spørsmålet vil ha et navn på et begrep, ikke en beskrivelse
+_SPOR_ETTER_NAVN = re.compile(r"^(hvilken|hvilket) (type|form|begrep|modell|strategi|metode|teori|tilnærming)\b|"
+                              r"^hva kalles\b|^hva heter\b", re.I)
+
+
+def _stammer(tekst: str) -> set[str]:
+    """Ordstammer (8 første bokstaver), så «markedsføringsmål» og «markedsføringens» regnes som samme ord."""
+    return {o[:8] for o in re.findall(r"[a-zæøå]{4,}", tekst.lower()) if o not in _SMAAORD}
+
+
+def avslorer_svaret(sporsmal: str, riktig: str, gale: list[str]) -> str | None:
+    """Kan svaret gjettes uten å kunne stoffet, eller passer ikke svarene til spørsmålet?
+
+    1. Det riktige svaret gjentar ordene i spørsmålet: «… hos så mange forhandlere som mulig?» →
+       «Selg overalt, hos så mange forhandlere som mulig». Gale svar som også gjentar spørsmålet, er
+       greit, for da peker ikke ordene ut det riktige.
+    2. Spørsmålet spør etter et navn («Hvilken type distribusjon …»), men svarene er beskrivelser.
+    Returnerer grunnen, eller None hvis spørsmålet er greit.
+    """
+    i_sporsmal = _stammer(sporsmal)
+
+    def andel(svar: str) -> float:
+        ord_ = _stammer(svar)
+        return len(ord_ & i_sporsmal) / len(ord_) if ord_ else 0.0
+
+    riktig_andel = andel(riktig)
+    if riktig_andel >= 0.99 or (riktig_andel >= 0.5 and riktig_andel > max(map(andel, gale), default=0) + 0.25):
+        return "det riktige svaret gjentar ordene i spørsmålet"
+    if _SPOR_ETTER_NAVN.search(sporsmal.strip()) and len(riktig.split()) > 6:
+        return "spørsmålet spør etter et navn, men svarene er beskrivelser"
+    return None
+
+
 class Duplikatfilter:
     """Husker spørsmålene i en økt og sier fra om et nytt spørsmål likner et tidligere."""
 

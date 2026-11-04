@@ -106,7 +106,25 @@ def mestring_per_tema(db) -> dict:
 
 
 def forfalte_sporsmal(db, fag: str | None = None) -> list:
-    """Flervalg og kortsvar der siste forsøk sier at spørsmålet skal vises igjen nå."""
+    """Flervalg og kortsvar der siste forsøk sier at spørsmålet skal vises igjen nå.
+
+    Spørsmål som er laget før en kontroll kom til (svaret står i spørsmålet, eller det viser til en
+    oppgave du ikke ser), hoppes over, så de ikke kommer igjen og igjen.
+    """
+    return [s for s in _forfalte(db, fag) if not _daarlig(s)]
+
+
+def _daarlig(s) -> bool:
+    from src.kontroll import avslorer_svaret, viser_til_ukjent
+    if viser_til_ukjent(s["sporsmal"], s["kildetekst"] or ""):
+        return True
+    if s["ovingsmate"] == "flervalg" and s["alternativer"]:
+        gale = [a for a in json.loads(s["alternativer"]) if a != s["fasit"]]
+        return bool(avslorer_svaret(s["sporsmal"], s["fasit"], gale))
+    return False
+
+
+def _forfalte(db, fag: str | None) -> list:
     return db.execute(
         "SELECT s.* FROM sporsmal s JOIN forsok f ON f.id = (SELECT MAX(id) FROM forsok WHERE sporsmal_id = s.id)"
         " WHERE s.ovingsmate IN ('flervalg', 'kortsvar') AND f.neste_repetisjon <= ? AND (? IS NULL OR s.fag = ?)"
