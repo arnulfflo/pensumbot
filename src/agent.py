@@ -207,7 +207,9 @@ def ukjente_tall(svar: Agentsvar, tekst: str) -> list[float]:
                   if not any(abs(x - k) <= 1e-6 * max(1, abs(k)) for k in kjente))
 
 
-_LATEX = {r"\times": "×", r"\cdot": "·", r"\div": "/", r"\approx": "≈", r"\%": "%", r"\,": " "}
+_LATEX = {r"\times": "×", r"\cdot": "·", r"\div": "/", r"\approx": "≈", r"\%": "%", r"\,": " ",
+          r"\Delta": "Δ", r"\gamma": "γ", r"\alpha": "α", r"\beta": "β", r"\sum": "Σ", r"\geq": "≥",
+          r"\leq": "≤", r"\neq": "≠", r"\infty": "∞"}
 
 
 def uten_latex(tekst: str) -> str:

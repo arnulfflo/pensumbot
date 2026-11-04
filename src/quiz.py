@@ -12,9 +12,11 @@ Kjør:  uv run python -m src.quiz --fag MRK1001 --tema "prisstrategi" --antall 5
 
 import argparse
 import random
+import re
 from datetime import datetime
 
 from src.database import koble, lagre_sporsmal, resultater
+from src.agent import uten_latex
 from src.henting import Bit, hent
 from src.kontroll import Duplikatfilter, avslorer_svaret, sitat_finnes, viser_til_ukjent
 from src.kortsvar import REKKEFOLGE, STILER, lag_kortsvar, vurder
@@ -85,6 +87,9 @@ def kandidat_biter(fag: str, tema: str, antall: int) -> list[Bit]:
         # Emneoversikten handler om kurset (datoer, fremdriftsplan), ikke om faget.
         if "emneoversikt" in bit.metadata["fil"]:
             continue
+        # Læringsmål («Etter forelesningen skal du kunne …») gir spørsmål om kurset, ikke om faget.
+        if re.search(r"læringsmål|etter (denne )?forelesningen|du skal kunne", bit.tekst, re.I):
+            continue
         if len(bit.tekst) >= 300:
             biter.append(bit)
     return biter
@@ -100,6 +105,9 @@ def lag_flervalg(bit: Bit) -> tuple[dict | None, str]:
         return None, "modellen brukte for lang tid"
     if not data.get("kan_lages"):
         return None, "teksten egnet seg ikke"
+    # Formler i kilden blir av og til til LaTeX («$\\Delta$FEK»). Gjør dem om til vanlig tekst.
+    data = {k: ([uten_latex(x) for x in v] if isinstance(v, list) else uten_latex(v) if isinstance(v, str) else v)
+            for k, v in data.items()}
     gale = [g for g in data["gale_svar"] if g.strip() and g.strip() != data["riktig_svar"].strip()][:3]
     if len(gale) != 3 or not data["sporsmal"].strip():
         return None, "manglende eller like alternativer"

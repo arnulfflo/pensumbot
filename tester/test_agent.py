@@ -180,3 +180,76 @@ def test_stopper_sporsmal_der_svaret_star_i_sporsmalet():
                            ["Motivasjon er en prosess som påvirker intensiteten i handlinger.",
                             "Retning, varighet og intensitet er de viktigste elementene.",
                             "Indre motivasjon er alltid sterkt styrt mot mål."]) is None
+
+
+@pytest.mark.parametrize("sporsmal, riktig, gale", [
+    ("Hva innebærer markedsføringsmål i sammenheng med markedsstrategien?",
+     "Markedsføringsmål er det overordnede målet som skal oppnås gjennom markedsføringen.",
+     ["Markedsstrategien er selve budskapet som skal formidles til markedet.",
+      "Kommunikasjonstaktikker er de verktøyene som brukes for å nå målene.",
+      "Kommunikasjonsmål er de spesifikke handlingene som skal utføres."]),
+    ("Hva er et sentralt formål med å kartlegge kjøpsatferd?", "Kjøpsatferd klarlegger behov, bruk og beslutningsprosess.",
+     ["Det definerer hvilke kanaler som er mest effektive.", "Det fastslår hvilke priskriterier som er mest attraktive.",
+      "Det beskriver hvordan markedet endrer seg over tid."]),
+    ("Hva er hovedforskjellen mellom transaksjonsorientering og relasjonsorientering når det gjelder tidshorisont?",
+     "lang tidshorisont", ["vekt på produksjonens sak", "kort tidshorisont", "fokus på produktfordeler"]),
+    ("Hva er et formål med inntekts- og kostnadsfordeling?", "å fordele inntekter og kostnader på avdelingene",
+     ["å beregne resultat for hver enkelt enhet", "å fastsette kostnader for spesifikke områder",
+      "å registrere omsetning på enkelte enheter"]),
+])
+def test_stopper_dumme_flervalg(sporsmal, riktig, gale):
+    from src.kontroll import avslorer_svaret
+    assert avslorer_svaret(sporsmal, riktig, gale)
+
+
+@pytest.mark.parametrize("sporsmal, riktig, gale", [
+    ("Hva er det første steget i STP-prosessen for å håndtere et heterogent marked?",
+     "Del markedet inn i grupper på den mest hensiktsmessige måten",
+     ["Velg og nå de kundegruppene som gir mest nytte", "Definer hvordan man skal betjene de ulike gruppene",
+      "Velg posisjon blant konkurrentene"]),
+    ("Hva representerer egenkapital i en bedrift?", "Det er krav som eierne har på bedriften",
+     ["Det er summen av alle inntekter", "Det er den delen av eiendelene som er finansiert med lån",
+      "Det er pengene i banken"]),
+    ("Hva er en kjerneegenskap ved psykologiske fordeler sammenlignet med rasjonelle produktfordeler?",
+     "De er vanskeligere å ta igjen", ["De er rent funksjonelle og måles", "De er lett tilgjengelige for alle",
+                                       "De er basert på umiddelbar nytte"]),
+])
+def test_slipper_gjennom_gode_flervalg(sporsmal, riktig, gale):
+    from src.kontroll import avslorer_svaret
+    assert avslorer_svaret(sporsmal, riktig, gale) is None
+
+
+def test_stopper_sporsmal_om_kurset_og_konteksten():
+    from src.kontroll import viser_til_ukjent
+    assert viser_til_ukjent("Hva er et hovedmål med å studere langsiktige beslutningsproblemer?", "")
+    assert viser_til_ukjent("Hva er en merkevare definert som i denne konteksten?", "")
+
+
+def test_stopper_svar_og_sporsmal_som_viser_til_kilden():
+    from src.kontroll import avslorer_svaret, viser_til_ukjent
+    assert viser_til_ukjent("Hva er en merkevare definert som i denne sammenhengen?", "")
+    assert viser_til_ukjent("Hva definerer destruktiv ledelse ifølge modellen?", "")
+    assert avslorer_svaret("Hva definerer destruktiv ledelse?", "evne til å hemme/forhindre dette",
+                           ["evne til å motivere andre", "evne til å skape mening", "evne til å styre daglig drift"])
+
+
+def test_stopper_sporsmal_om_studenten_og_kapittelet():
+    from src.kontroll import viser_til_ukjent
+    assert viser_til_ukjent("Hvilke elementer skal studenten kunne beskrive etter å ha lest kapittelet om posisjonering?", "")
+    assert viser_til_ukjent("Hvilke tre temaer trekker boken ut som en sjekkliste?", "")
+    assert viser_til_ukjent("Hva er det første steget i STP-prosessen?", "") is None
+
+
+@pytest.mark.parametrize("sporsmal, stoppes", [
+    ("Hva er en potensiell fare knyttet til en for stor utvidelse av sortimentet?", True),
+    ("Hva er et sentralt argument for å velge å maksimere salget som mål for prispolitikken?", True),
+    ("Hva er en av faktorene som påvirker lojalitet utover tilfredshet?", True),
+    ("Hva er et kjennetegn ved eksklusiv distribusjon?", False),
+    ("Hva er en kognitiv struktur?", False),
+    ("Hva er et grunnleggende krav for at ledelse skal kunne utøves?", False),
+    ("Hva er det første steget i STP-prosessen?", False),
+])
+def test_stopper_sporsmal_om_en_av_flere(sporsmal, stoppes):
+    from src.kontroll import avslorer_svaret
+    resultat = avslorer_svaret(sporsmal, "Et ganske vanlig svar her", ["Et annet svar", "Et tredje svar", "Et fjerde"])
+    assert bool(resultat) == stoppes, resultat

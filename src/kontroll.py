@@ -36,7 +36,12 @@ def sitat_finnes(sitat: str, kildetekst: str) -> bool:
 # «i tabellen», «oppgave 3», «ifølge teksten», «ovenfor»: viser til noe studenten ikke ser
 _HENVISNING = re.compile(r"\b((i|fra|se|av) (tabellen|figuren|oppgaven|caset|eksempelet|grafen)|"
                          r"(ifølge|basert på|i|fra|av) (teksten|tekstutdraget|kilden|notatet|foilen|lysbildet)|"
+                         r"i denne (konteksten|sammenhengen)|i dette tilfellet|i forelesningen|på lysbildet|"
+                         r"ifølge (modellen|figuren|forfatteren)|"
                          r"oppgave \d+|ovenfor|nedenfor)\b", re.I)
+# «Hva er målet med å studere …», «Hva skal du kunne etter forelesningen?»: spør om kurset, ikke faget
+_OM_KURSET = re.compile(r"\b(å studere|studere|læringsmål|forelesning\w*|kurset|emnet|pensum\w*|studenten|"
+                       r"kapit+e?let|boken|boka)\b", re.I)
 _FIRMA = re.compile(r"\b([A-ZÆØÅ][\wæøå-]*(?: [A-ZÆØÅ][\wæøå-]*)*) (AS|ASA|A/S)\b")
 
 
@@ -50,6 +55,8 @@ def viser_til_ukjent(sporsmal: str, kildetekst: str) -> str | None:
     """
     if treff := _HENVISNING.search(sporsmal):
         return f"viser til «{treff.group()}», som studenten ikke ser"
+    if treff := _OM_KURSET.search(sporsmal):
+        return f"spør om kurset («{treff.group()}»), ikke om faget"
     for navn, form in _FIRMA.findall(sporsmal):
         if normaliser(navn) in normaliser(kildetekst):
             return f"spør om {navn} {form} fra en oppgave i pensum, uten opplysningene fra oppgaven"
@@ -63,9 +70,21 @@ _SPOR_ETTER_NAVN = re.compile(r"^(hvilken|hvilket) (type|form|begrep|modell|stra
                               r"^hva kalles\b|^hva heter\b", re.I)
 
 
+def _ord(tekst: str) -> list[str]:
+    return [o for o in re.findall(r"[a-zæøå]{4,}", tekst.lower()) if o not in _SMAAORD]
+
+
 def _stammer(tekst: str) -> set[str]:
-    """Ordstammer (8 første bokstaver), så «markedsføringsmål» og «markedsføringens» regnes som samme ord."""
-    return {o[:8] for o in re.findall(r"[a-zæøå]{4,}", tekst.lower()) if o not in _SMAAORD}
+    """Ordstammer (6 første bokstaver), så «kostnadsfordeling» og «kostnader», eller «markedsføringsmål»
+    og «markedsføringens», regnes som samme ord."""
+    return {o[:6] for o in _ord(tekst)}
+
+
+_EN_AV_FLERE = re.compile(r"\b(en|et|ett) (av (de|faktorene|årsakene)|(sentral|viktig|mulig|potensiell|typisk)\w* )?"
+                          r"(argument|fare|faktor|årsak|fordel|ulempe|risiko|eksempel|grunn|utfordring)(en|et|er|ene)?\b"
+                          r"|\b(en|et|ett) av (de|faktorene|årsakene)\b", re.I)
+# «Markedsstrategien er …», «Kommunikasjonsmål er …»: hvert alternativ forklarer sitt eget begrep
+_BEGREP_ER = re.compile(r"^\s*([A-ZÆØÅa-zæøå-]+(?: [a-zæøå-]+)?) (er|betyr|innebærer)\b")
 
 
 def avslorer_svaret(sporsmal: str, riktig: str, gale: list[str]) -> str | None:
@@ -84,10 +103,33 @@ def avslorer_svaret(sporsmal: str, riktig: str, gale: list[str]) -> str | None:
         return len(ord_ & i_sporsmal) / len(ord_) if ord_ else 0.0
 
     riktig_andel = andel(riktig)
-    if riktig_andel >= 0.99 or (riktig_andel >= 0.5 and riktig_andel > max(map(andel, gale), default=0) + 0.25):
+    if riktig_andel >= 0.99 or (riktig_andel >= 0.5 and riktig_andel >= max(map(andel, gale), default=0) + 0.25):
         return "det riktige svaret gjentar ordene i spørsmålet"
     if _SPOR_ETTER_NAVN.search(sporsmal.strip()) and len(riktig.split()) > 6:
         return "spørsmålet spør etter et navn, men svarene er beskrivelser"
+
+    # Bare det riktige svaret starter med begrepet fra spørsmålet: «Kjøpsatferd klarlegger …» mot «Det …»
+    def forste(svar):
+        ord_ = re.findall(r"[a-zæøå]+", svar.lower())
+        return ord_[0][:6] if ord_ and len(ord_[0]) >= 4 and ord_[0] not in _SMAAORD else ""
+    if forste(riktig) and forste(riktig) in i_sporsmal and not any(forste(g) in i_sporsmal for g in gale):
+        return "bare det riktige svaret starter med ordet fra spørsmålet"
+    # Alternativene forklarer hvert sitt begrep, og spørsmålet nevner begrepet i det riktige
+    begreper = [_BEGREP_ER.match(a) for a in [riktig, *gale]]
+    navn = [b.group(1).lower() for b in begreper if b and _stammer(b.group(1))]
+    if len(navn) >= 3 and len(set(navn)) >= 3 and begreper[0] and \
+            _stammer(begreper[0].group(1)) and _stammer(begreper[0].group(1)) <= i_sporsmal:
+        return "alternativene forklarer hvert sitt begrep, og spørsmålet nevner det riktige"
+    # «Hva er en potensiell fare …?», «et sentralt argument …»: spør etter én av flere, og de gale svarene er
+    # ofte de andre punktene fra samme liste i pensum, altså også riktige
+    if _EN_AV_FLERE.search(sporsmal):
+        return "spør etter én av flere ting, så flere svar kan være riktige"
+    # «evne til å hemme/forhindre dette»: svaret viser til noe som bare sto i kildeteksten
+    if re.search(r"\b(dette|denne|disse|ovennevnte|det nevnte)\s*[.!]?\s*$", riktig.strip(), re.I):
+        return "svaret viser til noe som ikke står i spørsmålet («dette»)"
+    # «Hva er forskjellen …?» med et svar på to–tre ord sier ikke hva forskjellen er
+    if re.search(r"forskjell", sporsmal, re.I) and len(riktig.split()) <= 3:
+        return "spør etter en forskjell, men svaret er for kort til å forklare den"
     return None
 
 
