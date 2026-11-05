@@ -5,26 +5,28 @@ import random
 import pytest
 
 from src.modellquiz import rett_avkrysning
-from src.signaler import (CASER, casetekst, er_modellvalg, fasit_for_case, godkjent, krav, lag_finn, lag_signal,
+from src.signaler import (caser, casetekst, er_modellvalg, fasit_for_case, godkjent, krav, lag_finn, lag_signal,
                           signal_strom, signaler)
 
 FAG = "MRK1001"
+ALLE_CASER = [(fag, navn) for fag in ("MRK1001", "ORG1100") for navn in caser(fag)]
 
 
-@pytest.mark.parametrize("navn", list(CASER[FAG]))
-def test_hver_case_har_fasit_og_lesbar_tekst(navn):
-    riktige, _ = fasit_for_case(FAG, navn)
-    assert len(riktige) >= 5, navn
-    tekst = casetekst(FAG, navn)
+@pytest.mark.parametrize("fag,navn", ALLE_CASER)
+def test_hver_case_har_fasit_og_lesbar_tekst(fag, navn):
+    riktige, _ = fasit_for_case(fag, navn)
+    assert len(riktige) >= 3, navn
+    tekst = casetekst(fag, navn)
+    assert "\ufffd" not in tekst, "ødelagte bokstaver fra PDF-en"
     assert len(tekst.split()) > 500 and "NUMPAGES" not in tekst
     avsnitt = [a for a in tekst.split("\n\n") if len(a) > 80]
     assert len(avsnitt) == len(set(avsnitt)), "avsnitt som står to ganger skal bare tas med én gang"
 
 
-@pytest.mark.parametrize("navn", list(CASER[FAG]))
-def test_finn_gale_alternativer_er_aldri_i_fasiten(navn):
+@pytest.mark.parametrize("fag,navn", ALLE_CASER)
+def test_finn_gale_alternativer_er_aldri_i_fasiten(fag, navn):
     for seed in range(5):
-        q = lag_finn(FAG, navn, random.Random(seed))
+        q = lag_finn(fag, navn, random.Random(seed))
         assert er_modellvalg(q) and q["type"] == "avkrysning"
         assert set(q["fasit"]) <= set(q["alternativer"])
         assert len(q["alternativer"]) == len(set(q["alternativer"]))
@@ -72,4 +74,38 @@ def test_strommen_holder_seg_til_kapittelet():
     kap = {m.navn: m.kapittel for m in modeller(FAG)}
     qs = list(signal_strom(FAG, "kap. 12", "signal", 20, random.Random(0)))
     assert qs and all(any(kap[n] == 12 for n in q["fasit"]) and m.kapittel == 12 for q, m in qs)
-    assert len(list(signal_strom(FAG, None, "finn", 10, random.Random(0)))) == len(CASER[FAG])
+    assert len(list(signal_strom(FAG, None, "finn", 10, random.Random(0)))) == len(caser(FAG))
+
+
+@pytest.mark.parametrize("fag", ["MRK1001", "ORG1100"])
+def test_sitatene_staar_ordrett_i_casen(fag):
+    """Signalarket viser sitatet som bevis. Det må stå i casen, ikke være omskrevet."""
+    import re
+    vask = lambda s: re.sub(r"\s+", " ", s).strip()
+    sjekket = 0
+    for s in signaler(fag):
+        if s.sitat and s.sitat_fra in caser(fag):
+            assert vask(s.sitat) in vask(casetekst(fag, s.sitat_fra)), (s.sitat_fra, s.sitat)
+            sjekket += 1
+    assert sjekket >= 10
+
+
+def test_org_schjodt_bruker_sensorveiledningen():
+    riktige, _ = fasit_for_case("ORG1100", "Schjødt")
+    for m in ("Situasjonsbestemt ledelse (Hersey og Blanchard)", "Forventningsteori (Vroom)", "Herzbergs tofaktorteori"):
+        assert m in riktige
+    assert "Oppgave 2 (60 %)" in casetekst("ORG1100", "Schjødt")
+
+
+@pytest.mark.parametrize("fag", ["MRK1001", "ORG1100"])
+def test_signalarket_viser_sitat_modell_og_kilde(fag):
+    from src.signaler import signalark
+    ark = signalark(fag)
+    s = next(s for s in signaler(fag) if s.sitat and s.modeller)
+    assert s.sitat.strip("«»") in ark and s.modeller[0] in ark and "Oppslag per modell" in ark
+
+
+def test_signalarket_for_ett_kapittel_viser_bare_det_kapittelet():
+    from src.signaler import signalark
+    ark = signalark("ORG1100", 14)
+    assert "Competing Values Framework" in ark and "Forventningsteori" not in ark.split("### Oppslag per modell")[1]

@@ -1,0 +1,308 @@
+# Signaler: hva i en case eller oppgavetekst peker på hvilken teori (ORG1100).
+# Hentet 05.11.2026 fra pensum/ORG1100/eksamener/:
+#   losning/Sensurveiledning 2024.pdf             Schjødt, ordinær eksamen desember 2024
+#   losning/Sensurveiledning utsatt eksamen 23.pdf  SAS, utsatt eksamen vår 2023 (casen ligger ikke i mappen)
+#   losning/Case Pres Elkjøp.pdf                   studass-løsning, Elkjøp (motivasjon og belønning)
+#   oppgaver/Stud.ass ORG CASE 2 - KULTUR.pdf      studass-løsning, Easee (organisasjonskultur)
+#   losning/Umoe case studass løsning.pptx         studass-løsning, Umoe (beslutninger)
+#   losning/Case pres generel løse case.pdf        studass: hvordan løse en case
+#   eksempelsvar/… (A-besvarelse 2025)             Norsk Tipping (casen ligger ikke i mappen)
+#
+# Samme felt som config/signaler_MRK1001.yaml. «modeller» må stå på modellarket (config/modeller.yaml).
+# Teorier fra veiledningene som ikke er egne modeller i notatene dine (LMX, transformasjonsledelse,
+# begrenset rasjonalitet, stiavhengighet, tekniske og institusjonelle omgivelser) står under «begreper».
+# Merk: de eldre veiledningene viser til Jacobsen og Thorsvik. Notatene dine følger en annen bok, så
+# figurnumrene i veiledningene passer ikke med notatene.
+
+# Casene med fasit (Finn modellene). fil er relativ til pensum/ORG1100/eksamener/.
+caser:
+  Schjødt:
+    fil: oppgaver/Eksamen 2024.pdf
+    fasit: sensorveiledningen
+    oppgave: |
+      Oppgave 1 (40 %): Med utgangspunkt i relevant teori fra pensum, analyser Schjødt fra et ledelsesperspektiv, fra tiden etter ca. 2009.
+
+      Oppgave 2 (60 %): Med utgangspunkt i relevant teori fra pensum, analyser hvordan ledelsen ønsket å motivere ansatte i Schjødt. Drøft hva du ser om konsekvensen av denne tilnærmingen. Trekk inn annen relevant teori for å videre belyse analysen.
+  Elkjøp:
+    fil: oppgaver/Case Elkjop motivasjon.pdf
+    fasit: studass-løsningen
+  Easee:
+    fil: oppgaver/Case modul 3 Easee med oppgave.pdf
+    fasit: studass-løsningen
+  Umoe:
+    fil: oppgaver/9 Umoe m casespørsmål.docx
+    fasit: studass-løsningen
+
+signaler:
+  # ---------- oppgaveord: ordene i selve oppgaven ----------
+  - signal: "«analyser … fra et ledelsesperspektiv», «lederstil», «hvordan ledelsen …»"
+    type: oppgaveord
+    modeller: ["Situasjonsbestemt ledelse (Hersey og Blanchard)", "Managerial grid (Blake og Mouton)",
+               "Oppgave- og relasjonsorientert ledelse (Ohio State og Michigan)", "Konstruktiv og destruktiv ledelse"]
+    begreper: ["definisjon av ledelse", "autoritær–demokratisk lederstil", "LMX (relasjonsbasert ledelse)",
+               "transformasjonsledelse og karismatisk ledelse"]
+    kilder: [Schjødt]
+    sitat: "analyser Schjødt fra et ledelsesperspektiv"
+    sitat_fra: Schjødt
+    hvorfor: "Definer ledelse, klassifiser lederstilen og bruk Hersey og Blanchard. Ledergitteret: høyt produksjonshensyn, lavt menneskelig hensyn."
+  - signal: "«hvordan ledelsen ønsket å motivere», «motivere ansatte», «konsekvensen av denne tilnærmingen»"
+    type: oppgaveord
+    modeller: ["Forventningsteori (Vroom)", "Maslows behovshierarki", "Selvbestemmelseskontinuumet: indre og ytre motivasjon",
+               "Herzbergs tofaktorteori", "Jobbkarakteristikamodellen (Hackman og Oldham)"]
+    begreper: ["grad av deltakelse i beslutninger", "tilknytning til organisasjonen (normative bånd)"]
+    kilder: [Schjødt]
+    sitat: "analyser hvordan ledelsen ønsket å motivere ansatte i Schjødt"
+    sitat_fra: Schjødt
+    hvorfor: "Sensor lister forventningsteori, Maslow, indre og ytre motivasjon, Herzberg, Hackman og Oldham, deltakelse og tilknytning."
+  - signal: "«gjør rede for motivasjons- og belønningsteorier», «bonus», «belønning»"
+    type: oppgaveord
+    modeller: ["Motivasjonens tre dimensjoner", "Selvbestemmelseskontinuumet: indre og ytre motivasjon", "Prososial motivasjon",
+               "Forventningsteori (Vroom)", "Maslows behovshierarki", "Herzbergs tofaktorteori"]
+    kilder: [Elkjøp]
+    sitat: "Gjør rede for motivasjons- og belønningsteorier."
+    sitat_fra: Elkjøp
+    hvorfor: "Studass starter med hva motivasjon er (retning, intensitet, utholdenhet), så ytre, indre og prososial motivasjon, Vroom, Maslow og Herzberg."
+  - signal: "«organisasjonskultur», «kulturkollisjon», «kulturens effekt på resultatet»"
+    type: oppgaveord
+    modeller: ["Kulturinnhold: verdier, normer og virkelighetsoppfatninger", "Fire typer kulturuttrykk",
+               "Competing Values Framework (CVF)", "Integrasjons- og differensieringsperspektivet på kultur"]
+    begreper: ["Scheins tre nivåer: artefakter, verdier og normer, grunnleggende antakelser", "kulturens styrke og intensitet",
+               "subkulturer"]
+    kilder: [SAS 2023, Easee]
+    sitat: "analyser og diskuter Easees organisasjonskultur slik den framkommer i casen"
+    sitat_fra: Easee
+    hvorfor: "Definer organisasjonskultur. Sensor viser CVF (klan, adhokrati, hierarki, marked) og Scheins nivåer, og gir pluss for flere kulturer og subkulturer."
+  - signal: "«nasjonal kultur», «den norske modellen», «den nordiske modellen»"
+    type: oppgaveord
+    modeller: ["Hofstedes kulturdimensjoner", "Den nordiske modellen og trepartssamarbeidet"]
+    begreper: ["maktavstand"]
+    kilder: [SAS 2023]
+    sitat: "Drøft med utgangspunkt i teori hvordan nasjonal kultur og den norske modellen har påvirket organisasjonskulturen i SAS."
+    sitat_fra: SAS 2023 (oppgaveteksten)
+    hvorfor: "Definisjon og forklaring av den norske modellen forventes, og mer enn det som står i boka. Maktavstand er relevant for begge oppgavene."
+  - signal: "«beslutningsteori», «de beslutningene som ble tatt og hvilke konsekvenser de fikk»"
+    type: oppgaveord
+    modeller: ["Den rasjonelle beslutningsmodellen", "Feilkilder og feller i beslutninger", "Tre typer beslutninger"]
+    begreper: ["economic man", "begrenset rasjonalitet", "tid- og stiavhengighet"]
+    kilder: [Umoe]
+    sitat: "Diskuter med utgangspunkt i pensumteori de beslutningene som ble tatt og hvilke konsekvenser de fikk."
+    sitat_fra: Umoe
+    hvorfor: "Studass: start med hva en beslutning er, så economic man som ideal, begrenset rasjonalitet som det realistiske, og stiavhengighet."
+  - signal: "«organisatorisk læring», «ble innledet av flere andre alvorlige feil», «barrierer for læring»"
+    type: oppgaveord
+    modeller: ["Enkelt- og dobbeltkretslæring (Argyris og Schön)", "Behaviorisme", "Kolbs læringssirkel"]
+    begreper: ["læring fra individ til organisasjon", "operant betinging", "barrierer for læring"]
+    kilder: [Norsk Tipping]
+    sitat: "Eurojackpot-hendelsen ble innledet av flere andre alvorlige feil."
+    sitat_fra: Norsk Tipping 2025 (oppgaveteksten)
+    hvorfor: "A-besvarelsen bruker enkelt- og dobbeltkretslæring og operant betinging, og forklarer hvorfor feilene ikke ble lært av."
+  - signal: "«omgivelser», «hvordan omgivelsene har påvirket»"
+    type: oppgaveord
+    modeller: ["Betingelsesteori (contingency theory)", "Teorier om samfunnsansvar"]
+    begreper: ["tekniske og institusjonelle omgivelser", "legitimitet og omdømme"]
+    kilder: [Norsk Tipping]
+    sitat: "Drøft hvordan omgivelsene har påvirket Norsk Tipping."
+    sitat_fra: Norsk Tipping 2025 (oppgaveteksten)
+    hvorfor: "A-besvarelsen skiller tekniske og institusjonelle omgivelser og knytter feilene til tillit og legitimitet."
+
+  # ---------- casesignaler: fakta i caseteksten ----------
+  - signal: "Høy lønn, bonus og løfte om å bli partner, svært målbare krav (fakturerbare timer, poeng)"
+    type: case
+    modeller: ["Forventningsteori (Vroom)", "Selvbestemmelseskontinuumet: indre og ytre motivasjon", "Maslows behovshierarki"]
+    begreper: ["ytre motivasjon kan fortrenge indre", "variabel lønn"]
+    kilder: [Schjødt]
+    sitat: "Ueland krevde at partnerne leverte 2000 egne fakturerbare timer mot klient årlig"
+    sitat_fra: Schjødt
+    hvorfor: "Svært pengefokusert og målbart: forventningsteori. Høy grad av ytre motivasjon, som kan gå på bekostning av indre. Maslow for karriere og prestisje."
+  - signal: "Hard styring og frykt («frykt og penger»), straff når instrukser ikke følges"
+    type: case
+    modeller: ["Managerial grid (Blake og Mouton)", "Konstruktiv og destruktiv ledelse", "Åtte kilder til makt (French og Raven m.fl.)"]
+    begreper: ["tvangsmakt", "høyt produksjonshensyn, lavt menneskelig hensyn"]
+    kilder: [Schjødt]
+    sitat: "Limet i Schjødt har bestått av frykt og penger."
+    sitat_fra: Schjødt
+    hvorfor: "Ledergitteret: høyt produksjonshensyn og lavt menneskelig hensyn. Endringene hadde basis i ordre og tvang."
+  - signal: "Svært kompetente ansatte som likevel blir instruert og ikke får bestemme selv"
+    type: case
+    modeller: ["Situasjonsbestemt ledelse (Hersey og Blanchard)", "Psykologisk myndiggjøring (empowerment)"]
+    begreper: ["grad av deltakelse i beslutninger: lav"]
+    kilder: [Schjødt]
+    sitat: "De skulle ikke lengre bestemme timeprisen selv."
+    sitat_fra: Schjødt
+    hvorfor: "Hersey og Blanchard: med så kompetente ansatte burde stilen vært delegerende, men den var instruerende, og det skaper misnøye."
+  - signal: "Interessante og utfordrende oppgaver selv om pengene er hovedfokus"
+    type: case
+    modeller: ["Herzbergs tofaktorteori", "Jobbkarakteristikamodellen (Hackman og Oldham)"]
+    kilder: [Schjødt]
+    sitat: "De aller flinkeste kandidatene har jo gjerne et mål om å bli partner"
+    sitat_fra: Schjødt
+    hvorfor: "Mye hygienefaktorer (lønn), men motivasjonsfaktorene ligger i selve arbeidet: utfordrende, varierte oppgaver og vekst."
+  - signal: "En ny toppsjef som legger om alt ovenfra («ny kurs», «ble valgt som toppsjef»)"
+    type: case
+    modeller: ["Episodisk og kontinuerlig endring", "Åtte kilder til makt (French og Raven m.fl.)"]
+    begreper: ["revolusjon og evolusjon", "endring basert på ordre og tvang"]
+    kilder: [Schjødt]
+    sitat: "2009 ble Ueland valgt som toppsjef."
+    sitat_fra: Schjødt
+    hvorfor: "Endringen var en revolusjon styrt av ledelsen. Evolusjon passer ikke, fordi det var ledelsen som bestemte."
+  - signal: "Noen får bonus og andre ikke, uklare kriterier, «alle ansatte» som ikke stemmer"
+    type: case
+    modeller: ["Rettferdighetsteori (Adams)", "Fire former for rettferdighet i organisasjoner", "Forventningsteori (Vroom)"]
+    begreper: ["fordelings-, prosedyre- og samhandlingsrettferdighet"]
+    kilder: [Elkjøp]
+    sitat: "Samtidig viser det seg at bonusen likevel ikke omfatter «alle ansatte», slik kjeden først meldte."
+    sitat_fra: Elkjøp
+    hvorfor: "Ansatte sammenligner innsats og belønning med andre. Vroom: mer innsats ga ikke tariffansatte tilgang til bonusen, så ett ledd svikter."
+  - signal: "Belønning som kan oppleves som kontroll eller press («brukes som et pressmiddel»)"
+    type: case
+    modeller: ["Selvbestemmelsesteorien: tre psykologiske behov", "Selvbestemmelseskontinuumet: indre og ytre motivasjon",
+               "Prososial motivasjon"]
+    kilder: [Elkjøp]
+    sitat: "tapet av bonus brukes som et pressmiddel for å nå målet"
+    sitat_fra: Elkjøp
+    hvorfor: "Tap av bonus kan oppleves som kontroll og svekke autonomi og tilhørighet. Kravet om like vilkår kan være prososialt, ikke bare egeninteresse."
+  - signal: "Lønn og bonus står i sentrum, men folk vil også ha anerkjennelse og utvikling"
+    type: case
+    modeller: ["Herzbergs tofaktorteori", "Maslows behovshierarki", "Målsettingsteori (Locke og Latham)"]
+    kilder: [Elkjøp]
+    sitat: "«Som en takk for den enorme innsatsen som er lagt ned, er det gledelig å kunne dele overskuddet med alle ansatte."
+    sitat_fra: Elkjøp
+    hvorfor: "Lønn forebygger mistrivsel, men gir ikke varig motivasjon (Herzberg). Målsettingsteori: ansatte må kjenne og kunne påvirke kriteriene."
+  - signal: "Fagforening, tariffavtale og organisasjonsfrihet, LO som reagerer"
+    type: case
+    modeller: ["Den nordiske modellen og trepartssamarbeidet"]
+    kilder: [Elkjøp]
+    sitat: "LO vil ikke ha på seg at vi tvinger medlemmene til å handle et sted hvor de motarbeider et organisert arbeidsliv og den norske modellen."
+    sitat_fra: Elkjøp
+    hvorfor: "Studass: den norske modellen er nesten alltid relevant for norske bedrifter. Her står den i sentrum av konflikten."
+  - signal: "Ritualer, ting og symboler på jobben (bordtennisbord, ukentlige kultursamlinger, «head of love»)"
+    type: case
+    modeller: ["Fire typer kulturuttrykk", "Kulturinnhold: verdier, normer og virkelighetsoppfatninger"]
+    begreper: ["Scheins nivåer: artefakter"]
+    kilder: [Easee]
+    sitat: "Hver uke arrangeres det som kalles «Culture Box»."
+    sitat_fra: Easee
+    hvorfor: "Artefakter er det synlige nivået. Studass går fra artefakter via verdier og normer til grunnleggende antakelser."
+  - signal: "«No hierarchy», flat struktur, frihet og tillit framfor regler"
+    type: case
+    modeller: ["Competing Values Framework (CVF)", "Teori X og teori Y (McGregor)", "Mekanistiske og organiske organisasjoner (Burns og Stalker)"]
+    kilder: [Easee]
+    sitat: "Det skal ikke finnes subkulturer eller en følelse av hierarki."
+    sitat_fra: Easee
+    hvorfor: "Før krisen: klan og adhokrati i CVF. Den grunnleggende antakelsen er at folk er til å stole på (teori Y)."
+  - signal: "Etter en krise: «vi må ha mer kontroll», klare mål, ny toppsjef"
+    type: case
+    modeller: ["Competing Values Framework (CVF)", "Kulturendring (Stensaker og Sverdrup)"]
+    kilder: [Easee]
+    sitat: "Vi må ha mer kontroll, sier Helmikstøl."
+    sitat_fra: Easee
+    hvorfor: "Etter krisen går kulturen fra klan og adhokrati mot hierarki og marked. En sterk kultur gjør snuoperasjonen tung."
+  - signal: "Rekruttering på verdier, alle skal mene det samme, brudd blir ikke akseptert"
+    type: case
+    modeller: ["Integrasjons- og differensieringsperspektivet på kultur"]
+    begreper: ["kulturens styrke: enighet og sanksjoner"]
+    kilder: [Easee]
+    sitat: "Da vet de hva de går inn i og om de vil la verdiene våre bety noe."
+    sitat_fra: Easee
+    hvorfor: "Integreringsperspektivet: ett kulturelt fellesskap. Styrken avhenger av hvor enige folk er og hvor hardt brudd sanksjoneres."
+  - signal: "Krise og knapp tid som tvinger fram raske beslutninger («en toårs strategi på fire måneder»)"
+    type: case
+    modeller: ["Den rasjonelle beslutningsmodellen", "Tre typer beslutninger"]
+    begreper: ["begrenset rasjonalitet", "economic man som ideal"]
+    kilder: [Umoe]
+    sitat: "Vi måtte gjennomføre en toårs strategi på fire måneder, sier konserndirektøren."
+    sitat_fra: Umoe
+    hvorfor: "Den rasjonelle modellen er idealet. Korona og tidspress gjør beslutningene begrenset rasjonelle."
+  - signal: "Tidligere valg som binder eller må rettes opp («en vekststrategi som viste seg å være for ambisiøs»)"
+    type: case
+    modeller: ["Feilkilder og feller i beslutninger"]
+    begreper: ["tid- og stiavhengighet"]
+    kilder: [Umoe]
+    sitat: "Vi hadde hatt en ambisiøs vekststrategi som viste seg å være for ambisiøs."
+    sitat_fra: Umoe
+    hvorfor: "Studass deler beslutningene i faser: for ambisiøs vekst, så restrukturering, så nye muligheter. Hver fase bygger på den forrige."
+  - signal: "Gjentatte feil, autonome team uten kontroll («for mye fart og for lite kontroll»)"
+    type: case
+    modeller: ["Enkelt- og dobbeltkretslæring (Argyris og Schön)", "Situasjonsbestemt ledelse (Hersey og Blanchard)"]
+    kilder: [Norsk Tipping]
+    sitat: "Vi har hatt for mye fart og for lite kontroll. Nå skal vi gå roligere fram – og lære"
+    sitat_fra: Norsk Tipping 2025 (sitert i A-besvarelsen)
+    hvorfor: "Enkeltkretslæring uten å stille spørsmål ved målene. A-besvarelsen leser lederstilen som delegerende med feilvurdert modenhet."
+  - signal: "Medier, myndigheter og kunder mister tilliten etter feil"
+    type: case
+    modeller: ["Teorier om samfunnsansvar", "Betingelsesteori (contingency theory)"]
+    begreper: ["institusjonelle omgivelser", "legitimitet"]
+    kilder: [Norsk Tipping]
+    hvorfor: "Feil som rammer sårbare kunder svekker legitimiteten hos de institusjonelle omgivelsene."
+  - signal: "Utenlandsk sjef i et nordisk selskap, uttalelser om kulturkollisjon"
+    type: case
+    modeller: ["Hofstedes kulturdimensjoner", "Den nordiske modellen og trepartssamarbeidet"]
+    begreper: ["maktavstand"]
+    kilder: [SAS 2023]
+    sitat: "Anko van der Werff står for en helt klar kulturkollisjon når det gjelder den nordiske modellen"
+    sitat_fra: SAS 2023 (oppgaveteksten)
+    hvorfor: "Ensidig fordømming eller synsing teller negativt. Drøft utsagnet med teori fra flere sider."
+  - signal: "Flere grupper med hver sin kultur (fagforeninger, piloter, ledelse)"
+    type: case
+    modeller: ["Integrasjons- og differensieringsperspektivet på kultur", "Åtte kilder til makt (French og Raven m.fl.)"]
+    begreper: ["subkulturer", "makt"]
+    kilder: [SAS 2023]
+    hvorfor: "Pluss for å se flere organisasjonskulturer (SAS, fagforening, andre) og subkulturer. Makt for særlig sterke besvarelser."
+
+  # ---------- utledet fra notatene ----------
+  - signal: "Omorganisering, nedbemanning eller salg av deler av virksomheten"
+    type: case
+    utledet: true
+    modeller: ["Episodisk og kontinuerlig endring", "Endringsreaksjoner (Meyer og Stensaker)", "Psykologisk kontrakt",
+               "Lewins tretrinnsmodell"]
+    kilder: [notatene]
+    sitat: "Porteføljen ble spisset, deler av virksomheten ble solgt og husleienivåene ble kuttet der det var mulig."
+    sitat_fra: Umoe
+    hvorfor: "Store kutt er episodisk endring. Se på hvordan ansatte reagerer, og om den psykologiske kontrakten brytes."
+  - signal: "Konflikt som trappes opp mellom grupper eller personer"
+    type: case
+    utledet: true
+    modeller: ["Glasls konflikttrapp", "Sakskonflikt og relasjonskonflikt", "Fem konflikthåndteringsstiler"]
+    kilder: [notatene]
+    hvorfor: "Plasser konflikten på trappen, skill sak fra relasjon, og drøft hvilken håndteringsstil partene bruker."
+  - signal: "Et team som ikke fungerer, noen som ikke bidrar, uklare roller"
+    type: case
+    utledet: true
+    modeller: ["Tuckmans fasemodell", "Sosial loffing", "Gruppenormer", "MRPI-modellen (teamkontrakt)"]
+    kilder: [notatene]
+    hvorfor: "Hvilken fase er teamet i? Sosial loffing når innsatsen ikke synes. MRPI for mål, roller, prosedyrer og relasjoner."
+  - signal: "Ansatte som er utbrent eller stresset av høye krav"
+    type: case
+    utledet: true
+    modeller: ["Krav–kontroll-modellen (Karasek)", "Krav–ressurs-modellen (Bakker og Demerouti)"]
+    kilder: [notatene]
+    sitat: "Kravene til antallet fakturerbare timer var skyhøye."
+    sitat_fra: Schjødt
+    hvorfor: "Høye krav med lite kontroll gir stress. Krav–ressurs: ressurser kan veie opp for kravene."
+  - signal: "Byråkrati, mange regler og nivåer, eller en struktur som ikke passer omgivelsene"
+    type: case
+    utledet: true
+    modeller: ["Mintzbergs organisasjonsmodell (fem deler)", "Byråkratimodellen (Weber)", "Mintzbergs organisasjonstyper",
+               "Betingelsesteori (contingency theory)"]
+    kilder: [notatene]
+    hvorfor: "Beskriv strukturen med Mintzberg. Betingelsesteori: strukturen må passe omgivelsene og teknologien."
+
+  # ---------- når en teori IKKE passer ----------
+  - signal: "Oppgave 1 om organisasjonskultur sier «andre teorier enn nasjonal kultur»"
+    type: ikke
+    modeller: ["Hofstedes kulturdimensjoner"]
+    kilder: [SAS 2023]
+    hvorfor: "Nasjonal kultur skulle dekkes i oppgave 2. I oppgave 1 skal du ikke prioritere andre tema sterkere enn organisasjonskultur."
+  - signal: "Endringen ble styrt ovenfra av ledelsen"
+    type: ikke
+    begreper: ["evolusjon"]
+    kilder: [Schjødt]
+    hvorfor: "«Evolusjon passer ikke, da det var ledelsen som bestemte hva som skulle gjøres» (sensorveiledningen)."
+
+prinsipper:
+  - "Teorien skal kobles konkret til casen. Teori som ikke knyttes til spørsmålet trekker ned. (sensorveiledning 2024)"
+  - "Redegjør for teorien før du drøfter. Skriv som om sensor ikke kan pensum, og bruk egne ord. (studass)"
+  - "Både bredde og dybde kan gi god uttelling, men heller 2–3 teorier grundig enn 10 overfladisk. (sensorveiledning 2024, studass)"
+  - "Drøft begge sider («på den ene siden … på den andre siden»). Ikke start med konklusjonen, og ikke kom med løsninger til bedriften. (studass)"
+  - "Ta tydelige forutsetninger der casen er uklar, men ikke omdefiner eller smalne inn casen. (sensorveiledning 2024, studass)"
+  - "Den norske modellen er nesten alltid relevant, siden casene handler om norske bedrifter. (studass)"

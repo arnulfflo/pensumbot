@@ -44,6 +44,56 @@ def les_side(fil: Path, side: int) -> str:
     return tekst
 
 
+def les_side_spalter(fil: Path, side: int) -> str:
+    """Som les_side, men for sider satt i spalter (avisartikler i eksamenscasene): venstre spalte
+    ovenfra og ned før høyre, og ord delt med bindestrek ved linjeslutt skjøtes. Lagres for seg."""
+    cache = _cache_sti(fil, side).with_name(f"s{side:03d}_spalter.txt")
+    if cache.exists():
+        return cache.read_text(encoding="utf-8")
+
+    import re
+    import pymupdf
+    from ocrmac import ocrmac
+    from PIL import Image
+
+    with pymupdf.open(fil) as pdf:
+        png = pdf[side - 1].get_pixmap(dpi=DPI).tobytes("png")
+    linjer = ocrmac.OCR(Image.open(io.BytesIO(png)), language_preference=SPRAK,
+                        recognition_level="accurate").recognize()
+    # (tekst, sikkerhet, [x, y, bredde, høyde]), y målt nedenfra. Siden deles i bolker ovenfra og ned:
+    # linjer over nesten hele bredden står for seg, og hver bolk med smale linjer leses spalte for spalte.
+    # Spalteskillet i en bolk er der en loddrett linje krysser færrest tekstlinjer.
+    def spalter(bolk):
+        krysser = lambda r, b: r[2][0] < b - 0.01 and r[2][0] + r[2][2] > b + 0.01
+        beste = None
+        for b in (i / 100 for i in range(25, 80)):
+            v = sum(r[2][0] + r[2][2] <= b + 0.01 for r in bolk)
+            h = sum(r[2][0] >= b - 0.01 for r in bolk)
+            if min(v, h) >= max(2, len(bolk) / 6):
+                k = sum(krysser(r, b) for r in bolk)
+                if beste is None or k < beste[0]:
+                    beste = (k, b)
+        if beste is None:
+            return bolk
+        b = beste[1]
+        return [r for r in bolk if r[2][0] < b] + [r for r in bolk if r[2][0] >= b]
+
+    rekke, bolk = [], []
+    for r in sorted(linjer, key=lambda r: -r[2][1]):
+        if r[2][2] > 0.6:                    # hel bredde
+            rekke += spalter(bolk) + [r]
+            bolk = []
+        else:
+            bolk.append(r)
+    rekke += spalter(bolk)
+    tekst = "\n".join(r[0] for r in rekke)
+    tekst = re.sub(r"(\w)-\n(\w)", r"\1\2", tekst)       # «bordten-\nnisbord» → «bordtennisbord»
+
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(tekst, encoding="utf-8")
+    return tekst
+
+
 if __name__ == "__main__":
     fil, side = Path(sys.argv[1]), int(sys.argv[2]) if len(sys.argv) > 2 else 1
     print(les_side(fil, side))

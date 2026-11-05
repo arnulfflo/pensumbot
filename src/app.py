@@ -456,7 +456,7 @@ def svar_quiz(valgt, tekst, flere, request: gr.Request):
                 + (f", og {len(gale)} som ikke hører til" if gale else ""))
         linjer = "".join(f"<li>✓ {escape(a)}</li>" for a in q["fasit"] if a not in glemt)
         linjer += "".join(f"<li>· Du glemte: {escape(a)}</li>" for a in glemt)
-        linjer += "".join(f"<li>✗ {'Ikke i løsningsforslaget' if modellvalg else 'Hører ikke til'}: {escape(a)}</li>" for a in gale)
+        linjer += "".join(f"<li>✗ {'Ikke i fasiten' if modellvalg else 'Hører ikke til'}: {escape(a)}</li>" for a in gale)
         innhold = f"<ul>{linjer}</ul><p>{escape(q.get('forklaring') or '').replace(chr(10), '<br>')}</p>"
         tilbakemelding = None
     elif q["type"] == "flervalg":
@@ -818,8 +818,17 @@ def _kapitler(fag) -> list[str]:
     return [ALLE_KAPITLER] + [t for t in temaer_for(fag, med_alle=False) if kapittel_i(t)]
 
 
-def vis_modellark(fag, kapittel) -> str:
+ARK = ["Modellark", "Signalark"]
+
+
+def vis_modellark(fag, kapittel, ark="Modellark") -> str:
     kap = kapittel_i(kapittel) if kapittel != ALLE_KAPITLER else None
+    if ark == "Signalark":
+        if not signaler.har_signaler(fag):
+            return f"*Ingen signalkatalog for {fag} ennå.*"
+        return ("*Signalene er hentet fra sensorveiledninger, løsningsforslag og A-besvarelser til ekte eksamenscaser. "
+                "Les et signal, se sitatet fra casen, og lær hvilken modell det peker på. Øv etterpå med «Finn signalet» "
+                "og «Finn modellene i en eksamenscase».*\n\n" + signaler.signalark(fag, kap))
     tekst = modellark(fag, kap)
     antall = tekst.count("\n**")
     return (f"*{antall} modeller og teorier, hentet fra modellnotatene dine. Elementene er det du bruker "
@@ -973,6 +982,7 @@ def lag_app() -> gr.Blocks:
                         mfag0 = "MRK1001" if standardfag() not in MODELLFAG else standardfag()
                         modell_fag = gr.Dropdown(list(MODELLFAG), value=mfag0, label="Fag")
                         modell_kap = gr.Dropdown(_kapitler(mfag0), value=ALLE_KAPITLER, label="Kapittel", scale=2)
+                        modell_vis = gr.Radio(ARK, value="Modellark", label="Vis", scale=2)
                         modell_ov = gr.Button("🎯 Øv på disse ➜", variant="primary", scale=1)
                 modell_ark = gr.Markdown(vis_modellark(mfag0, ALLE_KAPITLER), elem_classes="modellark")
 
@@ -1019,9 +1029,10 @@ def lag_app() -> gr.Blocks:
 
         oppdater_knapp.click(vis_mestring, outputs=mestring)
 
-        modell_fag.input(lambda f: (gr.update(choices=_kapitler(f), value=ALLE_KAPITLER),
-                                    vis_modellark(f, ALLE_KAPITLER)), modell_fag, [modell_kap, modell_ark])
-        modell_kap.input(vis_modellark, [modell_fag, modell_kap], modell_ark)
+        modell_fag.input(lambda f, a: (gr.update(choices=_kapitler(f), value=ALLE_KAPITLER),
+                                       vis_modellark(f, ALLE_KAPITLER, a)), [modell_fag, modell_vis], [modell_kap, modell_ark])
+        modell_kap.input(vis_modellark, [modell_fag, modell_kap, modell_vis], modell_ark)
+        modell_vis.input(vis_modellark, [modell_fag, modell_kap, modell_vis], modell_ark)
         modell_ov.click(ov_paa_modeller, [modell_fag, modell_kap], [faner, quiz_fag, quiz_tema, quiz_type, quiz_stil])
 
         formel_ut = [formel_kort, formel_valg, formel_tekst, formel_resultat, formel_poeng, formel_okt]

@@ -9,30 +9,47 @@
 #   kilder:   hvilke caser signalet er hentet fra
 #   type:     oppgaveord (står i selve oppgaven), case (står i caseteksten) eller ikke (modellen passer IKKE)
 #   hvorfor:  hva løsningsforslaget sier, kort
+#   sitat:    en setning fra casen der signalet står (sitat_fra: hvilken case). Testen sjekker at den står der.
 #
 # Signaler med flere kilder er sikrere. «utledet» betyr at signalet er en slutning fra notatene,
 # ikke noe en sensor har skrevet.
 
+# Casene med løsningsforslag (Finn modellene). fil er relativ til pensum/MRK1001/eksamener/.
+caser:
+  Apiir: {fil: oppgaver/Apiir.docx}
+  Comfyballs: {fil: oppgaver/Comfyballs.docx}
+  Grandiosa: {fil: oppgaver/Grandiosa.docx}
+  Kari Traa: {fil: oppgaver/Karitraacase.docx}
+  Spike: {fil: oppgaver/Spike.docx}
+
 signaler:
   # ---------- oppgaveord: ordene i selve oppgaven ----------
   - signal: "«markedsundersøkelse», «hvordan ville du gjennomført en undersøkelse», «datainnsamlingsmetoder»"
+    sitat: "Redegjør for hvordan du ville ha gjennomført en slik undersøkelse, med valg av konkrete datainnsamlingsmetoder."
+    sitat_fra: Apiir
     type: oppgaveord
     modeller: ["Fem faser i et markedsanalyseprosjekt (Churchill)", "Feilkilder i markedsanalyser"]
     begreper: ["problemdefinisjon", "sekundærdata før primærdata", "kvalitativ (fokusgrupper) og kvantitativ", "utvalg"]
     kilder: [Apiir, Spike]
     hvorfor: "Start med en tydelig problemdefinisjon. Uten relevante momenter i informasjonsbehovet: høyst C/D (Spike)."
   - signal: "En frist eller lite penger til undersøkelsen («i løpet av to måneder», «bedriften går ikke så bra»)"
+    sitat: "Undersøkelsen skal gjennomføres i løpet av to måneder."
+    sitat_fra: Spike
     type: case
     modeller: ["Fem faser i et markedsanalyseprosjekt (Churchill)"]
     begreper: ["need to know og nice to know", "skrivebordsundersøkelse først", "fokusgrupper"]
     kilder: [Apiir, Spike]
     hvorfor: "Metodevalget skal begrunnes med tid og penger. A-besvarelsen skiller need to know fra nice to know."
   - signal: "«segmenter», «hvilke segment(er) bør de satse på», «målgruppe»"
+    sitat: "Gi en anbefaling om hvilk(e) segment(er) man bør satse på."
+    sitat_fra: Spike
     type: oppgaveord
     modeller: ["Segmenteringsvariabler", "Segmenteringskriterier", "STP-rammeverket", "Målrettingsstrategier"]
     kilder: [Apiir, Spike, Comfyballs, Kari Traa]
     hvorfor: "Teori alene holder ikke. Uten en praktisk segmentering av akkurat dette markedet: høyst E (Apiir)."
   - signal: "«ta utgangspunkt i teori om forbrukeratferd», «hvorfor kjøper ulike kunder ulike merker»"
+    sitat: "Ta utgangspunkt i teori om forbrukeratferd og forklar hvorfor ulike kunder ender opp med å kjøpe ulike typer og merker ferdigpizza."
+    sitat_fra: Grandiosa
     type: oppgaveord
     modeller: ["EKB-modellen: forbrukerens kjøpsprosess", "Forhold som påvirker kjøpsatferden (Kotler og Keller)",
                "Diffusjon av innovasjoner (Rogers)", "Fishbeins holdningsmodell"]
@@ -40,6 +57,8 @@ signaler:
     kilder: [Grandiosa, Comfyballs]
     hvorfor: "Kjøpsprosessen og hva som påvirker hvert trinn er forventet. Adopsjonskategori, Maslow og Fishbein gir pluss."
   - signal: "«vurdere merkestyrken», «merkevare», «merkeverdi»"
+    sitat: "Hvordan ville du gått frem for å vurdere merkestyrken til Grandiosa?"
+    sitat_fra: Grandiosa
     type: oppgaveord
     modeller: ["Fire modeller for merkevaren", "Psykologiske produktfordeler", "Co-branding og merkevareutvidelser"]
     begreper: ["Aakers merkeverdi: kjennskap, assosiasjoner, opplevd kvalitet, lojalitet", "fem funksjoner til et merke",
@@ -47,6 +66,8 @@ signaler:
     kilder: [Grandiosa]
     hvorfor: "Strukturer etter Aakers modell og gå gjennom hver driver for merket i casen. Merkeutvidelser gir pluss."
   - signal: "«reposisjonere», «oppleves som utdatert», «ta tilbake posisjonen hos målgruppen»"
+    sitat: "bedt deg vurdere mulighetene for å reposisjonere merket Kari Traa"
+    sitat_fra: Kari Traa
     type: oppgaveord
     modeller: ["Psykologiske produktfordeler", "Persepsjonskart", "Marketing mix (5 P)", "Tre produktnivåer",
                "Markedsplanleggingsprosessen"]
@@ -54,11 +75,15 @@ signaler:
     kilder: [Kari Traa]
     hvorfor: "Posisjonering = referanseramme, POP og POD. Så hvordan de 4 P-ene tilpasses. Gå fra makro til konkrete aktiviteter."
   - signal: "«markedsandel på X % innen N år», «vokse», «ta tilbake markedsandeler»"
+    sitat: "Et uttalt mål er at de skal ha en markedsandel på 75 % i dette markedet innen 3 år."
+    sitat_fra: Grandiosa
     type: oppgaveord
     modeller: ["Ansoffs ekspansjonsmatrise", "Sortimentets tre dimensjoner", "Marketing mix (5 P)"]
     kilder: [Comfyballs, Grandiosa]
     hvorfor: "Vekst = Ansoff, men på detaljnivå med konkrete vekststrategier. Bare strategisk nivå gir lite uttelling."
   - signal: "«gjør en situasjonsanalyse», «analyser situasjonen i markedet»"
+    sitat: "ønsker at du ved hjelp av relevant teori analyserer situasjonen i markedet"
+    sitat_fra: Grandiosa
     type: oppgaveord
     modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", "Tre delsystemer: mikro, interessent og makro",
                "Markedsførerens eksterne arbeidsbetingelser", "SWOT-analyse"]
@@ -66,6 +91,8 @@ signaler:
     kilder: [Apiir, Grandiosa, Spike]
     hvorfor: "Skill interne og eksterne forhold. SWOT bare som oppsummering: SWOT uten analysene bak gir trekk (Grandiosa)."
   - signal: "«anbefal en markedsstrategi», «hvordan kan de lykkes», «hva skal til»"
+    sitat: "ber deg om hjelp med en anbefaling på hvordan de skal nå denne målsettingen."
+    sitat_fra: Comfyballs
     type: oppgaveord
     modeller: ["Visjon, forretningsidé og kjerneverdier", "Ansoffs ekspansjonsmatrise", "Strategiklokken (Faulkner og Bowman)",
                "Marketing mix (5 P)"]
@@ -75,52 +102,70 @@ signaler:
 
   # ---------- casesignaler: fakta i caseteksten ----------
   - signal: "Navngitte konkurrenter med markedsandeler, store aktører med mye penger, nye aktører som kommer inn"
+    sitat: "På de neste plassene følger Monster (som er eid av Coca Cola Company) med 25% markedsandel"
+    sitat_fra: Spike
     type: case
     modeller: ["Porters bransjeanalyse (fem krefter, utvidet)"]
     begreper: ["konkurranseintensitet", "etableringsbarrierer", "forventede mottiltak"]
     kilder: [Apiir, Spike, Grandiosa]
     hvorfor: "Plasser konkurrentene i bransjeanalysen. Spike: hvilke mottiltak gjør de store mot en ny liten aktør?"
   - signal: "Få store kjeder eller én dominerende kunde («Norgesgruppen, Rema og Coop», «Netthandelsgruppen er eneste kunde»)"
+    sitat: "Netthandelsgruppen er i praksis eneste kunden til Tonic brands."
+    sitat_fra: Comfyballs
     type: case
     modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", "Forhandlingsmakt i kunde–leverandørforhold (Hollensen)"]
     begreper: ["kjøpernes / distribusjonens forhandlingsstyrke", "risiko ved én kunde"]
     kilder: [Grandiosa, Comfyballs, Spike]
     hvorfor: "Dagligvarekjedenes forhandlingsmakt skal drøftes (Grandiosa). Risikoen med én kunde med svak økonomi (Comfyballs)."
   - signal: "Kraftig vekst i markedet («doblet på fire år», «prognose: dobling innen 2032»)"
+    sitat: "Dette er en dobling i konsum på bare 4 år."
+    sitat_fra: Spike
     type: case
     modeller: ["Produktets livssyklus (PLC)", "Porters bransjeanalyse (fem krefter, utvidet)"]
     kilder: [Spike]
     hvorfor: "Vekstfasen i livssyklusen betyr høy konkurranseintensitet og nye aktører (løsningsforslag og A-besvarelse)."
   - signal: "Få brukere selv om markedet er stort, kundene vet ikke at de har behovet"
+    sitat: "I verden er det 6,3 milliarder smarttelefonbrukere, 1,14 millarder nettbrettbrukere og ca 1 milliard sykler, så det burde være potensiale for produktet?"
+    sitat_fra: Apiir
     type: case
     modeller: ["EKB-modellen: forbrukerens kjøpsprosess", "Diffusjon av innovasjoner (Rogers)", "Adopsjonsprosessen"]
     begreper: ["problemerkjennelse", "vareprat"]
     kilder: [Apiir]
     hvorfor: "Hva skal til for å skape problemerkjennelse? Bedriften er avhengig av rask diffusjon og positiv vareprat."
   - signal: "Lite penger, gründere uten lønn, utviklingskostnaden er allerede tatt"
+    sitat: "Guttene tar ikke ut nevneverdig lønn fra selskapet."
+    sitat_fra: Apiir
     type: case
     begreper: ["sunk cost", "rimelige kommunikasjonstiltak (demonstrasjon, gratis prøveperiode)"]
     modeller: ["Marketing mix (5 P)"]
     kilder: [Apiir]
     hvorfor: "Utviklingskostnaden er sunk cost, så alt som kommer inn er pluss. Tiltakene må være billige."
   - signal: "Konkurrent med lavere pris eller gratisversjon av et likt produkt"
+    sitat: "Sist, men ikke minst har vi PEDAL-PRO, som har 37000 brukere og er gratis for androidbrukere."
+    sitat_fra: Apiir
     type: case
     modeller: ["Skimming og penetrasjonspris", "Fem differensieringsområder"]
     kilder: [Apiir]
     hvorfor: "Vurder å senke prisen. Uten noe som skiller produktet fra konkurrentene, drøft hvordan det kan differensieres."
   - signal: "Lav panteandel, kjøp «i farta», kjøp man skjuler, ulike bruksituasjoner"
+    sitat: "mens tilsvarende tall for energidrikkbokser bare er på 50 %."
+    sitat_fra: Spike
     type: case
     modeller: ["Segmenteringsvariabler"]
     begreper: ["situasjonsbetinget segmentering", "atferdsbaserte variabler"]
     kilder: [Spike]
     hvorfor: "Situasjonsbetinget segmentering er det optimale her (løsningsforslag). A-besvarelsen brukte samme signal."
   - signal: "Livsstil i konkurrentenes kommunikasjon (sponsing av ekstremsport, musikk, fart og spenning)"
+    sitat: "Red Bull sponser idrettsstjerner i ulike sporter, som gjerne involverer fart og spenning."
+    sitat_fra: Spike
     type: case
     modeller: ["Segmenteringsvariabler"]
     begreper: ["psykografiske variabler: livsstil"]
     kilder: [Spike]
     hvorfor: "Livsstil er et mer relevant segmenteringskriterium enn demografi i denne kategorien."
   - signal: "Lover, helsemyndigheter eller forbrukerråd er kritiske («koffeingrense», «ikke positive til økt konsum»)"
+    sitat: "En utfordring i markedet er at norske helsemyndigheter og forbrukerrådet ikke er nevneverdig positive til økningen i konsum av energidrikker."
+    sitat_fra: Spike
     type: case
     modeller: ["Markedsførerens eksterne arbeidsbetingelser", "Etikk i markedsføring (Hunt og Vittel)",
                "Seks områder for samfunnsansvar (Sen og Bhattacharya)", "Segmenteringskriterier"]
@@ -128,36 +173,48 @@ signaler:
     kilder: [Spike]
     hvorfor: "En virkelig god besvarelse drøfter etikken. Spike må senke koffeinen for å være lovlig: kan segmentet nås?"
   - signal: "Liten markedsandel i et annet land («0,5 % i USA»)"
+    sitat: "I USA har SPIKE en markedsandel på rundt 0.5%"
+    sitat_fra: Spike
     type: case
     modeller: ["Segmenteringskriterier"]
     begreper: ["stort nok / lønnsomt"]
     kilder: [Spike]
     hvorfor: "Still spørsmål ved om segmentet er stort nok. Samme andel i Norge gir bare 20 millioner i omsetning."
   - signal: "Få varianter i sortimentet, eller mange fargevarianter som en butikk ikke kan ha på lager"
+    sitat: "Spike har bare 4 varianter av energidrikken, hvorav alle variantene er sukkerfrie."
+    sitat_fra: Spike
     type: case
     modeller: ["Sortimentets tre dimensjoner", "Distribusjonsveier"]
     begreper: ["sortimentsfunksjonen i distribusjonen"]
     kilder: [Spike, Comfyballs]
     hvorfor: "Vil man få tilgang med fire varianter (Spike)? Kan fysiske kjeder ivareta sortimentsfunksjonen (Comfyballs)?"
   - signal: "Tilbud om avtale med en kjede eller forhandler med annen profil («Dressmann vurderer en avtale»)"
+    sitat: "Dressmann, som er en kjede for herrer i det lavere prissegmentet har vurdert å inngå en avtale med Tonic Brands."
+    sitat_fra: Comfyballs
     type: case
     modeller: ["Distribusjonsstrategiens 6 C-er", "Intensiv, selektiv og eksklusiv distribusjon"]
     begreper: ["compatibility: passer kanalen profilen?"]
     kilder: [Comfyballs]
     hvorfor: "Profilene er ikke kompatible og kan ødelegge merket. Distribusjon er nødvendig for en god karakter."
   - signal: "Store nettbutikker som selger konkurrentene billig («Zalando og Boozt»)"
+    sitat: "om ikke nettselskapene Zalando og Boozt hadde en skyhøy vekst på henholdsvis 17,5% og 26%."
+    sitat_fra: Comfyballs
     type: case
     modeller: ["Distribusjonsveier"]
     begreper: ["horisontale konflikter i distribusjonskanalen"]
     kilder: [Comfyballs]
     hvorfor: "Samarbeid med Zalando og Boozt krever at man drøfter konflikter i distribusjonen."
   - signal: "Usikker på posisjonering og kommunikasjon («bare Facebook og bannerannonser», «vet ikke om posisjoneringen er riktig»)"
+    sitat: "Imidlertid er de usikre på om de har en riktig posisjonering- og kommunikasjonsstrategi."
+    sitat_fra: Comfyballs
     type: case
     modeller: ["Psykologiske produktfordeler", "Fire modeller for merkevaren", "Integrert markedskommunikasjon"]
     begreper: ["points of parity og points of difference", "merkestrategi"]
     kilder: [Comfyballs, Spike]
     hvorfor: "Posisjonerings- og kommunikasjonsstrategien skal drøftes. POP og POD bør diskuteres."
   - signal: "Produktfordel som kanskje ikke er relevant eller lov («mest koffein», «unik teknologi»)"
+    sitat: "Ikke minst påpeker de at de i særklasse er den energidrikken i markedet med mest koffein."
+    sitat_fra: Spike
     type: case
     modeller: ["Psykologiske produktfordeler"]
     begreper: ["point of difference: relevant og troverdig?"]
@@ -170,6 +227,8 @@ signaler:
     kilder: [Spike]
     hvorfor: "En kritisk suksessfaktor er å komme inn i kundens evoked set (løsningsforslag og A-besvarelse)."
   - signal: "Statistikk om trender og motiver i befolkningen (flere trener, nye treningsformer)"
+    sitat: "Fire av fem nordmenn trente minst én gang i uka i 2016."
+    sitat_fra: Kari Traa
     type: case
     modeller: ["Tre delsystemer: mikro, interessent og makro", "EKB-modellen: forbrukerens kjøpsprosess",
                "Segmenteringsvariabler"]
@@ -177,6 +236,8 @@ signaler:
     kilder: [Kari Traa]
     hvorfor: "Ta utgangspunkt i makrodataene og motivene, og knytt dem til kjøpsprosessen og målgruppen."
   - signal: "Konkurrentmerke som skades av en skandale, eller en konkurrent som er mer udifferensiert"
+    sitat: "Det er verdt å merke seg at Therese Johaug i 2017 ble dømt for brudd på dopingreglementet"
+    sitat_fra: Kari Traa
     type: case
     modeller: ["Psykologiske produktfordeler", "Persepsjonskart"]
     begreper: ["referanseramme: hvem konkurrerer vi mot?"]

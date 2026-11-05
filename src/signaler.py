@@ -23,9 +23,6 @@ from src.konfig import ROT, pensum_mappe
 from src.modeller import Modell, kapittel_i, modeller
 
 TYPER = {"signal": "Finn signalet", "finn": "Finn modellene i en eksamenscase"}
-# Casene med løsningsforslag. Nøkkelen er navnet som står under «kilder» i signalfilen.
-CASER = {"MRK1001": {"Apiir": "Apiir.docx", "Comfyballs": "Comfyballs.docx", "Grandiosa": "Grandiosa.docx",
-                     "Kari Traa": "Karitraacase.docx", "Spike": "Spike.docx"}}
 SPORSMAL_FINN = "Hvilke modeller fra pensum bør du bruke for å svare godt på oppgavene? Kryss av for modellene som passer."
 SPORSMAL_SIGNAL = "Hvilke modeller peker dette på? Kryss av for modellene som passer."
 
@@ -39,10 +36,13 @@ class Signal:
     kilder: list[str] = field(default_factory=list)
     hvorfor: str = ""
     utledet: bool = False
+    sitat: str = ""
+    sitat_fra: str = ""
 
     @property
     def opphav(self) -> str:
-        return "utledet fra notatene" if self.utledet else "løsningsforslag: " + ", ".join(self.kilder)
+        return ("utledet fra notatene, ikke fra en sensor" if self.utledet
+                else "fra løsning/sensorveiledning: " + ", ".join(self.kilder))
 
 
 def _fil(fag: str):
@@ -54,13 +54,24 @@ def har_signaler(fag: str) -> bool:
 
 
 @cache
+def _data(fag: str) -> dict:
+    return yaml.safe_load(_fil(fag).read_text(encoding="utf-8")) if har_signaler(fag) else {}
+
+
 def signaler(fag: str) -> tuple[Signal, ...]:
-    if not har_signaler(fag):
-        return ()
-    data = yaml.safe_load(_fil(fag).read_text(encoding="utf-8"))
-    return tuple(Signal(**{k: s.get(k, v) for k, v in
-                           dict(signal="", type="case", modeller=[], begreper=[], kilder=[], hvorfor="", utledet=False).items()})
-                 for s in data["signaler"])
+    standard = dict(signal="", type="case", modeller=[], begreper=[], kilder=[], hvorfor="", utledet=False,
+                    sitat="", sitat_fra="")
+    return tuple(Signal(**{k: s.get(k, v) for k, v in standard.items()}) for s in _data(fag).get("signaler", []))
+
+
+def caser(fag: str) -> dict[str, dict]:
+    """Casene med fasit: navn → {fil, oppgave}. fil er relativ til eksamener/. oppgave legges til casen
+    når casefilen ikke har med oppgaveteksten (den står da i sensorveiledningen)."""
+    return _data(fag).get("caser", {})
+
+
+def prinsipper(fag: str) -> list[str]:
+    return _data(fag).get("prinsipper", [])
 
 
 def _modell_etter_navn(fag: str) -> dict[str, Modell]:
@@ -176,8 +187,47 @@ def _tekst_fra_docx(sti) -> str:
     return "\n\n".join(linjer)
 
 
+def _flyt(tekst: str) -> str:
+    """OCR gir én linje per trykte linje. Slå dem sammen til avsnitt; korte linjer uten punktum er titler."""
+    avsnitt, naa = [], []
+    for linje in (l.strip() for l in tekst.splitlines()):
+        if not linje:
+            continue
+        tittel = len(linje) < 45 and not re.search(r"[.,:;?!»]$", linje)
+        if tittel or linje.startswith(("- ", "– ")):
+            if naa:
+                avsnitt.append(" ".join(naa))
+            naa = []
+        if tittel:
+            avsnitt.append(linje)
+        else:
+            naa.append(linje)
+    if naa:
+        avsnitt.append(" ".join(naa))
+    return "\n\n".join(avsnitt)
+
+
+def _tekst_fra_pdf(sti) -> str:
+    """Tekst fra PDF. Skannede sider (og sider der PDF-en mangler bokstaver) leses med OCR, spalte for spalte."""
+    from pypdf import PdfReader
+    from src.ocr import les_side_spalter
+    sider = []
+    for i, side in enumerate(PdfReader(sti).pages):
+        t = side.extract_text() or ""
+        if len(t.split()) < 30 or "\ufffd" in t:
+            t = les_side_spalter(sti, i + 1)
+        sider.append(t)
+    return _flyt("\n".join(sider))
+
+
+@cache
 def casetekst(fag: str, navn: str) -> str:
-    return _tekst_fra_docx(pensum_mappe() / fag / "eksamener" / "oppgaver" / CASER[fag][navn])
+    c = caser(fag)[navn]
+    sti = pensum_mappe() / fag / "eksamener" / c["fil"]
+    tekst = _tekst_fra_pdf(sti) if sti.suffix == ".pdf" else _tekst_fra_docx(sti)
+    if c.get("oppgave"):
+        tekst += "\n\n" + c["oppgave"].strip()
+    return tekst
 
 
 def fasit_for_case(fag: str, navn: str) -> tuple[dict[str, list[Signal]], dict[str, Signal]]:
@@ -206,7 +256,8 @@ def lag_finn(fag: str, navn: str, rng: random.Random) -> dict | None:
     gale = list(feller) + _gale_modeller(fag, fasit, rng, antall=max(2, antall_gale), unngaa=set(feller))
     alternativer = fasit + gale
     rng.shuffle(alternativer)
-    linjer = [f"Du må finne minst {krav(len(fasit))} av de {len(fasit)} modellene løsningsforslaget bruker, "
+    kilde = caser(fag)[navn].get("fasit", "løsningsforslaget")
+    linjer = [f"Du må finne minst {krav(len(fasit))} av de {len(fasit)} modellene {kilde} bruker, "
               "uten å velge noen som ikke passer. Signalene i casen og modellene de peker på:"]
     for s in signaler(fag):
         if navn in s.kilder and s.type != "ikke":
@@ -217,7 +268,7 @@ def lag_finn(fag: str, navn: str, rng: random.Random) -> dict | None:
     return {"sporsmal": f"📄 Eksamenscase: {navn}\n\n{tekst}\n\n{SPORSMAL_FINN}",
             "alternativer": alternativer, "fasit": fasit, "forklaring": "\n".join(linjer), "sitat": "",
             "type": "avkrysning", "stil": "finn modellene", "case": navn,
-            "kilde": f"eksamener/oppgaver/{CASER[fag][navn]} (fasit fra løsningsforslaget)"}
+            "kilde": f"eksamener/{caser(fag)[navn]['fil']} (fasit fra {caser(fag)[navn].get('fasit', 'løsningsforslaget')})"}
 
 
 # ---------- strømmen til quiz-fanen ----------
@@ -233,7 +284,7 @@ def signal_strom(fag: str, tema: str | None, stil: str, antall: int = 15, rng: r
     kap = kapittel_i(tema or "")
     alle = _modell_etter_navn(fag)
     if stil == "finn":
-        navn = [n for n in CASER.get(fag, {}) if _i_kapittel(fag, list(fasit_for_case(fag, n)[0]), kap)]
+        navn = [n for n in caser(fag) if _i_kapittel(fag, list(fasit_for_case(fag, n)[0]), kap)]
         rng.shuffle(navn)
         laget = ((lag_finn(fag, n, rng), n) for n in navn)
     else:
@@ -253,9 +304,59 @@ def signal_strom(fag: str, tema: str | None, stil: str, antall: int = 15, rng: r
         yield q, foerste
 
 
+# ---------- signalarket: å lese og lære av ----------
+
+_OVERSKRIFT = {"oppgaveord": "Ord i oppgaveteksten", "case": "Fakta i casen", "ikke": "Når en teori ikke passer"}
+_INGRESS = {"oppgaveord": "Verbene og ordene i selve oppgaven sier hvilket tema sensor ser etter.",
+            "case": "Opplysninger i caseteksten som gjør en bestemt modell relevant. Strek dem under når du leser casen.",
+            "ikke": "Her sier sensor eller løsningsforslaget rett ut at noe gir lite uttelling."}
+
+
+def signalark(fag: str, kapittel: int | None = None) -> str:
+    """Markdown til Modeller-fanen: hvert signal med sitat fra casen, modellene det peker på og hvorfor.
+    Med kapittel: bare signalene som peker på en modell i kapittelet."""
+    alle = _modell_etter_navn(fag)
+    utvalg = [s for s in signaler(fag) if kapittel is None or _i_kapittel(fag, s.modeller, kapittel)]
+    if not utvalg:
+        return "*Ingen signaler peker på modeller i dette kapittelet ennå.*"
+    deler = []
+    if kapittel is None and prinsipper(fag):
+        deler.append("### Det sensor ser etter i alle oppgaver\n" + "\n".join(f"- {p}" for p in prinsipper(fag)))
+    for type_ in ("oppgaveord", "case", "ikke"):
+        gruppe = [s for s in utvalg if s.type == type_]
+        if not gruppe:
+            continue
+        seksjon = [f"### {_OVERSKRIFT[type_]}\n*{_INGRESS[type_]}*"]
+        for s in gruppe:
+            linjer = [f"#### {s.signal}"]
+            if s.sitat:
+                linjer.append(f"> «{s.sitat.strip('«»')}»  \n> — *{s.sitat_fra}*")
+            if s.modeller:
+                etikett = "Gir lite uttelling" if type_ == "ikke" else "Peker på"
+                navn = [f"{n} (kap. {alle[n].kapittel})" if n in alle else n for n in s.modeller]
+                linjer.append(f"**{etikett}:** " + "; ".join(navn))
+            if s.begreper:
+                linjer.append("**Begreper:** " + "; ".join(s.begreper))
+            linjer.append(f"**Hvorfor:** {s.hvorfor}")
+            linjer.append(f"<sub>{'⚠️ ' if s.utledet else ''}{s.opphav}</sub>")
+            seksjon.append("\n\n".join(linjer))
+        deler.append("\n\n".join(seksjon))
+    # oppslag andre veien: når du leser om en modell, se hvilke signaler som peker på den
+    per_modell: dict[str, list[str]] = {}
+    for s in utvalg:
+        if s.type != "ikke":
+            for n in s.modeller:
+                if kapittel is None or (n in alle and alle[n].kapittel == kapittel):
+                    per_modell.setdefault(n, []).append(s.signal)
+    if per_modell:
+        rader = [f"- **{n}**: " + " / ".join(ss) for n, ss in sorted(per_modell.items())]
+        deler.append("### Oppslag per modell\n*Hvilke signaler peker på modellen?*\n" + "\n".join(rader))
+    return "\n\n---\n\n".join(deler)
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Øv på å finne modellene i en case (viser spørsmål og fasit)")
-    ap.add_argument("fag", choices=list(CASER))
+    ap.add_argument("fag", choices=["MRK1001", "ORG1100"])
     ap.add_argument("--type", choices=list(TYPER), default="signal")
     ap.add_argument("--kap", type=int)
     ap.add_argument("-n", type=int, default=3)

@@ -209,12 +209,13 @@ def test_case_oppgaver_kjennes_igjen_ogsaa_i_repetisjonen():
     assert not er_case_oppgave({"sporsmal": "Forklar hva BCG-matrisen er."})
 
 
-def test_signalene_viser_til_modeller_som_finnes():
-    """config/signaler_MRK1001.yaml: hvert modellnavn må stå på modellarket, og hvert signal må ha kilde."""
+@pytest.mark.parametrize("fag", ["MRK1001", "ORG1100"])
+def test_signalene_viser_til_modeller_som_finnes(fag):
+    """config/signaler_{fag}.yaml: hvert modellnavn må stå på modellarket, og hvert signal må ha kilde."""
     import yaml
     from src.konfig import ROT
-    data = yaml.safe_load((ROT / "config" / "signaler_MRK1001.yaml").read_text(encoding="utf-8"))
-    navn = {m.navn for m in modeller("MRK1001")}
+    data = yaml.safe_load((ROT / "config" / f"signaler_{fag}.yaml").read_text(encoding="utf-8"))
+    navn = {m.navn for m in modeller(fag)}
     for s in data["signaler"]:
         assert s["kilder"] and s["hvorfor"] and s["type"] in ("oppgaveord", "case", "ikke"), s["signal"]
         assert s.get("modeller") or s.get("begreper"), s["signal"]
