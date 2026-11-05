@@ -190,3 +190,12 @@ def test_besvarelsene_gir_fasit_for_los_tacos_og_hiking_patrol():
     assert {"Persepsjonskart", "Segmenteringsvariabler", "Skimming og penetrasjonspris"} <= set(riktige)
     q = lag_finn(FAG, "Hiking Patrol", random.Random(0))
     assert "karakter ikke oppgitt" in q["kilde"]
+
+
+def test_schjodt_fasit_har_med_modellene_fra_a_besvarelsene():
+    riktige, _ = fasit_for_case("ORG1100", "Schjødt")
+    assert {"Fiedlers kontingensteori", "Den nordiske modellen og trepartssamarbeidet",
+            "Competing Values Framework (CVF)", "Femfaktormodellen (Big Five)"} <= set(riktige)
+    assert "Situasjonsbestemt ledelse (Hersey og Blanchard)" in riktige      # sensorveiledningen står fortsatt
+    q = lag_finn("ORG1100", "Schjødt", random.Random(0))
+    assert "A-besvarelser" in q["kilde"] and "4 P" not in q["forklaring"]

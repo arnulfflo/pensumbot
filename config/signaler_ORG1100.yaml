@@ -7,6 +7,8 @@
 #   losning/Umoe case studass løsning.pptx         studass-løsning, Umoe (beslutninger)
 #   losning/Case pres generel løse case.pdf        studass: hvordan løse en case
 #   eksempelsvar/… (A-besvarelse 2025)             Norsk Tipping (casen ligger ikke i mappen)
+#   eksempelsvar/A-Schjodt-ledelse.pdf             A-besvarelse, Schjødt (kandidatnummer ikke oppgitt)
+#   eksempelsvar/A-Schjodt-kandidat10466.pdf       A-besvarelse, Schjødt (kandidat 10466)
 #
 # Samme felt som config/signaler_MRK1001.yaml. «modeller» må stå på modellarket (config/modeller.yaml).
 # Teorier fra veiledningene som ikke er egne modeller i notatene dine (LMX, transformasjonsledelse,
@@ -18,7 +20,12 @@
 caser:
   Schjødt:
     fil: oppgaver/Eksamen 2024.pdf
-    fasit: sensorveiledningen
+    fasit: sensorveiledningen og to A-besvarelser
+    # Passer også, men er ikke brukt i sensorveiledningen eller besvarelsene. Vises aldri som gale alternativer.
+    ogsaa_ok: ["Teori X og teori Y (McGregor)", "Rettferdighetsteori (Adams)", "Prososial motivasjon",
+               "Fire typer kulturuttrykk", "Psykologisk kontrakt", "Målsettingsteori (Locke og Latham)",
+               "Sti–mål-teorien (House)", "Krav–kontroll-modellen (Karasek)", "Krav–ressurs-modellen (Bakker og Demerouti)",
+               "Kulturendring (Stensaker og Sverdrup)", "Byråkratimodellen (Weber)"]
     oppgave: |
       Oppgave 1 (40 %): Med utgangspunkt i relevant teori fra pensum, analyser Schjødt fra et ledelsesperspektiv, fra tiden etter ca. 2009.
 
@@ -286,6 +293,104 @@ signaler:
                "Betingelsesteori (contingency theory)"]
     kilder: [notatene]
     hvorfor: "Beskriv strukturen med Mintzberg. Betingelsesteori: strukturen må passe omgivelsene og teknologien."
+
+  # ---------- fra de to A-besvarelsene på Schjødt (eksempelsvar/A-Schjodt-*.pdf) ----------
+  - signal: "Tydeligere hierarki, færre som får ta beslutninger"
+    type: case
+    modeller: ["Oppgave- og relasjonsorientert ledelse (Ohio State og Michigan)", "Seks strukturelle forhold ved organisasjoner"]
+    begreper: ["autoritær–demokratisk lederstil", "sentralisering"]
+    kilder: [Schjødt]
+    sitat: "Vi måtte skape en kultur med et tydeligere ledelseshierarki, der ikke alle kunne ta alle beslutninger."
+    sitat_fra: Schjødt
+    hvorfor: "Begge A-besvarelsene: stilen går fra demokratisk mot autoritær, og beslutningene sentraliseres. Sentralisering gir klare signaler, men kan gi demotiverte ansatte."
+  - signal: "Dårlig forhold mellom leder og ansatte, uklare krav og mye makt hos lederen"
+    type: case
+    modeller: ["Fiedlers kontingensteori"]
+    begreper: ["ufordelaktig ledersituasjon"]
+    kilder: [Schjødt]
+    sitat: "Det er det nærmeste man kan komme en konsentrasjonsleir i advokatbransjen"
+    sitat_fra: Schjødt
+    hvorfor: "A-besvarelsen: dårlig forhold, lite strukturerte oppgaver (bonusen er skjønnsbasert) og sterk posisjonsmakt gir en ufordelaktig situasjon. Da passer oppgaveorientert ledelse etter Fiedler."
+  - signal: "En tøff leder som står imot skepsis"
+    type: case
+    modeller: ["Femfaktormodellen (Big Five)"]
+    begreper: ["personlighet og ledelse"]
+    kilder: [Schjødt]
+    sitat: "Men det var en fordel å ha Erling som var tøff"
+    sitat_fra: Schjødt
+    hvorfor: "A-besvarelsen (10466) kobler lederens personlighet til femfaktormodellen, særlig ekstroversjon."
+  - signal: "Bonusen er helt opp til ledelsen å avgjøre"
+    type: case
+    modeller: ["Forventningsteori (Vroom)"]
+    begreper: ["lav instrumentalitet", "valens"]
+    kilder: [Schjødt]
+    sitat: "Men bonusene var såkalt diskresjonære, fullstendig opp til Schjødt-ledelsen å avgjøre."
+    sitat_fra: Schjødt
+    hvorfor: "Uklare krav for bonus gir lav instrumentalitet. Partnerskapet har høy valens, men lav sannsynlighet (A-besvarelsen)."
+  - signal: "Partnerskapet er der pengene er"
+    type: case
+    modeller: ["Forventningsteori (Vroom)", "Herzbergs tofaktorteori"]
+    begreper: ["forfremmelse som motivasjonsfaktor"]
+    kilder: [Schjødt]
+    sitat: "Og det er nettopp på innsiden av partnerskapet gullgruven ligger"
+    sitat_fra: Schjødt
+    hvorfor: "Høy valens, men få når opp. Forfremmelse til partner er en motivasjonsfaktor etter Herzberg, mens bonusen er en hygienefaktor (A-besvarelsen)."
+  - signal: "Lønnen ligger bak konkurrentene"
+    type: case
+    modeller: ["Herzbergs tofaktorteori"]
+    begreper: ["hygienefaktor"]
+    kilder: [Schjødt]
+    sitat: "De hadde sett seg lei på at Schjødt-lønnen lå bak konkurrerende firmaer"
+    sitat_fra: Schjødt
+    hvorfor: "Lønn er en hygienefaktor: for lav lønn gir mistrivsel, men høy lønn gir ikke motivasjon i seg selv (A-besvarelsen 10466)."
+  - signal: "«Ikke for opptatt av hva du skal tjene»"
+    type: case
+    modeller: ["Selvbestemmelseskontinuumet: indre og ytre motivasjon"]
+    begreper: ["indre motivasjon"]
+    kilder: [Schjødt]
+    sitat: "Hvis du kommer inn i et stort advokatfirma og er for opptatt av hva du skal tjene, kan det tyde på litt feil fokus."
+    sitat_fra: Schjødt
+    hvorfor: "Utsagnet flytter fokus fra ytre motivasjon (lønn) til selve oppgaven (A-besvarelsen 10466)."
+  - signal: "Straff når instrukser ikke følges, og måling av alt"
+    type: case
+    modeller: ["Selvbestemmelseskontinuumet: indre og ytre motivasjon"]
+    begreper: ["målforskyvning: overdreven regelfokusering og overmåling", "belønning og straff"]
+    kilder: [Schjødt]
+    sitat: "Hvis partneren ikke fulgte en skriftlig instruks fra Erling Ueland eller styret, risikerte hen å miste bonus"
+    sitat_fra: Schjødt
+    hvorfor: "Motivasjon gjennom frykt for straff er ytre. Konsekvens: målforskyvning, de ansatte blir mer opptatt av regler og måletall enn av klientene (A-besvarelsen 10466)."
+  - signal: "Tydelige tilbakemeldinger og ansvar for egne resultater"
+    type: case
+    modeller: ["Jobbkarakteristikamodellen (Hackman og Oldham)"]
+    begreper: ["kunnskap om resultatene", "ansvar for resultatet"]
+    kilder: [Schjødt]
+    sitat: "Hvis han ikke var fornøyd, fikk du tydelig beskjed"
+    sitat_fra: Schjødt
+    hvorfor: "Tilbakemelding gir kunnskap om resultatene, og poengstigen gir ansvar for resultatet: to av de tre psykologiske tilstandene (A-besvarelsen)."
+  - signal: "Prestasjonskultur som noen trives i og andre ikke"
+    type: case
+    modeller: ["Competing Values Framework (CVF)", "Kulturinnhold: verdier, normer og virkelighetsoppfatninger"]
+    begreper: ["markedskultur", "grunnleggende antakelser"]
+    kilder: [Schjødt]
+    sitat: "Ikke alle trives i en prestasjonskultur"
+    sitat_fra: Schjødt
+    hvorfor: "Prestasjonskulturen ligner markedskultur i CVF. «Frykt og penger» som verdier og normer, prestasjon som grunnleggende antakelse. Konsekvens: de som deler verdiene blir, resten faller fra (begge A-besvarelsene)."
+  - signal: "Partnere blir presset ut uten forvarsel"
+    type: case
+    modeller: ["Åtte kilder til makt (French og Raven m.fl.)", "Påvirkningsteknikker (Yukl)"]
+    begreper: ["tvangsmakt", "overtalelse", "åpen og skjult maktbruk"]
+    kilder: [Schjødt]
+    sitat: "Partneren ble spurt, uten forvarsel, om han ikke burde slutte i Schjødt."
+    sitat_fra: Schjødt
+    hvorfor: "A-besvarelsen drøfter om dette er tvangsmakt eller overtalelse."
+  - signal: "Velferdsdager strammes inn, og partnerne jobber over 12 timer om dagen"
+    type: case
+    modeller: ["Den nordiske modellen og trepartssamarbeidet", "Arbeidsgivers styringsrett"]
+    begreper: ["arbeidsmiljøloven", "velferdsordninger"]
+    kilder: [Schjødt]
+    sitat: "Senere skulle advokatfirmaet også stramme inn fridager, såkalte velferdsdager, i forbindelse med dødsfall i familien."
+    sitat_fra: Schjødt
+    hvorfor: "A-besvarelsen (10466): et brudd med den norske modellen, og arbeidsmengden utfordrer arbeidsmiljøloven."
 
   # ---------- når en teori IKKE passer ----------
   - signal: "Oppgave 1 om organisasjonskultur sier «andre teorier enn nasjonal kultur»"

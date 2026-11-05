@@ -279,7 +279,10 @@ def lag_finn(fag: str, navn: str, rng: random.Random) -> dict | None:
             linjer.append(f"• {s.signal} → " + ", ".join(s.modeller))
     for m, s in feller.items():
         linjer.append(f"✗ {m} passer ikke her: {s.hvorfor}")
-    linjer.append("Husk: modellene skal brukes på bedriften i casen, og strategien skal ende i de 4 P-ene.")
+    if fag == "MRK1001":
+        linjer.append("Husk: modellene skal brukes på bedriften i casen, og strategien skal ende i de 4 P-ene.")
+    else:
+        linjer.append("Husk: koble teorien konkret til casen, og drøft begge sider.")
     return {"sporsmal": f"📄 Eksamenscase: {navn}\n\n{tekst}\n\n{SPORSMAL_FINN}",
             "alternativer": alternativer, "fasit": fasit, "forklaring": "\n".join(linjer), "sitat": "",
             "type": "avkrysning", "stil": "finn modellene", "case": navn,
