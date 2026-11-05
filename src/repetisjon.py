@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 
 from src.database import lagre_forsok, naa
 
+MODELLARK = "modellark"                 # «modell»-kolonnen for spørsmål laget i Python fra modellarket
 QUIZ_INTERVALLER = [1, 3, 7, 14, 30]    # dager (SPEC.md: 1, 3 og 7, så videre)
 MAKS_KORTINTERVALL = 180                # dager
 
@@ -118,6 +119,8 @@ def _daarlig(s) -> bool:
     from src.kontroll import avslorer_svaret, viser_til_ukjent
     if viser_til_ukjent(s["sporsmal"], s["kildetekst"] or ""):
         return True
+    if s["modell"] == MODELLARK:
+        return False        # laget i Python fra modellarket: «Hva mangler?» viser de andre elementene med vilje
     if s["ovingsmate"] == "flervalg" and s["alternativer"]:
         gale = [a for a in json.loads(s["alternativer"]) if a != s["fasit"]]
         return bool(avslorer_svaret(s["sporsmal"], s["fasit"], gale))

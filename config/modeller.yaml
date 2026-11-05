@@ -1,0 +1,1002 @@
+# Modellarket for MRK og ORG: hvilke seksjoner i modellnotatene som er modeller og teorier.
+# Lest av src/modeller.py. Alt innhold kommer fra notatene dine. Denne fila sier bare hvilke
+# seksjoner som er med, og retter navn og elementer der notatet ikke har en ren punktliste.
+#
+# Nøkkelen er starten på overskriften i notatet. Verdien kan være tom (ta med som den er), eller ha:
+#   navn:      navnet på modellarket og i spørsmålene
+#   elementer: «Navn – forklaring», når punktlisten i notatet mangler eller er rotete
+#   med_neste: antall seksjoner rett etter som hører til modellen (teksten slås sammen)
+# «ankere» er avsnitt som starter en modell selv om de ikke er en overskrift i notatet.
+#
+# Kjør etter endring:  uv run python -m src.modeller MRK1001
+
+MRK1001:
+  ankere:
+    - "Kommunikasjonsprosessen (Shannon, 1948)"
+    - "AIDA – effekthierarki"
+    - "Kognisjon–affekt–erfaring"
+    - "ELM – Elaboration Likelihood Model"
+    - "FCB-matrisen"
+    - "Integrert markedskommunikasjon – fem vurderingsfaktorer"
+    - "Kreativitetsmodell (tilpasset fra Rosengren"
+    - "Rossiters annonsemodell"
+    - "Appell-typologi"
+    - "Levende/interaktiv-modellen"
+    - "TOFU/MOFU/BOFU"
+    - "Inndeling etter følgertall"
+    - "Fem anbefalinger for å lykkes med å sponse en sak"
+    - "Attribueringshypotesen"
+    - "SEO – tre kategorier"
+    - "Adstock-modellen"
+    - "Dette er EKB-modellen"
+  modeller:
+    # Kapittel 1
+    "Behov, ønsker og begjær":
+    "Fire former for nytteverdi":
+    "Kohli & Jaworski (1990)":
+      navn: "Markedsorientering (Kohli og Jaworski)"
+      elementer:
+        - "Innhenting av markedsinformasjon – om kunders nåværende og latente behov"
+        - "Spredning av informasjonen – på tvers av organisasjonsnivåer"
+        - "Reaksjon på informasjonen – informasjonen skal styre beslutninger"
+    "Figur 1.4 – Kombinasjoner av markedsorientering":
+      navn: "Markedsorientering og markedsføringskompetanse (2×2)"
+    "Figur 1.5 – Interne drivkrefter":
+      navn: "Interne drivkrefter for markedsorientering"
+    "De fire grunnpilarene":
+      navn: "Fire grunnpilarer i markedsorientert tankegang"
+    "Triple bottom line":
+      navn: "Triple bottom line (Elkington)"
+      elementer:
+        - "Økonomisk – tradisjonell avkastning og profitt"
+        - "Miljømessig – miljøinnvirkningen av markedsstrategien"
+        - "Sosial – den sosiale innvirkningen av markedsstrategien"
+    "Etikk i markedsføring":
+      navn: "Etikk i markedsføring (Hunt og Vittel)"
+      elementer:
+        - "Konsekvensetikk – handlingen vurderes ut fra konsekvensene"
+        - "Pliktetikk – en autoritet har bestemt hva som er rett"
+        - "Ytre rammer – kulturelt, profesjonelt og bransjemessig miljø"
+        - "Personlige egenskaper – religion, verdisystem, trossystem"
+    "Figur 1.11 – Markedsplanleggingsprosessen":
+      navn: "Markedsplanleggingsprosessen"
+      elementer:
+        - "Styring – overordnede mål og bedriftsstrategi"
+        - "Analyse – markedsmuligheter"
+        - "Planlegging – markedsmål, markedsstrategi og markedsprogram"
+        - "Gjennomføring og kontroll – markedsaktiviteter og kontroll"
+    "Figur 1.13 – Marketing mix":
+      navn: "Marketing mix (5 P)"
+    # Kapittel 2
+    "Figur 2.1 – Markedsføringssystemet":
+      navn: "Markedsføringssystemet"
+    "Delsystemene i markedsføringssystemet":
+      navn: "Tre delsystemer: mikro, interessent og makro"
+      elementer:
+        - "Mikrosystemet – det bedriften er tettest på: leverandører, mellomledd, kunder og konkurrenter"
+        - "Interessentsystemet – ansatte, offentlige instanser, media, finanskilder, aksjonsgrupper og publikum"
+        - "Makrosystemet – demografiske, politiske, kulturelle, økonomiske, naturgitte og teknologiske faktorer"
+    "Porters bransjeanalyse – utvidet (Figur 2.7)":
+      navn: "Porters bransjeanalyse (fem krefter, utvidet)"
+      med_neste: 5
+      elementer:
+        - "Konkurranseintensitet/rivalisering – sentrum i modellen"
+        - "Trussel om nyetablering – stordriftsfordeler, merkeidentitet, kapitalkrav, byttekostnader"
+        - "Leverandørenes forhandlingsstyrke – konsentrasjon, differensiering, byttekostnader"
+        - "Kjøperens forhandlingsstyrke – konsentrasjon, volum, kunnskap, produktforskjeller"
+        - "Trussel fra substitutter – substituttenes ytelse i forhold til pris, byttekostnader"
+    "Ulike konkurranseformer (Tabell 2.2)":
+      navn: "Konkurranseformer"
+      elementer:
+        - "Monopol – én aktør alene i markedet"
+        - "Duopol – to dominerende aktører"
+        - "Oligopol – få aktører som behersker markedet (rent eller differensiert)"
+        - "Fullkommen konkurranse – svært mange, relativt like aktører"
+        - "Monopolistisk konkurranse – mange aktører med differensierte produkter"
+    "Oversikt over markedsførerens eksterne arbeidsbetingelser":
+      navn: "Markedsførerens eksterne arbeidsbetingelser"
+    "Ansoffs ekspansjonsmatrise":
+      navn: "Ansoffs ekspansjonsmatrise"
+    # Kapittel 3
+    "Seks strateginivåer":
+    "Visjon, forretningsidé og kjerneverdier":
+    "Samfunnsansvar":
+      navn: "Seks områder for samfunnsansvar (Sen og Bhattacharya)"
+    "Balansert målstyring":
+      navn: "Balansert målstyring (Balanced Scorecard)"
+    "Strategiklokken":
+      navn: "Strategiklokken (Faulkner og Bowman)"
+      elementer:
+        - "Rute 1: No frills – lav pris og lav tilført verdi"
+        - "Rute 2: Lav pris – lav pris og middels verdi"
+        - "Rute 3: Hybrid – høy opplevd verdi og lav pris"
+        - "Rute 4: Differensiering – høy opplevd verdi og middels pris"
+        - "Rute 5: Fokusert differensiering – høy opplevd verdi og høy pris"
+        - "Rute 6–8: Feilstrategier – for høy pris i forhold til verdien"
+    "Fem differensieringsområder":
+    "SWOT-analyse":
+      elementer:
+        - "Styrker – interne forhold ved bedriften"
+        - "Svakheter – interne forhold ved bedriften"
+        - "Muligheter – eksterne forhold i omgivelsene"
+        - "Trusler – eksterne forhold i omgivelsene"
+    "Bedriftens kompetansematrise":
+      navn: "Kompetansematrisen (Kotler)"
+      elementer:
+        - "Konsenter innsatsen her – svak, og stor betydning for kunden"
+        - "Oppretthold den gode innsatsen – sterk, og stor betydning for kunden"
+        - "Avvent situasjonen – svak, og liten betydning for kunden"
+        - "Fare for overinvestering – sterk, og liten betydning for kunden"
+    "Bedriftens trussel- og mulighetsmatrise":
+      navn: "Trussel- og mulighetsmatrisen"
+    "Strategisk problemdefinisjon (SPD)":
+      navn: "Strategisk problemdefinisjon (SPD) og kritiske suksessfaktorer (KSF)"
+      elementer:
+        - "Kvadrant 1 i mulighetsmatrisen – mulighetene bedriften bør prioritere"
+        - "Kvadrant 1 og 2 i kompetansematrisen – konsenter innsatsen og oppretthold"
+        - "Kvadrant 1 i trusselmatrisen – truslene bedriften må ta mest på alvor"
+    # Kapittel 4
+    "Atferdsøkonomi: System 1 og System 2":
+      navn: "System 1 og system 2 (Kahneman)"
+    "Navngitte kognitive skjevheter":
+      navn: "Kognitive skjevheter (Kahneman)"
+    "Navngitte effekter (Dan Ariely)":
+      navn: "Atferdseffekter (Ariely)"
+    "Dette er EKB-modellen":
+      navn: "EKB-modellen: forbrukerens kjøpsprosess"
+      elementer:
+        - "Problemerkjennelse – gap mellom ønsket og faktisk tilstand"
+        - "Søkeprosess – intern og ekstern informasjon"
+        - "Alternativ evaluering – alternativene vurderes etter kriterier"
+        - "Valg – beslutningen, påvirket av situasjonsfaktorer"
+        - "Resultat – innfridde produktet forventningene?"
+    "4.3.3 Informasjonssøking":
+      navn: "Informasjonskilder ved kjøp"
+    "Fishbeins forenklede holdningsmodell":
+      navn: "Fishbeins holdningsmodell"
+      elementer:
+        - "Tro om objektet – det du mener om enkeltegenskaper"
+        - "Holdning – den samlede positive eller negative følelsen"
+        - "Intensjoner – hva du har lyst til å gjøre"
+        - "Atferd – det du faktisk gjør"
+    "Multiattributtmodeller":
+      med_neste: 1
+      elementer:
+        - "Kompensatoriske modeller – svakhet på ett attributt kan veies opp av styrke på et annet (Ab = Σ Wi × Bib)"
+        - "Ikke-kompensatoriske modeller – forbrukeren setter minstekrav til egenskapene"
+    "4.3.6 Resultater":
+      navn: "Resultater etter kjøpet"
+    "Forhold som virker inn på kjøpsatferden":
+      navn: "Forhold som påvirker kjøpsatferden (Kotler og Keller)"
+      elementer:
+        - "Kulturelle forhold – kultur og subkultur"
+        - "Sosiale forhold – referansegrupper, familie, roller og status"
+        - "Demografiske forhold – alder og livsstil, økonomi, livssyklus"
+        - "Personlige forhold – motivasjon, oppfatning, læring, holdninger og verdier"
+    "Adopsjonsprosessen – fem trinn":
+      navn: "Adopsjonsprosessen"
+    "Diffusjon av innovasjoner":
+      navn: "Diffusjon av innovasjoner (Rogers)"
+    "Forbrukeratferd på nett":
+    # Kapittel 5
+    "Klassifisering av produkter på bedriftsmarkedet":
+      navn: "Produkter på bedriftsmarkedet"
+    "Ulike typer kjøp":
+      navn: "Tre typer kjøp på bedriftsmarkedet"
+    "Tre kjøpstilnærminger":
+    "Beslutningsprosessen (Figur 5.2)":
+      navn: "Organisasjoners beslutningsprosess (Webster og Wind)"
+      elementer:
+        - "Problem/behov"
+        - "Kriterier/kvanta"
+        - "Spesifikasjoner"
+        - "Søking blant leverandører"
+        - "Vurdering av leverandører"
+        - "Valg av leverandør"
+        - "Ordreplassering"
+        - "Oppfølging"
+    "Kjøpssenteret":
+      navn: "Kjøpssenteret (Bonoma)"
+    "Viktige kjøpskriterier på bedriftsmarkedet":
+      navn: "Kjøpskriterier på bedriftsmarkedet (Selnes)"
+    "Ti typer bånd":
+      navn: "Ti typer bånd mellom aktører (Liljander og Strandvik)"
+    "Relasjonsprosessen":
+    "Forhandlingsmakt i kunde–leverandørforhold":
+      navn: "Forhandlingsmakt i kunde–leverandørforhold (Hollensen)"
+    # Kapittel 6
+    "STP-rammeverket":
+    "Segmenteringsvariabler":
+    "Segmenteringskriterier":
+    "RFM-modellen":
+      elementer:
+        - "Recency – hvor nylig kunden kjøpte"
+        - "Frequency – hvor ofte kunden kjøper"
+        - "Monetary value – hvor mye kunden kjøper for"
+    "CLV – Customer Lifetime Value":
+      navn: "CLV – kundens livstidsverdi"
+      elementer:
+        - "Kostnaden for å skaffe kunden – markedsføringstiltak"
+        - "Kontantstrømmen kunden gir over tid – dekningsbidraget"
+        - "Hvor lenge kunden forblir aktiv"
+    "Personas (6.7)":
+      navn: "Personas"
+      med_neste: 1
+      elementer:
+        - "Datainnsamling – atferd og kjennetegn"
+        - "Sammenstille motivasjoner og behov"
+        - "Bestemme personas"
+        - "Inngående beskrivelse av personas"
+    "Segmentering på bedriftsmarkedet":
+      navn: "Segmenteringskriterier på bedriftsmarkedet (Biong, Nes og Sande)"
+    "Strategiske vurderinger ved målretting":
+      navn: "Målrettingsstrategier"
+    # Kapittel 7
+    "7.1 Hva er egentlig et":
+      navn: "Tre produktnivåer"
+      elementer:
+        - "Kjerneprodukt – det egentlige behovet kunden dekker"
+        - "Konkret produkt – kvalitet, egenskaper, design, merkenavn, innpakning"
+        - "Utvidet produkt – installasjon, levering, betaling, garanti, service"
+    "7.3.1 Grunnbegrepene":
+      navn: "Sortimentets tre dimensjoner"
+      elementer:
+        - "Bredde – hvor mange produktgrupper"
+        - "Dybde – hvor mange varianter i hver gruppe"
+        - "Sammenheng (konsistens) – hvor mye produktgruppene henger sammen"
+    "7.3.4 Kategoristyring":
+      navn: "Kategoristyring (åtte trinn)"
+    "7.3.5 BCG-matrisen":
+      navn: "BCG-matrisen"
+      med_neste: 2
+      elementer:
+        - "Stjerne – høy markedsvekst, høy relativ markedsandel"
+        - "Melkeku – lav markedsvekst, høy relativ markedsandel"
+        - "Problembarn – høy markedsvekst, lav relativ markedsandel"
+        - "Hund – lav markedsvekst, lav relativ markedsandel"
+    "Hva gjør man med denne informasjonen? (4 strategier)":
+      navn: "Fire strategier i BCG-matrisen"
+    "To måter å forstå kvalitet på":
+      navn: "To syn på kvalitet"
+    "7.5 Produktutvikling — den enkle":
+      navn: "Produktutviklingsmodellen"
+    "5. Testsalg":
+      navn: "Testsalg: kjøp og gjenkjøp"
+    "7.6 Livssyklus":
+      navn: "Produktets livssyklus (PLC)"
+      med_neste: 5
+    "Sidenotat: Figur 7.16":
+      navn: "Classics, trends og fads"
+    # Kapittel 8
+    "De fire grunnleggende distribusjonsveiene":
+      navn: "Distribusjonsveier"
+      elementer:
+        - "Produsent → forbruker – direkte distribusjon"
+        - "Produsent → detaljist → forbruker"
+        - "Produsent → grossist → detaljist → forbruker"
+        - "Tredjepartsaktører – kan kobles inn hvor som helst i kjeden"
+    "Tre strategiske valg en produsent har for internett":
+      navn: "Tre strategiske valg for netthandel"
+    "8.5.2 Distribusjonsstrategiens":
+      navn: "Distribusjonsstrategiens 6 C-er"
+      elementer:
+        - "Character – markedets karakter: volum, kundetyper, geografi"
+        - "Coverage – hvor stor del av markedet kanalen når"
+        - "Compatibility – om kanalen passer profilen til produktet"
+        - "Cost – avanse, provisjon og krav til støtte"
+        - "Continuity – om kanalvalget er stabilt over tid"
+        - "Control – hvor mye leverandøren kan styre pris og profilering"
+    "8.5.3 Omfanget av distribusjonen":
+      navn: "Intensiv, selektiv og eksklusiv distribusjon"
+      med_neste: 1
+    "Fire nivåer av samarbeid":
+      navn: "Fire nivåer av samarbeid i distribusjonskanalen"
+    # Kapittel 9
+    "9.1 Mål for prispolitikken":
+      navn: "Mål for prispolitikken"
+      med_neste: 7
+      elementer:
+        - "Maksimere salget"
+        - "Markedsandel"
+        - "Maksimere fortjenesten"
+        - "En gitt fortjenestemargin"
+        - "Møte eller unngå konkurranse"
+        - "Stabilisere prisnivået"
+        - "Støtte andre produkter"
+    "Elastisitetens tallverdi":
+      navn: "Priselastisitet"
+      med_neste: 1
+    "9.4.1 Grunnleggende beslutninger":
+      navn: "Prisnivå i forhold til markedsprisen"
+    "Produktets alder — skimming":
+      navn: "Skimming og penetrasjonspris"
+      elementer:
+        - "Skimming – relativt høy introduksjonspris for nyvinninger med uelastisk etterspørsel"
+        - "Penetrasjonspris – relativt lav pris for å bli akseptert raskt av et stort marked"
+    "9.5.3 Konkurranseorienterte priser":
+    "9.6 Rabattpolitikk":
+    # Kapittel 10
+    "Kommunikasjonsprosessen (Shannon, 1948)":
+      navn: "Kommunikasjonsprosessen (Shannon)"
+      elementer: ["Avsender", "Koding", "Kanal", "Dekoding", "Mottaker", "Støy – påvirker hele prosessen"]
+    "AIDA – effekthierarki":
+      navn: "AIDA"
+      elementer: ["Attention – oppmerksomhet", "Interest – interesse", "Desire – ønske", "Action – handling"]
+    "Kognisjon–affekt–erfaring":
+      navn: "Kognisjon, affekt og erfaring (Vakratsas og Ambler)"
+      elementer:
+        - "Kognisjon – tenkning og vurdering av fakta"
+        - "Affekt – følelser vekket av produkt eller merke"
+        - "Erfaring – preferanse bygget gjennom repetisjon og vaner"
+    "ELM – Elaboration Likelihood Model":
+      navn: "ELM – Elaboration Likelihood Model"
+      elementer:
+        - "Sentral rute – høy involvering: logikk, fakta og informasjon gir sterk holdningsendring"
+        - "Perifer rute – lav involvering: andre virkemidler og heuristikker gir svak holdningsendring"
+    "FCB-matrisen":
+      navn: "FCB-matrisen (Vaughn)"
+    "Integrert markedskommunikasjon – fem":
+      navn: "Integrert markedskommunikasjon"
+      elementer:
+        - "Dekning og rekkevidde"
+        - "Kostnader"
+        - "Like eller ulike assosiasjoner på tvers av kanaler"
+        - "Synergier og timing"
+        - "Konformitet"
+    "Kreativitetsmodell":
+      navn: "Kreativitetsmodellen for annonser (Rosengren)"
+      elementer:
+        - "Kreativitet – divergens og relevans"
+        - "Kortsiktige effekter – affekt, prosessering og signalisering"
+        - "Resultater – holdning og kjennskap til annonse og merke"
+    "Rossiters annonsemodell":
+      elementer: ["Markør – fanger oppmerksomhet", "Nysgjerrighet", "Produkt/merke", "Søk etter svar", "Påstått fordel"]
+    "Appell-typologi":
+      navn: "Appeller i annonser"
+      elementer:
+        - "Kjendiser – kredibilitet er attraktivitet, ekspertise og tillit"
+        - "Frykt"
+        - "Demonstrasjon"
+        - "Eksperter"
+        - "Humor – risiko for vampyreffekten"
+        - "Informative appeller – hard-sell eller soft-sell"
+        - "Innramming – positiv eller negativ motivasjon"
+    "Levende/interaktiv-modellen":
+      navn: "Levende og interaktivt innhold (Steuer)"
+      elementer: ["Levende (vivid)", "Interaktivt"]
+    "TOFU/MOFU/BOFU":
+      elementer:
+        - "TOFU – toppen av trakten: informerende"
+        - "MOFU – midten: bygger relasjon og tillit"
+        - "BOFU – bunnen: konverterer til salg"
+    "Inndeling etter følgertall":
+      navn: "Influensere etter følgertall"
+      elementer: ["Nano", "Mikro", "Medium", "Makro", "Mega"]
+    "Fem anbefalinger for å lykkes med å sponse":
+      navn: "Fem råd for å sponse en sak (Schamp)"
+      elementer:
+        - "Sikre forståelse for hva som doneres"
+        - "Velg passende kontekst"
+        - "Vær oppriktig opptatt av saken"
+        - "Fokuser på emosjonell tilknytning"
+        - "Avklar de viktigste markedsføringsmålene"
+    "Attribueringshypotesen":
+      navn: "Attribueringshypotesen (salgsfremmende tiltak)"
+    "SEO – tre kategorier":
+      navn: "SEO"
+      elementer:
+        - "On-page SEO – sideoptimalisering"
+        - "Technical SEO – tekniske tiltak"
+        - "Off-page SEO – referanser og lenker"
+    "Adstock-modellen":
+      elementer:
+        - "Effekten har begrenset varighet"
+        - "Effekten avtar jo nærmere et mettet marked man er"
+    # Kapittel 11
+    "11.1.1 Hva er posisjonering":
+      navn: "Fire modeller for merkevaren"
+    "11.1.3 Psykologiske produktfordeler":
+      navn: "Psykologiske produktfordeler"
+      elementer:
+        - "Opplevelsesbaserte fordeler – kognitiv eller sensorisk positiv stimulans"
+        - "Symbolske fordeler – signalverdi gjennom status, luksus, identitet eller gruppetilhørighet"
+    "11.2 Merkevarestrategi":
+      navn: "Fire vurderinger ved posisjonering av en merkevare (Stengel)"
+    "11.2.1 Merkevarekapital":
+      navn: "Tre måter å måle merkevarekapital"
+      elementer:
+        - "Kostnadstilnærmingen – totale kostnader brukt på å bygge merket"
+        - "Markedstilnærmingen – salgsøkning sammenlignet med generiske produkter"
+        - "Finanstilnærmingen – nåverdien av fremtidig kontantstrøm knyttet til merket"
+    "Seks argumenter for at kjeder etablerer EMV":
+      navn: "Handelens egne merkevarer (EMV)"
+    "11.2.3 Persepsjons- og assosiasjonskart":
+      navn: "Persepsjonskart"
+      elementer:
+        - "Identifiser relevante produkter og egenskaper"
+        - "Innhent persepsjonsdata – spørreskjema i et definert segment"
+        - "Velg egnet analysemetode"
+        - "Plott i et persepsjonskart"
+    "11.2.4 Co-branding":
+      navn: "Co-branding og merkevareutvidelser"
+      elementer:
+        - "Merkevareutvidelse – et etablert merke brukes på et nytt produkt"
+        - "Utvanning – merket svekkes når navnet spres på for mange produkter"
+        - "Felles-co-branding – begge merkene på et helt nytt produkt"
+        - "Ingrediens-co-branding – ett merke inngår som ingrediens i et annet"
+    "11.2.6 Merkeverdikjeden":
+      navn: "Merkeverdikjeden"
+    # Kapittel 12
+    "Hva skiller transaksjons- og relasjonsorientering":
+      navn: "Transaksjons- og relasjonsorientering"
+      elementer:
+        - "Transaksjonsorientering – enkeltsalg, kort tidshorisont, vekt på produktfordeler"
+        - "Relasjonsorientering – kundevarighet, lang tidshorisont, vekt på kundeverdi og service"
+    "Hva er offensiv og defensiv strategi":
+      navn: "Offensiv og defensiv strategi og byttebarrierer"
+      elementer:
+        - "Offensiv strategi – rettet mot nye kunder"
+        - "Defensiv strategi – rettet mot eksisterende kunder"
+        - "Negative barrierer – fysisk byttekostnad som låser kunden fast"
+        - "Positive barrierer – psykisk byttekostnad og opplevd nytte"
+    "Hva er lojalitet, og hva er de fire nivåene":
+      navn: "Fire nivåer av lojalitet (Oliver)"
+    "Hva er kundetilfredshet":
+      navn: "Kundetilfredshet og forventningsbrøken"
+      elementer: ["Leveranse", "Forventning", "Tilfredshet – leveranse delt på forventning"]
+    "Hvordan henger tilfredshet og lojalitet sammen":
+      navn: "Norsk Kundebarometer (NKB)"
+      elementer:
+        - "Drivere for tilfredshet – pris, materiell kvalitet, reaksjonsdyktighet, personlig behandling"
+        - "Tilfredshet"
+        - "Omdømme, affektiv og kalkulativ tilknytning"
+        - "Lojalitet"
+    "Hvilke faktorer skaper langsiktige relasjoner":
+      navn: "Seks drivere for langsiktige kunderelasjoner"
+      elementer:
+        - "Verdien av produktet"
+        - "Verdien av merket – sosial og emosjonell verdi"
+        - "Verdien av serviceprosessen"
+        - "Relasjonsfremmende insentiver"
+        - "Klagehåndteringssystem"
+        - "Kundekostnader"
+    "Hva er relasjonsfremmende insentiver":
+      navn: "Relasjonsfremmende insentiver"
+      elementer:
+        - "Fordelsprogram – bonus ved gjentatte kjøp"
+        - "Gjenkjennelsesprogram – IT kjenner igjen kunden og tilpasser tilbudet"
+        - "Samfunnsbygging – kunde–kunde-relasjoner rundt felles interesser"
+        - "Kunnskapsbyggende program – øker kundens kompetanse"
+    "Når egner RM seg ikke":
+      navn: "Når relasjonsmarkedsføring ikke passer"
+    "Hvordan styrer man kundeporteføljen":
+      navn: "Bruhn-modellen: kundeporteføljen"
+      med_neste: 3
+      elementer:
+        - "Rute 1: tilfredshet × aktivitet – selvmotiverte, adekvate, ignorante, døde"
+        - "Rute 2: varighet × tilfredshet – innlåste, overbeviste, usikre, variasjonssøkende"
+        - "Rute 3: økonomisk resultat × varighet – investeringskunder, suksesskunder, tilfeldige, mette"
+    # Kapittel 13
+    "Hva viser servicetrianglet":
+      navn: "Servicetrianglet (Andreassen)"
+      elementer:
+        - "Gi serviceløftet – bedrift til kunde, gjennom markedskommunikasjon"
+        - "Muliggjøre serviceløftet – bedrift til ansatt, gjennom internmarkedsføring"
+        - "Levere serviceløftet – ansatt til kunde"
+    "Hva er produktelementmodellen":
+      navn: "Produktelementmodellen (Troye)"
+      elementer:
+        - "Strukturelle elementer – de fysiske omgivelsene"
+        - "Backstage-elementer – det kunden ikke ser"
+        - "Samhandlingselementer – interaksjonen mellom personale og kunde"
+        - "Kundeavhengige elementer – kundens egen bruk uten andre involvert"
+    "Hva er Servqual-modellen":
+      navn: "Servqual"
+    "Hva er Service Profit Chain":
+      navn: "Service Profit Chain"
+      elementer:
+        - "Intern servicekvalitet"
+        - "Personaltilfredshet"
+        - "Personallojalitet og personalproduktivitet"
+        - "Ekstern servicekvalitet"
+        - "Kundetilfredshet"
+        - "Kundelojalitet"
+        - "Inntektsvekst og lønnsomhet"
+    "Hvordan gjør man de ansatte i stand til å levere":
+      navn: "Internmarkedsføringsmodellen (Wilson)"
+      elementer:
+        - "Rekrutter de beste medarbeiderne"
+        - "Utvikle medarbeiderne til å levere servicekvalitet"
+        - "Ha gode støttesystemer"
+        - "Behold de beste medarbeiderne"
+    "Hva er gap-modellen":
+      navn: "Gap-modellen"
+    # Kapittel 14
+    "Når trenger vi markedsanalyser":
+      navn: "Fire første prinsipper for markedsanalyse (Palmatier)"
+      elementer:
+        - "Alle kunder er ulike – styre kundeheterogenitet"
+        - "Alle kunder endrer seg – styre kundedynamikk"
+        - "Alle konkurrenter reagerer – styre konkurransefortrinn"
+        - "Alle ressurser er begrensede – styre ressursavveininger"
+    "Hvilke to former for markedsanalyse":
+      navn: "To former for markedsanalyse"
+      elementer:
+        - "Prosjekt med primær- og sekundærdata – starter med et problem, lineær prosess"
+        - "Prosjekt med foreliggende data – starter med data, iterativ prosess"
+    "Hvordan er arbeidsgangen med primær- og sekundærdata":
+      navn: "Fem faser i et markedsanalyseprosjekt (Churchill)"
+      elementer: ["Problemdefinisjon", "Prosjektutforming", "Datainnhenting", "Dataanalyse", "Rapportering"]
+    "Hvordan er arbeidsgangen med foreliggende data":
+      navn: "Seks faser med foreliggende data (Wirth og Hipp)"
+      elementer:
+        - "Definere prosjektformål"
+        - "Få oversikt over datamaterialet"
+        - "Forberede dataene"
+        - "Modellering"
+        - "Evaluering"
+        - "Implementering"
+    "Hvilke feilkilder finnes i markedsanalyser":
+      navn: "Feilkilder i markedsanalyser"
+      elementer:
+        - "Manglende ekspertise"
+        - "Validitetsfeil – man måler ikke det man vil måle"
+        - "Reliabilitetsfeil – undersøkelsen representerer ikke virkeligheten"
+        - "Seleksjonsproblemet – foreliggende data er ikke representative"
+    # Kapittel 15
+    "Hvilke typer innovasjoner finnes":
+      navn: "Fire inndelinger av innovasjoner"
+      elementer:
+        - "Produkt- og prosessinnovasjon"
+        - "Plattform-, modul- og designinnovasjon"
+        - "Bevarende og omveltende innovasjoner (Christensen)"
+        - "Inkrementelle og radikale innovasjoner"
+    "Hvordan adopteres ny teknologi":
+      navn: "UTAUT: adopsjon av ny teknologi"
+      elementer:
+        - "Egenskaper ved teknologien – forventet ytelse, krav til innsats, kost–nytte"
+        - "Personlige egenskaper – hedonisk nytte og vaner"
+        - "Eksterne faktorer – sosial påvirkning og støtte til bruk"
+        - "Modererende faktorer – erfaring, kjønn og alder"
+    "Hva er diffusjon, og hva er avgrunnen":
+      navn: "Avgrunnen (Moore, Crossing the Chasm)"
+    "Hvilke produktstrategier finnes for høyteknologi":
+      navn: "Produktstrategier for høyteknologi"
+      elementer:
+        - "Salg av patenter eller kunnskap"
+        - "Lisensiering"
+        - "Salg av komplette produkter"
+        - "Kombinasjon av lisensiering og komplett produkt"
+
+ORG1100:
+  ankere:
+    - "Disposisjonell tilnærming"
+    - "Lockes affektteori"
+    - "Herzbergs tofaktorteori"
+    - "Hackman & Oldhams jobbkarakteristikamodell"
+    - "Krav–kontroll-modellen"
+    - "Krav–ressurs-modellen"
+    - "1) Fiedlers kontingensteori"
+    - "2) Hersey og Blanchards modell"
+    - "3) Sti–mål-teorien"
+    - "4) Substitutter/erstatninger for ledelse"
+    - "Psykodynamisk teori (Freud)"
+    - "Humanistisk teori (Maslow, Rogers)"
+    - "Punktert likevekt-modellen"
+    - "Geert Hofstede"
+  modeller:
+    # Kapittel 1
+    "Intelligenstesting og IQ":
+      navn: "Krystallisert og flytende intelligens"
+      elementer:
+        - "Krystallisert intelligens – kunnskapen og ferdighetene du har lært deg"
+        - "Flytende intelligens – evnen til å løse helt nye problemer"
+    "Klassiske intelligensteorier":
+      navn: "Klassiske intelligensteorier"
+      elementer:
+        - "Spearman – én generell g-faktor"
+        - "Thurstone – ingen g-faktor"
+        - "Gardner – mange uavhengige typer intelligens"
+        - "CHC-modellen – dagens mest gyldige modell"
+    "Klassiske personlighetsteorier":
+      navn: "Tre hovedgrupper av personlighetsteori"
+      med_neste: 2
+      elementer:
+        - "Psykodynamisk teori (Freud) – ubevisste krefter styrer oss"
+        - "Humanistisk teori (Maslow, Rogers) – medfødt behov for selvaktualisering"
+        - "Trekkteori – personlighet som graderte dimensjoner"
+    "Eysencks Giant Three":
+      navn: "Eysencks Giant Three"
+      elementer: ["Ekstroversjon", "Nevrotisisme", "Psykotisisme"]
+    "Femfaktormodellen":
+      navn: "Femfaktormodellen (Big Five)"
+      elementer:
+        - "Nevrotisisme – tendens til negative følelser"
+        - "Ekstroversjon – sosial, aktiv, pratsom"
+        - "Åpenhet for erfaring – fantasifull, nysgjerrig"
+        - "Omgjengelighet – altruistisk, hjelpsom"
+        - "Planmessighet – målbevisst, pålitelig"
+    "HEXACO-modellen":
+      elementer:
+        - "Honesty-Humility – ærlighet og ydmykhet"
+        - "Emotionality – emosjonalitet"
+        - "eXtraversion – ekstroversjon"
+        - "Agreeableness – omgjengelighet"
+        - "Conscientiousness – planmessighet"
+        - "Openness – åpenhet for erfaring"
+    # Kapittel 2
+    "Den perseptuelle syklusen":
+      navn: "Den perseptuelle syklusen (Neisser)"
+    "System 1- og system 2-tenkning":
+    "Tretrinns hukommelsesmodell":
+    "Følelseshjulet":
+      navn: "Følelseshjulet (Russell)"
+    "Emosjonenes fire felles egenskaper":
+      navn: "Emosjonenes fire egenskaper (Lazarus)"
+    "Dobbeltspormodellen for emosjoner":
+      navn: "Dobbeltspormodellen for emosjoner (LeDoux)"
+    # Kapittel 3
+    "Hva er motivasjon?":
+      navn: "Motivasjonens tre dimensjoner"
+    "Maslows behovshierarki":
+    "Alderfers behovsteori":
+      navn: "Alderfers ERG-teori"
+    "Prestasjonsmotivteori":
+      navn: "Prestasjonsmotivteori (McClelland)"
+    "Selvbestemmelsesteori – tre grunnleggende":
+      navn: "Selvbestemmelsesteorien: tre psykologiske behov"
+    "Forventningsteori":
+      navn: "Forventningsteori (Vroom)"
+    "Rettferdighetsteori":
+      navn: "Rettferdighetsteori (Adams)"
+    "Målorienteringsteori":
+    "Målsettingsteori":
+      navn: "Målsettingsteori (Locke og Latham)"
+    "Mestringstro":
+      navn: "Mestringstro (self-efficacy)"
+    "Selvbestemmelsesteorien – indre og ytre":
+      navn: "Selvbestemmelseskontinuumet: indre og ytre motivasjon"
+      elementer:
+        - "Amotivasjon"
+        - "Ytre regulering – kontrollert av straff og belønning"
+        - "Introjeksjonsregulering – man handler fordi man føler man må"
+        - "Identifisert regulering – oppleves som viktig for egne mål"
+        - "Integrert regulering – helhjertet selvbestemt"
+        - "Indre motivasjon – aktiviteten er interessant i seg selv"
+    "Prososial motivasjon":
+    "Valgfrihet/selvbestemmelse – psykologisk myndiggjøring":
+      navn: "Psykologisk myndiggjøring (empowerment)"
+    "Samspillet mellom motivasjonsteoriene":
+      navn: "Samspillet mellom motivasjonsteoriene (Figur 3.3)"
+      elementer:
+        - "Behov"
+        - "Det som verdsettes og motiverer"
+        - "Belønninger og motivasjon"
+        - "Mål og intensjoner"
+        - "Valgfrihet og selvbestemmelse"
+    # Kapittel 4
+    "Disposisjonell tilnærming":
+      navn: "Disposisjonell tilnærming til jobbtilfredshet"
+    "Lockes affektteori":
+      elementer:
+        - "Hva man ønsker fra jobben"
+        - "Hva man faktisk får – jo mindre avstand, desto høyere tilfredshet"
+        - "Hvor viktig aspektet er for personen – påvirker hvor mye avviket teller"
+    "Herzbergs tofaktorteori":
+      navn: "Herzbergs tofaktorteori"
+      elementer:
+        - "Motivasjonsfaktorer – indre, f.eks. jobbinnhold og ansvar: skaper trivsel når de er til stede"
+        - "Hygienefaktorer – ytre, f.eks. lønn og arbeidsmiljø: skaper mistrivsel når de mangler"
+    "Hackman & Oldhams jobbkarakteristikamodell":
+      navn: "Jobbkarakteristikamodellen (Hackman og Oldham)"
+      elementer:
+        - "Ferdighetsvariasjon"
+        - "Oppgaveidentitet"
+        - "Oppgavebetydning"
+        - "Autonomi"
+        - "Tilbakemelding"
+    "Hva er jobbengasjement?":
+      navn: "Jobbengasjementets tre kvaliteter"
+      elementer:
+        - "Vitalitet – høyt energinivå og utholdenhet"
+        - "Entusiasme – inspirasjon, stolthet og identifikasjon"
+        - "Oppslukthet – dyp konsentrasjon"
+    "Krav–kontroll-modellen":
+      navn: "Krav–kontroll-modellen (Karasek)"
+      elementer: ["Jobbkrav", "Kontroll – beslutningsfrihet"]
+    "Krav–ressurs-modellen":
+      navn: "Krav–ressurs-modellen (Bakker og Demerouti)"
+      elementer:
+        - "Jobbkrav – mentale, emosjonelle og fysiske belastninger"
+        - "Jobbressurser – støtte, autonomi og tilbakemelding"
+        - "Stressreaksjon – kan følge av jobbkravene"
+        - "Motivasjon og engasjement – følger av jobbressursene"
+    "Tiltak – 10 punkter":
+      navn: "Ti tiltak for jobbtilfredshet og jobbengasjement"
+    # Kapittel 6
+    "Hva er overføring av læring?":
+      navn: "Overføring av læring"
+      elementer:
+        - "Spontan og automatisk overføring – av praktiske ferdigheter"
+        - "Bevisst generalisering – av abstrakt kunnskap"
+    "Hva sier behaviorismen?":
+      navn: "Behaviorisme"
+    "Hva sier kognitive perspektiver?":
+      navn: "Kognitive perspektiver på læring"
+    "Hva er Kolbs modell?":
+      navn: "Kolbs læringssirkel"
+      elementer:
+        - "Konkrete erfaringer"
+        - "Reflekterende observasjoner"
+        - "Abstraksjoner og generaliseringer"
+        - "Aktiv eksperimentering"
+    "Hva er Argyris og Schöns modell?":
+      navn: "Enkelt- og dobbeltkretslæring (Argyris og Schön)"
+    "Hva er Banduras sosialkognitive teori?":
+      navn: "Banduras fire kilder til mestringstro"
+    "Hva er læringsstil og læringspreferanse?":
+      navn: "Læringsstil og læringspreferanse"
+      elementer:
+        - "Dyp prosessering – forstå underliggende mening"
+        - "Overflateprosessering – huske uten å forstå"
+    # Kapittel 7
+    "Problemløsningsprosessen":
+    "Algoritmer og heuristikker":
+      elementer:
+        - "Algoritmer – presist definerte fremgangsmåter for veldefinerte problemer"
+        - "Heuristikker – tommelfingerregler for vagt definerte problemer"
+    "Beslutninger":
+      navn: "Tre typer beslutninger"
+    "Hva er en god beslutning?":
+      navn: "Den rasjonelle beslutningsmodellen"
+    "Tre mekanismer ved vurderinger":
+      navn: "Tre heuristikker ved vurderinger"
+    "Feilkilder og feller":
+      navn: "Feilkilder og feller i beslutninger"
+    "Kreativitet":
+      navn: "De fire p-ene i kreativitet (Rhodes)"
+      elementer:
+        - "Person – egenskaper ved kreative mennesker"
+        - "Prosess – de mentale prosessene"
+        - "Produkt – kjennetegn ved kreative ideer"
+        - "Press – miljøforhold som fremmer eller hemmer"
+    "Prosess: Wallas":
+      navn: "Wallas' fire faser i kreativ prosess"
+    "Person: evner og personlighet":
+      navn: "Divergent og konvergent tenkning"
+      elementer:
+        - "Divergent tenkning – lage mange og varierte ideer: idéflyt, originalitet, fleksibilitet"
+        - "Konvergent evne – vurdere og videreutvikle ideene"
+    "Press: miljøet rundt":
+      navn: "Miljøfaktorer som påvirker kreativitet"
+    # Kapittel 8
+    "Tuckmans fasemodell":
+    "MRPI-modellen":
+    "Beslutningsmåter i team":
+    "Sosial loffing":
+    "Normer":
+      navn: "Gruppenormer"
+    # Kapittel 9
+    "Rettferdighet i organisasjoner":
+      navn: "Fire former for rettferdighet i organisasjoner"
+    "Konflikter i arbeidsmiljøet":
+      navn: "Sakskonflikt og relasjonskonflikt"
+      elementer:
+        - "Sakskonflikt – uenighet om saken eller oppgaven"
+        - "Relasjonskonflikt – uenighet mellom personene"
+    "Glasls konfliktmodell":
+      navn: "Glasls konflikttrapp"
+      elementer:
+        - "Fase I: Sakskonflikt – trinn 1–3"
+        - "Fase II: Personlige motsetninger, blokkeringer og sabotasje – trinn 4–6"
+        - "Fase III: Motpartens verdi som menneske benektes – trinn 7–9"
+    "Fem konflikthåndteringsstiler":
+    "Destruktiv medarbeideratferd":
+      navn: "Destruktiv medarbeideratferd (Robinson og Bennett)"
+      elementer:
+        - "Organisatorisk og alvorlig – underslag, tyveri, korrupsjon"
+        - "Organisatorisk og mindre alvorlig – dårlig arbeidsutførelse, skulking"
+        - "Mellommenneskelig og alvorlig – aggresjon, mobbing, vold"
+        - "Mellommenneskelig og mindre alvorlig – sladder, baksnakking, uhøflighet"
+    # Kapittel 10
+    "Utgangspunkt: hvordan kommunikasjon defineres":
+      navn: "Tre aspekter ved kommunikasjon"
+    "Shannon og Weavers kommunikasjonsmodell":
+      navn: "Shannon og Weavers kommunikasjonsmodell"
+    "Palo Alto-skolen og dobbeltbinding":
+    "\"Sensemaking\" (Karl E. Weick)":
+      navn: "Sensemaking (Weick)"
+    "Transaksjonskostnadsteori":
+    "Diskusjon vs. dialog":
+      navn: "Diskusjon og dialog (Senge)"
+      elementer:
+        - "Diskusjon – noen ønsker å vinne"
+        - "Dialog – partene søker å finne ut noe de ikke visste"
+    "Retorikk – Aristoteles":
+      navn: "Retorikk: etos, patos og logos"
+    "Geert Hofstede":
+      navn: "Hofstedes kulturdimensjoner"
+      elementer:
+        - "Individualisme vs. kollektivisme"
+        - "Høy vs. lav maktavstand"
+        - "Femininitet vs. maskulinitet"
+        - "Høy vs. lav usikkerhetsunngåelse"
+        - "Langtidsorientering vs. korttidsorientering"
+    # Kapittel 11
+    "Tre resultater av påvirkningsforsøk":
+    "Åtte kilder til makt":
+      navn: "Åtte kilder til makt (French og Raven m.fl.)"
+      elementer:
+        - "Legitim makt – stilling, posisjon eller rolle"
+        - "Belønningsmakt – mulighet til å belønne"
+        - "Straffemakt – mulighet til å sanksjonere"
+        - "Referentmakt – respekt, beundring og identifisering"
+        - "Ekspertmakt – kompetanse andre respekterer"
+        - "Informasjonsmakt – tilgang til viktig informasjon"
+        - "Argumentasjonsmakt – dyktighet i å argumentere og overbevise"
+        - "Personlighet – maktmotivasjon, trekk og kommunikasjonsstil"
+    "Påvirkningsteknikker (Yukl)":
+      navn: "Påvirkningsteknikker (Yukl)"
+    "Effekter av å oppleve makt":
+      elementer:
+        - "Handlingsorientert tankesett"
+        - "Økt målorientering"
+        - "Sosial distansering"
+    # Kapittel 12
+    "Hva påvirker ledelse?":
+      navn: "Hva påvirker ledelse (Figur 12.1)"
+      elementer:
+        - "Hva lederen faktisk gjør"
+        - "Lederens kjennetegn – personlighet og erfaring"
+        - "Medarbeidernes egenskaper og atferd"
+        - "Organisasjonens kjennetegn – maktforskjeller og kultur"
+    "Konstruktiv versus destruktiv ledelse":
+      navn: "Konstruktiv og destruktiv ledelse"
+      elementer:
+        - "Inspirerende – konstruktiv og aktiv"
+        - "Delegerende – konstruktiv og passiv"
+        - "Ydmykende/misbrukende – destruktiv og aktiv"
+        - "La-det-skure (laissez-faire) – destruktiv og passiv"
+    "Management versus ledelse":
+      elementer:
+        - "Management – administrasjon, daglig drift, regler og systemer"
+        - "Ledelse – påvirkning, mening og støtte til å nå mål"
+    "«Stor mann»-teorier":
+      navn: "«Stor mann»-teorier"
+    "Ledelse som utøvelse av ferdigheter":
+      navn: "Lederferdigheter (Katz)"
+      elementer: ["Praktiske ferdigheter", "Menneskelige ferdigheter", "Konseptuelle ferdigheter"]
+    "Lederatferd og lederstiler":
+      navn: "Oppgave- og relasjonsorientert ledelse (Ohio State og Michigan)"
+      elementer:
+        - "Oppgaveorientert ledelse – organisere, klargjøre roller og ressurser"
+        - "Relasjonsorientert ledelse – individuell omtanke, støtte, trivsel"
+    "Blake og Moutons managerial grid":
+      navn: "Managerial grid (Blake og Mouton)"
+      elementer:
+        - "Uengasjert ledelse (1,1) – lite opptatt av både produksjon og mennesker"
+        - "Koseklubbledelse (1,9) – mest opptatt av mennesker"
+        - "Autoritets-lydighetsledelse (9,1) – mest opptatt av produksjon"
+        - "Midt-på-treet-ledelse (5,5) – middels opptatt av begge"
+        - "Teamledelse (9,9) – svært opptatt av begge, ifølge Blake og Mouton den beste"
+    "1) Fiedlers kontingensteori":
+      navn: "Fiedlers kontingensteori"
+      elementer:
+        - "Leder–medarbeider-relasjonen – tillit og lojalitet"
+        - "Oppgavestruktur – hvor klart definert oppgaven er"
+        - "Stillingsmakt – legitim makt til å straffe og belønne"
+    "2) Hersey og Blanchards modell":
+      navn: "Situasjonsbestemt ledelse (Hersey og Blanchard)"
+      elementer:
+        - "S1 Instruerende – lav modenhet"
+        - "S2 Overtalende"
+        - "S3 Deltakende"
+        - "S4 Delegerende – høy modenhet"
+    "3) Sti–mål-teorien":
+      navn: "Sti–mål-teorien (House)"
+      elementer: ["Dirigerende", "Støttende", "Deltakende", "Prestasjonsorientert"]
+    "4) Substitutter/erstatninger for ledelse":
+      navn: "Substitutter for ledelse (Kerr og Jermier)"
+      elementer:
+        - "Substitutter – gjør medarbeiderne uavhengige av lederen"
+        - "Nøytralisatorer – hindrer lederen eller nuller ut effekten"
+    # Kapittel 13
+    "A) Seks strukturelle forhold":
+      navn: "Seks strukturelle forhold ved organisasjoner"
+    "B) Arbeidsdeling og spesialisering":
+      navn: "Vertikal og horisontal arbeidsdeling"
+      elementer:
+        - "Vertikal arbeidsdeling – fordeling av myndighet mellom nivåer"
+        - "Horisontal arbeidsdeling – fordeling av oppgaver på samme nivå"
+    "C) Mintzbergs generelle organisasjonsmodell":
+      navn: "Mintzbergs organisasjonsmodell (fem deler)"
+    "I) Byråkratimodellen":
+      navn: "Byråkratimodellen (Weber)"
+    "J) Taylorisme":
+      navn: "Taylorisme (scientific management)"
+    "L) Mekanistiske versus organiske":
+      navn: "Mekanistiske og organiske organisasjoner (Burns og Stalker)"
+      elementer:
+        - "Mekanistiske organisasjoner – sterk regelstyring, klare hierarkiske relasjoner"
+        - "Organiske organisasjoner – generelt definerte oppgaver, fleksibilitet og autonomi"
+    "M) Mintzbergs sju organisasjonstyper":
+      navn: "Mintzbergs organisasjonstyper"
+    "N) Human relations-tradisjonen":
+      navn: "Human relations og Hawthorne-eksperimentene"
+    "O) Douglas McGregors teori X og teori Y":
+      navn: "Teori X og teori Y (McGregor)"
+    "P) Betingelsesteori":
+      navn: "Betingelsesteori (contingency theory)"
+    # Kapittel 14
+    "Har en organisasjon én kultur eller flere?":
+      navn: "Integrasjons- og differensieringsperspektivet på kultur"
+      elementer:
+        - "Integrasjonsperspektivet – én kultur: konsistens, konsensus, lederfokus"
+        - "Differensieringsperspektivet – inkonsistens, subkulturer, flere kilder til kultur"
+    "Hva består kulturinnholdet av?":
+      navn: "Kulturinnhold: verdier, normer og virkelighetsoppfatninger"
+      elementer: ["Verdier", "Normer", "Virkelighetsoppfatninger"]
+    "Hvordan kommer kulturen til uttrykk?":
+      navn: "Fire typer kulturuttrykk"
+    "Hva er Competing Values Framework?":
+      navn: "Competing Values Framework (CVF)"
+      elementer:
+        - "Klankultur – internt fokus og fleksibilitet: samarbeid"
+        - "Adhockratikultur – eksternt fokus og fleksibilitet: innovasjon"
+        - "Markedskultur – eksternt fokus og stabilitet: konkurranse og resultater"
+        - "Hierarkikultur – internt fokus og stabilitet: kontroll og forutsigbarhet"
+    "Kan man endre kulturen i en organisasjon?":
+      navn: "Kulturendring (Stensaker og Sverdrup)"
+    # Kapittel 15
+    "Typer endring":
+      navn: "Episodisk og kontinuerlig endring"
+      elementer:
+        - "Episodisk endring – stor, radikal og sjelden, drevet av eksterne krefter"
+        - "Kontinuerlig endring – liten og gradvis, knyttet til praksis og læring"
+    "Lewins tretrinnsmodell":
+      navn: "Lewins tretrinnsmodell"
+    "Kotters åtte steg":
+      navn: "Kotters åtte steg"
+    "Endringskurven":
+      navn: "Endringskurven (Scott og Jaffe)"
+    "Endringsreaksjoner":
+      navn: "Endringsreaksjoner (Meyer og Stensaker)"
+      elementer:
+        - "Motstand – aktiv, endringen blir ikke gjennomført"
+        - "Proaktiv – aktiv, endringen blir gjennomført"
+        - "BOHICA – passiv, endringen blir ikke gjennomført"
+        - "Lojalitet – passiv, endringen blir gjennomført"
+    "Psykologisk kontrakt":
+    "Det situasjonsavhengige perspektivet":
+      navn: "Det situasjonsavhengige perspektivet på endring"
+    "Hva: tannhjulmodellen":
+      navn: "Tannhjulmodellen"
+      elementer:
+        - "Struktur"
+        - "Kompetanse"
+        - "Arbeidsprosesser"
+        - "Insentiver"
+        - "Kultur"
+        - "Teknologisk plattform"
+        - "Eksterne relasjoner"
+        - "Ledelse og styring"
+        - "Eierskap"
+    "Utfordringer ved omstilling":
+    # Kapittel 17
+    "Arbeidsgivers styringsrett":
+    "Den nordiske modellen":
+      navn: "Den nordiske modellen og trepartssamarbeidet"
+    # Kapittel 18
+    "Trippel bunnlinje-modellen":
+      navn: "Trippel bunnlinje og ESG (Elkington)"
+      elementer:
+        - "Økonomi"
+        - "Miljø – avfall, utslipp, klima, biologisk mangfold"
+        - "Sosiale forhold – arbeidsforhold, likestilling, menneskerettigheter"
+    "Økonomiske teorier om samfunnsansvar":
+      navn: "Teorier om samfunnsansvar"
+    "Økonomiske argumenter for å ta samfunnsansvar":
+    "Det etiske grunnlaget for samfunnsansvar":
+      navn: "Tre etiske teorier"
+    "Praktisk fremgangsmåte for å innføre bærekraft":
+      navn: "Sju steg for å innføre bærekraft"

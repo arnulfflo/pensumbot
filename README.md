@@ -24,9 +24,10 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - ⚡ **Neste spørsmål lages i bakgrunnen** mens du svarer, så quizen går nesten momentant
 - 🤖 **BØA-agent** som selv velger når den skal søke i pensum og regne, mens koden kontrollerer hvert tall
 - 🧮 **BØA-formeltrening**: 32 formler fra pensum, snudd algebraisk, med oppgaver der Python regner fasiten
+- 🧩 **Modeller og teorier for MRK og ORG**: 239 modeller hentet fra egne notater, med øving i å kjenne dem igjen, velge riktig modell til en case og analysere casen med den
 - 🧭 **Studieveileder-agent**: «Jeg har to timer i kveld, hva bør jeg øve på?» gir en ferdig økt med «Øv nå»-knapper
 - 🔒 **100 % lokalt og privat**, og ett konfigurasjonsvalg fra å bruke Claude i stedet
-- 🧪 **Målt kvalitet** med eget testsett og 139 automatiske tester
+- 🧪 **Målt kvalitet** med eget testsett og 177 automatiske tester
 
 ## 🧩 Funksjoner
 
@@ -53,6 +54,13 @@ BØA-eksamen er uten hjelpemidler, så formlene må sitte. Fanen har 32 formler 
 - **Trening** med fem typer oppgaver: hvilken formel, snu formelen, regn ut, hva skjer hvis («VEK øker, hva skjer med nullpunktet?») og sammenhenger på tvers (pris og VEK → DB → DG → NPO)
 - **Fasiten regnes ut i Python**, aldri av språkmodellen, og tallene går opp uten kalkulator, som på eksamen
 - Hver løsning viser formelen, utregningen steg for steg og hvor i pensum formelen står. Resultatene teller med i mestringen per tema
+
+### 🧩 Modeller og teorier (MRK og ORG)
+På MRK- og ORG-eksamen skal du bruke modeller og teorier på en case. Fanen «Modeller» viser et modellark med 124 modeller i markedsføring og 115 i organisasjon og ledelse. Hver modell har elementene sine og sidetall eller figur. Alt er hentet fra modellnotatene dine. `config/modeller.yaml` sier hvilke seksjoner som er modeller.
+- **Kjenn modellen**: hvilken modell består av disse elementene, hvilket element hører til, hvilket mangler, og hva betyr et element. Spørsmålene lages i Python fra modellarket, uten språkmodell, og de gale svarene er sjekket mot modellen så det bare finnes én riktig fasit
+- **Velg modell til casen**: språkmodellen skriver en kort case der én modell passer, og du velger hvilken. Koden stopper caser som røper navnet, forfatteren eller elementene
+- **Bruk modellen på casen**: du skriver analysen, og den rettes mot elementene i modellen, så du ser hvilke du fikk med og hvilke du glemte
+- Ligger som typen «modeller og teorier» i quiz-fanen, med repetisjon av feilsvar og mestring per kapittel
 
 ### 🧭 Studieveilederen
 Øverst i «I dag» kan du spørre med vanlige ord, for eksempel «Jeg har 45 min til BØA, hva gjør jeg?». En agent ser på dine egne data og setter opp en økt.
@@ -168,7 +176,7 @@ Målt mot håndlagde testsett (`tester/testsett_*.yaml`) med `uv run python -m s
 | Organisasjon og ledelse | 14 av 15 | 0,882 | 3 av 3 | 0 |
 | Markedsføring | 15 av 15 | 0,967 | 3 av 3 | 0 |
 
-Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **139 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, og at hver BØA-formel, omforming og fasit regner riktig (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
+Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **177 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
 
 ## 🛠️ Teknologi
 
@@ -190,7 +198,7 @@ Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue O
 | **PyYAML** · **python-dotenv** | Innstillinger, eksamensdatoer og API-nøkkel |
 | **pytest** | Enhetstester |
 
-Rundt 4 900 linjer Python fordelt på 24 filer. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
+Rundt 5 700 linjer Python fordelt på 26 filer. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
 
 ## 🚀 Kom i gang
 

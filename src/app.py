@@ -19,14 +19,15 @@ import gradio as gr
 
 from src.database import koble, lagre_sporsmal
 from src.flashcards import forfalte, lag_nye_kort
-from src import formler
+from src import formler, modellquiz
 from src.henting import Bit, hent
 from src.innlesing import alle_fag, standardfag
 from src.kortsvar import STILER, vurder
 from src.llm import generer
 from src.planlegger import UKEDAGER, angre_hopp_over, blokker_for, hopp_over, lag_og_lagre, last_eksamener, marker_fullfort
 from src.quiz import modellnavn, sporsmal_strom
-from src.repetisjon import forfalte_sporsmal, lagre_resultat
+from src.modeller import FILER as MODELLFAG, kapittel_i, modellark
+from src.repetisjon import MODELLARK, forfalte_sporsmal, lagre_resultat
 from src.agent import FAG as AGENTFAG, kildeliste as agentkilder, kjor_agent
 from src.svar import selvstendig_sporsmal, svar_pa
 from src.veileder import kjor_veileder
@@ -36,9 +37,14 @@ BOKSTAVER = "ABCD"
 FARGER = {"MRK1001": "#ea7a1a", "ORG1100": "#2f6fde", "BOA1100": "#1f9d63", "MET1001": "#8b5cf6"}
 NAVN = {"MRK1001": "Markedsføring", "ORG1100": "Organisasjon og ledelse", "BOA1100": "Bedriftsøkonomi",
         "MET1001": "Metode"}
-IKONER = {"flashcards": "🗂️", "flervalg": "🎯", "kortsvar": "✍️", "repetisjon": "🔁", "feilsvar": "🔁"}
+IKONER = {"flashcards": "🗂️", "flervalg": "🎯", "kortsvar": "✍️", "repetisjon": "🔁", "feilsvar": "🔁",
+          "modeller": "🧩"}
 OVINGSNAVN = {"flashcards": "Flashcards", "flervalg": "Flervalg", "kortsvar": "Kortsvar", "repetisjon": "Repetisjon",
-              "feilsvar": "Feilsvar på nytt"}
+              "feilsvar": "Feilsvar på nytt", "modeller": "Modeller og teorier"}
+QUIZTYPER = [("flervalg", "flervalg"), ("kortsvar", "kortsvar"), ("modeller og teorier", "modeller"),
+             ("repetisjon", "repetisjon")]
+MODELLSTILER = [(navn, verdi) for verdi, navn in modellquiz.TYPER.items()]
+ALLE_KAPITLER = "Alle kapitler"
 
 # Quizøkter per nettleserfane. Generatorer kan ikke ligge i gr.State (den kopierer verdiene),
 # så de lagres her med Gradios økt-ID som nøkkel.
@@ -182,9 +188,36 @@ def _repetisjonsstrom(fag):
         yield q, bit, s["id"], s["kilde"]
 
 
+def _tema_for_kapittel(fag, kapittel) -> str:
+    """Temaet i config/eksamener.yaml med samme kapittel, så modellspørsmål teller på riktig tema i mestringen."""
+    return next((t for t in temaer_for(fag, med_alle=False) if kapittel_i(t) == kapittel), f"kap. {kapittel}")
+
+
+def _modellstrom(fag, tema, stil):
+    db = koble()
+    for q, bit, m in modellquiz.modell_strom(fag, tema, stil, SPORSMAL_PER_TEMA):
+        tema_m = _tema_for_kapittel(fag, m.kapittel)
+        laget_av = modellnavn() if q["stil"] in ("velg modell", "bruk modellen") else MODELLARK
+        sid = lagre_sporsmal(db, fag=fag, tema=tema_m, ovingsmate=q["type"], sporsmal=q["sporsmal"],
+                             alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],
+                             forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=m.kilde, modell=laget_av,
+                             kildetekst=m.tekst)
+        yield {**q, "tema": tema_m}, bit, sid, m.kilde
+
+
+def riktig_stil(type_, stil):
+    """Stilen som hører til typen. Rester fra forrige type («forklar» for modeller) gir standardvalget."""
+    if type_ == "modeller":
+        return stil if stil in modellquiz.TYPER else "blandet"
+    return stil if stil in (*STILER, "blandet") else "forklar"
+
+
 def _ny_strom(fag, tema, type_, stil):
     if type_ == "repetisjon":
         yield from _repetisjonsstrom(fag)
+        return
+    if type_ == "modeller":
+        yield from _modellstrom(fag, tema, stil)
         return
     db = koble()
     for q, bit in sporsmal_strom(fag, tema, SPORSMAL_PER_TEMA, type_, stil):
@@ -197,6 +230,7 @@ def _ny_strom(fag, tema, type_, stil):
 
 
 def _start_okt(fag, tema, type_, stil) -> dict:
+    stil = riktig_stil(type_, stil)
     """Lager spørsmål i en bakgrunnstråd, to foran det du svarer på, så «Nytt spørsmål» går fort."""
     okt = {"nokkel": (fag, tema, type_, stil), "ko": queue.Queue(maxsize=2), "stopp": threading.Event(),
            "besvart": 0, "riktige": 0, "nr": 0, "feil": [], "runde": []}
@@ -240,7 +274,7 @@ def _sporsmalskort(fag, q, nr, kilde: str = "") -> str:
     return (f'<div class="kort" style="--fag:{farge(fag)}"><div class="topplinje">'
             f'<span>{merke(fag)} &nbsp;{escape(kort_tema(q.get("tema") or ""))}</span>'
             f'<span>Spørsmål {nr} · {OVINGSNAVN[q["type"]]}{stil}</span></div>'
-            f'<div class="sporsmal">{escape(q["sporsmal"])}</div>'
+            f'<div class="sporsmal">{escape(q["sporsmal"]).replace(chr(10), "<br>")}</div>'
             f'{f"<div class=fra>📖 Laget fra: {escape(kilde)}</div>" if kilde else ""}</div>')
 
 
@@ -263,7 +297,10 @@ def forbered_quiz(fag, tema, type_, stil, request: gr.Request):
     """Begynner å lage spørsmål så snart temaet er valgt, før du trykker «Nytt spørsmål»."""
     tema = (tema or "").strip()
     okt = OKTER.get(request.session_hash)
-    if (tema or type_ == "repetisjon") and not (okt and okt["nokkel"] == (fag, tema, type_, stil)):
+    stil = riktig_stil(type_, stil)
+    if type_ == "modeller" and fag not in MODELLFAG:
+        return
+    if (tema or type_ in ("repetisjon", "modeller")) and not (okt and okt["nokkel"] == (fag, tema, type_, stil)):
         _ny_okt(request, fag, tema, type_, stil)
 
 
@@ -291,7 +328,9 @@ def _vis(okt, fag, element):
         valg = [f"{b}) {a}" for b, a in zip(BOKSTAVER, q["alternativer"])]
         felter = (gr.update(choices=valg, value=None, visible=True), skjul)
     else:
-        felter = (skjul, gr.update(value="", visible=True))
+        etikett = ("Din analyse: bruk hvert element i modellen på casen" if q.get("stil") == "bruk modellen"
+                   else "Ditt svar (2–4 setninger)")
+        felter = (skjul, gr.update(value="", visible=True, label=etikett, lines=7 if "analyse" in etikett else 4))
     return (kort, *felter, "", _poeng(okt), *_knapper(okt, besvart=False))
 
 
@@ -302,7 +341,11 @@ def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
         okt["ovelse"] = True
         return _vis(okt, okt["runde_fag"], okt["runde"].pop(0))
     tema = (tema or "").strip()
-    if type_ != "repetisjon" and not tema:
+    stil = riktig_stil(type_, stil)
+    if type_ == "modeller" and fag not in MODELLFAG:
+        return (_melding("Modeller og teorier finnes for MRK1001 og ORG1100. For BØA: bruk fanen «BØA-formler»."),
+                skjul, skjul, "", "", *INGEN_ENDRING)
+    if type_ not in ("repetisjon", "modeller") and not tema:
         return (_melding("Velg et tema først, eller skriv ditt eget, f.eks. «prisstrategi»."), skjul, skjul, "", "",
                 *INGEN_ENDRING)
     nokkel = (fag, tema, type_, stil)
@@ -314,6 +357,8 @@ def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
         okt["stopp"].set()
         okt["nokkel"] = None
         tekst = ("Ingen spørsmål skal repeteres nå. 🎉" if type_ == "repetisjon"
+                 else "Du har vært gjennom alle modellene i utvalget. Trykk «Nytt spørsmål» for en ny runde."
+                 if type_ == "modeller"
                  else f"Fant ikke flere gode spørsmål om «{tema}». Prøv et bredere tema.")
         return _melding(tekst), skjul, skjul, "", _poeng(okt), *_knapper(okt, besvart=True)
     return _vis(okt, fag, element)
@@ -504,10 +549,10 @@ def ov_paa(fag, tema, ovingsmate):
         return (gr.Tabs(selected="kort"), gr.update(), gr.update(), gr.update(), gr.update(),
                 gr.update(value=fag), gr.update(choices=temaer_for(fag), value=tema or ALLE_KORT))
     type_ = {"flervalg": "flervalg", "feilsvar": "repetisjon"}.get(ovingsmate, "kortsvar")
-    stil = "blandet" if type_ == "kortsvar" else "forklar"
+    stil = {**stilvalg(type_), "value": "blandet"} if type_ == "kortsvar" else stilvalg(type_)
     return (gr.Tabs(selected="quiz"), gr.update(value=fag),
             gr.update(choices=temaer_for(fag, med_alle=False), value=tema or None),
-            gr.update(value=type_), gr.update(value=stil), gr.update(), gr.update())
+            gr.update(value=type_), stil, gr.update(), gr.update())
 
 
 def fullfort(blokk_id):
@@ -701,6 +746,32 @@ TEMA = gr.themes.Soft(primary_hue="indigo", neutral_hue="slate", radius_size="lg
 CSS = (Path(__file__).parent / "app.css").read_text(encoding="utf-8")
 
 
+def stilvalg(type_):
+    """Stil-menyen: kortsvar har forklar/hvorfor/…, modeller har kjenn/velg/bruk."""
+    if type_ == "modeller":
+        return gr.update(choices=MODELLSTILER, value="blandet", label="Øvingsmåte", visible=True)
+    return gr.update(choices=[*STILER, "blandet"], value="forklar", label="Stil", visible=type_ == "kortsvar")
+
+
+def _kapitler(fag) -> list[str]:
+    return [ALLE_KAPITLER] + [t for t in temaer_for(fag, med_alle=False) if kapittel_i(t)]
+
+
+def vis_modellark(fag, kapittel) -> str:
+    kap = kapittel_i(kapittel) if kapittel != ALLE_KAPITLER else None
+    tekst = modellark(fag, kap)
+    antall = tekst.count("\n**")
+    return (f"*{antall} modeller og teorier, hentet fra modellnotatene dine. Elementene er det du bruker "
+            f"når du analyserer en case.*\n" + tekst)
+
+
+def ov_paa_modeller(fag, kapittel):
+    tema = kapittel if kapittel != ALLE_KAPITLER else None
+    return (gr.Tabs(selected="quiz"), gr.update(value=fag),
+            gr.update(choices=temaer_for(fag, med_alle=False), value=tema),
+            gr.update(value="modeller"), stilvalg("modeller"))
+
+
 def lag_app() -> gr.Blocks:
     with gr.Blocks(title="Pensumboten") as app:
         gr.HTML(topp)
@@ -779,9 +850,10 @@ def lag_app() -> gr.Blocks:
                         quiz_tema = gr.Dropdown(temaer_for(standardfag(), med_alle=False), value=None, label="Tema",
                                                 allow_custom_value=True, scale=2,
                                                 info="Velg fra listen, eller skriv ditt eget tema")
-                        quiz_type = gr.Radio(["flervalg", "kortsvar", "repetisjon"], value="flervalg", label="Type",
-                                             scale=2)
-                        quiz_stil = gr.Dropdown([*STILER, "blandet"], value="forklar", label="Stil", visible=False)
+                        quiz_type = gr.Radio(QUIZTYPER, value="flervalg", label="Type", scale=3)
+                        # allow_custom_value: når typen byttes, kan Gradio sende den gamle stilen ett øyeblikk
+                        quiz_stil = gr.Dropdown([*STILER, "blandet"], value="forklar", label="Stil", visible=False,
+                                                allow_custom_value=True)
                 poeng = gr.HTML()
                 quiz_sporsmal = gr.HTML(_melding("Velg fag og tema, og trykk «Nytt spørsmål»."))
                 quiz_valg = gr.Radio(show_label=False, visible=False, elem_classes="svaralternativer")
@@ -833,6 +905,15 @@ def lag_app() -> gr.Blocks:
                     with gr.Tab("Formelark"):
                         gr.HTML(vis_formelark())
 
+            with gr.Tab("🧩 Modeller", id="modeller"):
+                with gr.Group(elem_classes="panel"):
+                    with gr.Row():
+                        mfag0 = "MRK1001" if standardfag() not in MODELLFAG else standardfag()
+                        modell_fag = gr.Dropdown(list(MODELLFAG), value=mfag0, label="Fag")
+                        modell_kap = gr.Dropdown(_kapitler(mfag0), value=ALLE_KAPITLER, label="Kapittel", scale=2)
+                        modell_ov = gr.Button("🎯 Øv på disse ➜", variant="primary", scale=1)
+                modell_ark = gr.Markdown(vis_modellark(mfag0, ALLE_KAPITLER), elem_classes="modellark")
+
             with gr.Tab("📈 Mestring", id="mestring"):
                 mestring = gr.HTML()
                 oppdater_knapp = gr.Button("Oppdater", size="sm")
@@ -863,7 +944,7 @@ def lag_app() -> gr.Blocks:
         nytt_knapp.click(nytt_sporsmal, [quiz_fag, quiz_tema, quiz_type, quiz_stil], sporsmal_ut)
         feil_knapp.click(ta_feil_paa_nytt, quiz_fag, sporsmal_ut)
         prov_knapp.click(prov_igjen, quiz_tekst, quiz_resultat)
-        quiz_type.change(lambda t: gr.update(visible=t == "kortsvar"), quiz_type, quiz_stil)
+        quiz_type.input(stilvalg, quiz_type, quiz_stil)
         svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst], [quiz_resultat, poeng, *knapper])
 
         # .input (ikke .change): bare når du selv bytter fag, så «Øv nå» ikke nullstiller temaet
@@ -874,6 +955,11 @@ def lag_app() -> gr.Blocks:
             knapp.click(vurder_kort, [knapp, ko], [ko, flashcard, snu_rad, vurder_rad])
 
         oppdater_knapp.click(vis_mestring, outputs=mestring)
+
+        modell_fag.input(lambda f: (gr.update(choices=_kapitler(f), value=ALLE_KAPITLER),
+                                    vis_modellark(f, ALLE_KAPITLER)), modell_fag, [modell_kap, modell_ark])
+        modell_kap.input(vis_modellark, [modell_fag, modell_kap], modell_ark)
+        modell_ov.click(ov_paa_modeller, [modell_fag, modell_kap], [faner, quiz_fag, quiz_tema, quiz_type, quiz_stil])
 
         formel_ut = [formel_kort, formel_valg, formel_tekst, formel_resultat, formel_poeng, formel_okt]
         formel_ny.click(ny_formeloppgave, [formel_tema, formel_type, formel_okt], formel_ut)
