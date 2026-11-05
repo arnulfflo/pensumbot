@@ -83,9 +83,31 @@ def _flervalg(sporsmal: str, riktig: str, gale: list[str], m: Modell, stil: str,
             "modell_id": m.id}
 
 
+_GENERELLE_ORD = {"modellen", "modeller", "strategier", "strategien", "prosessen", "faktorer", "elementer",
+                  "perspektivet", "kjennetegn", "innovasjoner"}
+
+
+def _nokkelord(navn: str) -> set[str]:
+    """Lange fagord i navnet, kuttet så bøyninger møtes: «markedsorientering» → «markedsorienter»."""
+    return {o[:max(8, len(o) - 3)] for o in re.findall(r"[a-zæøå]{8,}", navn.lower()) if o not in _GENERELLE_ORD}
+
+
+def _samme_tema(m: Modell, a: Modell) -> bool:
+    """Handler modellene om samme begrep? «Markedsorientering (Kohli og Jaworski)» og «Interne drivkrefter for
+    markedsorientering» gjør det, og da er elementene i den ene lette å tro hører til den andre.
+    Samme forfattere i parentes teller også."""
+    tekst_a = normaliser(a.navn).replace(" ", "")
+    if any(o in tekst_a for o in _nokkelord(m.navn)) or any(o in normaliser(m.navn).replace(" ", "")
+                                                          for o in _nokkelord(a.navn)):
+        return True
+    forfattere = lambda n: set(re.findall(r"\b[A-ZÆØÅ][a-zæøå]{3,}", " ".join(re.findall(r"\(([^)]+)\)", n))))
+    return bool(forfattere(m.navn) & forfattere(a.navn)) or (m.overskrift in a.tekst[:300])
+
+
 def _andre_modeller(m: Modell, alle: list[Modell], rng: random.Random, samme_kap_forst: bool = True) -> list[Modell]:
     """Andre modeller i faget som ikke deler elementer med m. Nærmeste kapitler først, i tilfeldig rekkefølge."""
-    andre = [a for a in alle if a.id != m.id and _overlapp(m, a) == 0 and not _likt(a.navn, m.navn)]
+    andre = [a for a in alle if a.id != m.id and _overlapp(m, a) == 0 and not _likt(a.navn, m.navn)
+             and not _samme_tema(m, a)]
     rng.shuffle(andre)
     if samme_kap_forst:
         andre.sort(key=lambda a: abs(a.kapittel - m.kapittel))
@@ -160,7 +182,30 @@ def lag_betydning(m: Modell, alle: list[Modell], rng: random.Random) -> dict | N
     return _flervalg(sporsmal, fasit, gale, m, "hva betyr elementet", rng)
 
 
-KJENN = [lag_hvilken_modell, lag_hvilket_element, lag_mangler, lag_betydning]
+def lag_alle_elementer(m: Modell, alle: list[Modell], rng: random.Random) -> dict | None:
+    """«Hvilke av disse er elementer i Kotters åtte steg? Kryss av for alle.» Alle elementene er med, og
+    2–4 gale fra andre modeller. Riktig bare når du har krysset av for alle de riktige og ingen gale."""
+    if not 3 <= len(m.elementer) <= 6 or not all(_kort(e) for e in m.elementer) or _navnet_avslorer(m, [e.navn for e in m.elementer]):
+        return None
+    riktige = [e.navn for e in m.elementer]
+    gale = _gale_elementer(m, alle, rng, antall=max(2, min(4, 8 - len(riktige))))
+    if len(gale) < 2:
+        return None
+    alternativer = riktige + gale
+    rng.shuffle(alternativer)
+    return {"sporsmal": f"Hvilke av disse er elementer i «{m.navn}»? Kryss av for alle som hører til.",
+            "alternativer": alternativer, "fasit": riktige, "forklaring": _forklaring(m), "sitat": "",
+            "type": "avkrysning", "stil": "alle elementene", "modell_id": m.id}
+
+
+def rett_avkrysning(q: dict, valgt: list[str]) -> tuple[bool, list[str], list[str]]:
+    """(riktig, de du glemte, de du krysset av for som ikke hører til)."""
+    glemt = [a for a in q["fasit"] if a not in valgt]
+    feil = [a for a in valgt if a not in q["fasit"]]
+    return not glemt and not feil, glemt, feil
+
+
+KJENN = [lag_alle_elementer, lag_hvilken_modell, lag_hvilket_element, lag_mangler, lag_betydning]
 
 
 def lag_kjenn(m: Modell, alle: list[Modell], rng: random.Random) -> dict | None:
@@ -301,8 +346,9 @@ if __name__ == "__main__":
     a = ap.parse_args()
     for q, _, m in modell_strom(a.fag, f"kap. {a.kap}" if a.kap else None, a.type, a.n):
         print(f"\n[{q['stil']}] {m.kilde}\n{q['sporsmal']}")
-        for bokstav, alt in zip("ABCD", q.get("alternativer", [])):
-            print(f"  {bokstav}) {alt}{'   ✓' if alt == q['fasit'] else ''}")
+        for bokstav, alt in zip("ABCDEFGH", q.get("alternativer", [])):
+            riktig = alt in q["fasit"] if isinstance(q["fasit"], list) else alt == q["fasit"]
+            print(f"  {bokstav if q['type'] == 'flervalg' else '☐'}) {alt}{'   ✓' if riktig else ''}")
         if q["type"] == "kortsvar":
             print("  Nøkkelpunkter:", *q["nokkelpunkter"], sep="\n   - ")
             print("  Modellsvar:", q["modellsvar"])

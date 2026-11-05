@@ -212,7 +212,7 @@ def still_kortsvar(q: dict, bit: Bit) -> tuple[str, bool, str | None] | None:
     for punkt, dekket in zip(q["nokkelpunkter"], v["dekket"]):
         print(f"   {'✓' if dekket else '·'} {punkt}")
     for feil in v["feil"]:
-        print(f"   ✗ Stemmer ikke med kilden: {feil}")
+        print(f"   ⚠️ Sjekk mot notatet: {feil}")
     print(f"   {v['tilbakemelding']}")
     print(f"   Modellsvar: {q['modellsvar']}")
     print("   (Vurderingen er en indikasjon fra en liten modell, ikke en karakter.)")

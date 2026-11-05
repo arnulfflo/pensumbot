@@ -10,7 +10,7 @@ import pytest
 
 from src.kontroll import normaliser
 from src.modeller import FILER, element, kapittel_i, manglende_nokler, modeller, seksjoner
-from src.modellquiz import (_likt, case_avslorer, lag_betydning, lag_hvilken_modell, lag_hvilket_element, lag_kjenn,
+from src.modellquiz import (_likt, _samme_tema, case_avslorer, lag_alle_elementer, rett_avkrysning, lag_betydning, lag_hvilken_modell, lag_hvilket_element, lag_kjenn,
                             lag_mangler, modell_strom)
 
 FAG = list(FILER)
@@ -145,3 +145,44 @@ def test_kjenn_finner_spoersmaal_for_de_fleste_modellene():
         uten = [m.navn for m in alle if lag_kjenn(m, alle, rng) is None]
         # F.eks. «Behov, ønsker og begjær» (navnet er elementene) og teorier uten elementer. De er med i casene.
         assert len(uten) <= len(alle) * 0.3, uten
+
+
+def test_gale_svar_kommer_ikke_fra_modeller_om_samme_begrep():
+    """Skjermbilde 05.11: «Målkonflikt mellom avdelinger» (drivkrefter for markedsorientering) som galt svar
+    på et spørsmål om markedsorientering hos Kohli og Jaworski. Det er for likt til å være et rettferdig galt svar."""
+    mrk = {m.navn: m for m in modeller("MRK1001")}
+    m = mrk["Markedsorientering (Kohli og Jaworski)"]
+    assert _samme_tema(m, mrk["Interne drivkrefter for markedsorientering"])
+    assert _samme_tema(m, mrk["Fire grunnpilarer i markedsorientert tankegang"])
+    assert not _samme_tema(m, mrk["Markedsplanleggingsprosessen"])
+    alle = list(mrk.values())
+    for frø in range(30):
+        q = lag_hvilket_element(m, alle, random.Random(frø))
+        assert "Målkonflikt mellom avdelinger" not in q["alternativer"]
+        assert "Målgruppetenkning" not in q["alternativer"]
+
+
+@pytest.mark.parametrize("fag", FAG)
+def test_avkrysning_har_alle_elementene_og_bare_gale_ellers(fag):
+    alle = list(modeller(fag))
+    rng = random.Random(4)
+    laget = 0
+    for m in alle:
+        q = lag_alle_elementer(m, alle, rng)
+        if q is None:
+            continue
+        laget += 1
+        egne = [e.navn for e in m.elementer]
+        assert sorted(q["fasit"]) == sorted(egne)
+        assert set(egne) <= set(q["alternativer"]) and 5 <= len(q["alternativer"]) <= 8
+        assert len(set(q["alternativer"])) == len(q["alternativer"])
+        for g in set(q["alternativer"]) - set(egne):
+            assert not any(_likt(g, x) for x in egne) and normaliser(g) not in normaliser(m.tekst), (m.navn, g)
+    assert laget >= 30
+
+
+def test_avkrysning_rettes_som_alt_eller_ingenting():
+    q = {"fasit": ["Mobilisere", "Endre", "Stabilisere"]}
+    assert rett_avkrysning(q, ["Endre", "Stabilisere", "Mobilisere"]) == (True, [], [])
+    assert rett_avkrysning(q, ["Endre", "Mobilisere"]) == (False, ["Stabilisere"], [])
+    assert rett_avkrysning(q, ["Endre", "Mobilisere", "Stabilisere", "Lojalitet"]) == (False, [], ["Lojalitet"])

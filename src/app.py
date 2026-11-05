@@ -40,7 +40,7 @@ NAVN = {"MRK1001": "Markedsføring", "ORG1100": "Organisasjon og ledelse", "BOA1
 IKONER = {"flashcards": "🗂️", "flervalg": "🎯", "kortsvar": "✍️", "repetisjon": "🔁", "feilsvar": "🔁",
           "modeller": "🧩"}
 OVINGSNAVN = {"flashcards": "Flashcards", "flervalg": "Flervalg", "kortsvar": "Kortsvar", "repetisjon": "Repetisjon",
-              "feilsvar": "Feilsvar på nytt", "modeller": "Modeller og teorier"}
+              "feilsvar": "Feilsvar på nytt", "modeller": "Modeller og teorier", "avkrysning": "Avkrysning"}
 QUIZTYPER = [("flervalg", "flervalg"), ("kortsvar", "kortsvar"), ("modeller og teorier", "modeller"),
              ("repetisjon", "repetisjon")]
 MODELLSTILER = [(navn, verdi) for verdi, navn in modellquiz.TYPER.items()]
@@ -182,6 +182,10 @@ def _repetisjonsstrom(fag):
         if s["ovingsmate"] == "flervalg":
             q = {"sporsmal": s["sporsmal"], "alternativer": liste, "fasit": s["fasit"], "forklaring": s["forklaring"],
                  "sitat": s["sitat"], "type": "flervalg", "tema": s["tema"]}
+        elif s["ovingsmate"] == "avkrysning":
+            q = {"sporsmal": s["sporsmal"], "alternativer": random.sample(liste, len(liste)),
+                 "fasit": json.loads(s["fasit"]), "forklaring": s["forklaring"], "sitat": s["sitat"],
+                 "type": "avkrysning", "tema": s["tema"]}
         else:
             q = {"sporsmal": s["sporsmal"], "nokkelpunkter": liste, "modellsvar": s["fasit"], "fasit": s["fasit"],
                  "sitat": s["sitat"], "type": "kortsvar", "tema": s["tema"]}
@@ -198,8 +202,9 @@ def _modellstrom(fag, tema, stil):
     for q, bit, m in modellquiz.modell_strom(fag, tema, stil, SPORSMAL_PER_TEMA):
         tema_m = _tema_for_kapittel(fag, m.kapittel)
         laget_av = modellnavn() if q["stil"] in ("velg modell", "bruk modellen") else MODELLARK
+        fasit = json.dumps(q["fasit"], ensure_ascii=False) if isinstance(q["fasit"], list) else q["fasit"]
         sid = lagre_sporsmal(db, fag=fag, tema=tema_m, ovingsmate=q["type"], sporsmal=q["sporsmal"],
-                             alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],
+                             alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=fasit,
                              forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=m.kilde, modell=laget_av,
                              kildetekst=m.tekst)
         yield {**q, "tema": tema_m}, bit, sid, m.kilde
@@ -327,11 +332,16 @@ def _vis(okt, fag, element):
     if q["type"] == "flervalg":
         valg = [f"{b}) {a}" for b, a in zip(BOKSTAVER, q["alternativer"])]
         felter = (gr.update(choices=valg, value=None, visible=True), skjul)
+        flere = skjul
+    elif q["type"] == "avkrysning":
+        felter = (skjul, skjul)
+        flere = gr.update(choices=q["alternativer"], value=[], visible=True)
     else:
         etikett = ("Din analyse: bruk hvert element i modellen på casen" if q.get("stil") == "bruk modellen"
                    else "Ditt svar (2–4 setninger)")
         felter = (skjul, gr.update(value="", visible=True, label=etikett, lines=7 if "analyse" in etikett else 4))
-    return (kort, *felter, "", _poeng(okt), *_knapper(okt, besvart=False))
+        flere = skjul
+    return (kort, *felter, "", _poeng(okt), *_knapper(okt, besvart=False), flere)
 
 
 def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
@@ -344,10 +354,10 @@ def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
     stil = riktig_stil(type_, stil)
     if type_ == "modeller" and fag not in MODELLFAG:
         return (_melding("Modeller og teorier finnes for MRK1001 og ORG1100. For BØA: bruk fanen «BØA-formler»."),
-                skjul, skjul, "", "", *INGEN_ENDRING)
+                skjul, skjul, "", "", *INGEN_ENDRING, skjul)
     if type_ not in ("repetisjon", "modeller") and not tema:
         return (_melding("Velg et tema først, eller skriv ditt eget, f.eks. «prisstrategi»."), skjul, skjul, "", "",
-                *INGEN_ENDRING)
+                *INGEN_ENDRING, skjul)
     nokkel = (fag, tema, type_, stil)
     if not okt or okt["nokkel"] != nokkel:
         okt = _ny_okt(request, fag, tema, type_, stil)
@@ -360,7 +370,7 @@ def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
                  else "Du har vært gjennom alle modellene i utvalget. Trykk «Nytt spørsmål» for en ny runde."
                  if type_ == "modeller"
                  else f"Fant ikke flere gode spørsmål om «{tema}». Prøv et bredere tema.")
-        return _melding(tekst), skjul, skjul, "", _poeng(okt), *_knapper(okt, besvart=True)
+        return _melding(tekst), skjul, skjul, "", _poeng(okt), *_knapper(okt, besvart=True), skjul
     return _vis(okt, fag, element)
 
 
@@ -368,9 +378,10 @@ def ta_feil_paa_nytt(fag, request: gr.Request):
     """Stiller feilsvarene fra denne økten på nytt med en gang. Teller ikke: de kommer i repetisjonen som før."""
     okt = OKTER.get(request.session_hash)
     if not okt or not okt["feil"]:
-        return (_melding("Ingen feilsvar å ta på nytt."), gr.update(), gr.update(), "", _poeng(okt), *INGEN_ENDRING)
+        return (_melding("Ingen feilsvar å ta på nytt."), gr.update(), gr.update(), "", _poeng(okt), *INGEN_ENDRING,
+                gr.update())
     for q, bit, sid, kilde in okt["feil"]:
-        if q["type"] == "flervalg":          # stokk på nytt, så du ikke bare husker bokstaven
+        if q["type"] in ("flervalg", "avkrysning"):     # stokk på nytt, så du ikke bare husker bokstaven
             q = {**q, "alternativer": random.sample(q["alternativer"], len(q["alternativer"]))}
         okt["runde"].append((q, bit, sid, kilde))
     okt["feil"] = []
@@ -387,20 +398,37 @@ def _tilbakemelding(riktig: bool, dom: str, innhold: str) -> str:
 def _vurdering_html(q, v) -> tuple[str, str]:
     """(dom, innhold) for et vurdert kortsvar."""
     dom = f"{'Godkjent' if v['riktig'] else 'Ikke godkjent'} · {sum(v['dekket'])} av {len(v['dekket'])} nøkkelpunkter"
+    if v["feil"]:
+        dom += f" · {len(v['feil'])} {'påstand' if len(v['feil']) == 1 else 'påstander'} å sjekke"
     punkter = "".join(f"<li>{'✓' if d else '·'} {escape(p)}</li>" for p, d in zip(q["nokkelpunkter"], v["dekket"]))
-    punkter += "".join(f"<li>✗ Stemmer ikke med kilden: {escape(f)}</li>" for f in v["feil"])
+    for f, sitat in zip(v["feil"], v.get("feil_sitat") or [""] * len(v["feil"])):
+        punkter += (f"<li>⚠️ Sjekk mot notatet: «{escape(f)}»"
+                    + (f"<br><span class=notis>Notatet sier: «{escape(sitat)}»</span>" if sitat else "") + "</li>")
     innhold = (f"<ul>{punkter}</ul><p>{escape(v['tilbakemelding'])}</p>"
                f'<div class="modellsvar"><b>Modellsvar:</b> {escape(q["modellsvar"])}</div>'
                f'<p class="notis">Vurderingen er en indikasjon fra en liten modell, ikke en karakter.</p>')
     return dom, innhold
 
 
-def svar_quiz(valgt, tekst, request: gr.Request):
+def svar_quiz(valgt, tekst, flere, request: gr.Request):
     okt = OKTER.get(request.session_hash)
     if not okt or "q" not in okt:
         return _melding("Trykk «Nytt spørsmål» først."), _poeng(okt), *INGEN_ENDRING
     q, bit, sid = okt["q"], okt["bit"], okt["sid"]
-    if q["type"] == "flervalg":
+    if q["type"] == "avkrysning":
+        if not flere:
+            return _melding("Kryss av for elementene som hører til modellen."), _poeng(okt), *INGEN_ENDRING
+        riktig, glemt, gale = modellquiz.rett_avkrysning(q, flere)
+        svar = json.dumps(flere, ensure_ascii=False)
+        dom = "Riktig! Du fant alle elementene." if riktig else (
+            f"Ikke helt. {len(q['fasit']) - len(glemt)} av {len(q['fasit'])} riktige"
+            + (f", og {len(gale)} som ikke hører til" if gale else ""))
+        linjer = "".join(f"<li>✓ {escape(a)}</li>" for a in q["fasit"] if a not in glemt)
+        linjer += "".join(f"<li>· Du glemte: {escape(a)}</li>" for a in glemt)
+        linjer += "".join(f"<li>✗ Hører ikke til: {escape(a)}</li>" for a in gale)
+        innhold = f"<ul>{linjer}</ul><p>{escape(q.get('forklaring') or '')}</p>"
+        tilbakemelding = None
+    elif q["type"] == "flervalg":
         if not valgt:
             return _melding("Velg et alternativ."), _poeng(okt), *INGEN_ENDRING
         svar = valgt[3:]
@@ -857,6 +885,7 @@ def lag_app() -> gr.Blocks:
                 poeng = gr.HTML()
                 quiz_sporsmal = gr.HTML(_melding("Velg fag og tema, og trykk «Nytt spørsmål»."))
                 quiz_valg = gr.Radio(show_label=False, visible=False, elem_classes="svaralternativer")
+                quiz_flere = gr.CheckboxGroup(show_label=False, visible=False, elem_classes="svaralternativer")
                 quiz_tekst = gr.Textbox(label="Ditt svar (2–4 setninger)", lines=4, visible=False)
                 with gr.Row():
                     svar_knapp = gr.Button("Svar", variant="primary")
@@ -940,12 +969,12 @@ def lag_app() -> gr.Blocks:
         for felt in (quiz_tema, quiz_type, quiz_stil):
             felt.change(forbered_quiz, quiz_valg_inn, None, show_progress="hidden")
         knapper = [svar_knapp, nytt_knapp, prov_knapp, feil_knapp]
-        sporsmal_ut = [quiz_sporsmal, quiz_valg, quiz_tekst, quiz_resultat, poeng, *knapper]
+        sporsmal_ut = [quiz_sporsmal, quiz_valg, quiz_tekst, quiz_resultat, poeng, *knapper, quiz_flere]
         nytt_knapp.click(nytt_sporsmal, [quiz_fag, quiz_tema, quiz_type, quiz_stil], sporsmal_ut)
         feil_knapp.click(ta_feil_paa_nytt, quiz_fag, sporsmal_ut)
         prov_knapp.click(prov_igjen, quiz_tekst, quiz_resultat)
         quiz_type.input(stilvalg, quiz_type, quiz_stil)
-        svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst], [quiz_resultat, poeng, *knapper])
+        svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst, quiz_flere], [quiz_resultat, poeng, *knapper])
 
         # .input (ikke .change): bare når du selv bytter fag, så «Øv nå» ikke nullstiller temaet
         kort_fag.input(lambda f: gr.update(choices=temaer_for(f), value=ALLE_KORT), kort_fag, kort_temavalg)

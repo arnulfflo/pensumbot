@@ -27,7 +27,7 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - 🧩 **Modeller og teorier for MRK og ORG**: 239 modeller hentet fra egne notater, med øving i å kjenne dem igjen, velge riktig modell til en case og analysere casen med den
 - 🧭 **Studieveileder-agent**: «Jeg har to timer i kveld, hva bør jeg øve på?» gir en ferdig økt med «Øv nå»-knapper
 - 🔒 **100 % lokalt og privat**, og ett konfigurasjonsvalg fra å bruke Claude i stedet
-- 🧪 **Målt kvalitet** med eget testsett og 177 automatiske tester
+- 🧪 **Målt kvalitet** med eget testsett og 181 automatiske tester
 
 ## 🧩 Funksjoner
 
@@ -57,7 +57,7 @@ BØA-eksamen er uten hjelpemidler, så formlene må sitte. Fanen har 32 formler 
 
 ### 🧩 Modeller og teorier (MRK og ORG)
 På MRK- og ORG-eksamen skal du bruke modeller og teorier på en case. Fanen «Modeller» viser et modellark med 124 modeller i markedsføring og 115 i organisasjon og ledelse. Hver modell har elementene sine og sidetall eller figur. Alt er hentet fra modellnotatene dine. `config/modeller.yaml` sier hvilke seksjoner som er modeller.
-- **Kjenn modellen**: hvilken modell består av disse elementene, hvilket element hører til, hvilket mangler, og hva betyr et element. Spørsmålene lages i Python fra modellarket, uten språkmodell, og de gale svarene er sjekket mot modellen så det bare finnes én riktig fasit
+- **Kjenn modellen**: kryss av for alle elementene i en modell, hvilken modell består av disse elementene, hvilket element hører til, hvilket mangler, og hva betyr et element. Spørsmålene lages i Python fra modellarket, uten språkmodell, og de gale svarene er sjekket mot modellen så det bare finnes én riktig fasit
 - **Velg modell til casen**: språkmodellen skriver en kort case der én modell passer, og du velger hvilken. Koden stopper caser som røper navnet, forfatteren eller elementene
 - **Bruk modellen på casen**: du skriver analysen, og den rettes mot elementene i modellen, så du ser hvilke du fikk med og hvilke du glemte
 - Ligger som typen «modeller og teorier» i quiz-fanen, med repetisjon av feilsvar og mestring per kapittel
@@ -176,7 +176,7 @@ Målt mot håndlagde testsett (`tester/testsett_*.yaml`) med `uv run python -m s
 | Organisasjon og ledelse | 14 av 15 | 0,882 | 3 av 3 | 0 |
 | Markedsføring | 15 av 15 | 0,967 | 3 av 3 | 0 |
 
-Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **177 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
+Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **181 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
 
 ## 🛠️ Teknologi
 
