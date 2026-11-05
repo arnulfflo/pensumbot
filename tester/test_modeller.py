@@ -207,3 +207,16 @@ def test_noekkelpunkt_viser_betydningen_ikke_tallet_fra_figuren():
 def test_case_oppgaver_kjennes_igjen_ogsaa_i_repetisjonen():
     assert er_case_oppgave({"sporsmal": "Casen …\n\nAnalyser casen med «BCG-matrisen». Bruk elementene i modellen."})
     assert not er_case_oppgave({"sporsmal": "Forklar hva BCG-matrisen er."})
+
+
+def test_signalene_viser_til_modeller_som_finnes():
+    """config/signaler_MRK1001.yaml: hvert modellnavn må stå på modellarket, og hvert signal må ha kilde."""
+    import yaml
+    from src.konfig import ROT
+    data = yaml.safe_load((ROT / "config" / "signaler_MRK1001.yaml").read_text(encoding="utf-8"))
+    navn = {m.navn for m in modeller("MRK1001")}
+    for s in data["signaler"]:
+        assert s["kilder"] and s["hvorfor"] and s["type"] in ("oppgaveord", "case", "ikke"), s["signal"]
+        assert s.get("modeller") or s.get("begreper"), s["signal"]
+        for m in s.get("modeller", []):
+            assert m in navn, (m, s["signal"])
