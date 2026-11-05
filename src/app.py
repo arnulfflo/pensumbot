@@ -19,7 +19,7 @@ import gradio as gr
 
 from src.database import koble, lagre_sporsmal
 from src.flashcards import forfalte, lag_nye_kort
-from src import formler, modellquiz
+from src import formler, modellquiz, signaler
 from src.henting import Bit, hent
 from src.innlesing import alle_fag, standardfag
 from src.kortsvar import STILER, vurder
@@ -199,21 +199,27 @@ def _tema_for_kapittel(fag, kapittel) -> str:
 
 def _modellstrom(fag, tema, stil):
     db = koble()
-    for q, bit, m in modellquiz.modell_strom(fag, tema, stil, SPORSMAL_PER_TEMA):
+    if stil in signaler.TYPER:          # finn modellene: fasit fra løsningsforslagene, ingen språkmodell
+        strom = ((q, Bit(m.tekst, {"fil": m.fil}, 0.0), m)
+                 for q, m in signaler.signal_strom(fag, tema, stil, SPORSMAL_PER_TEMA))
+    else:
+        strom = modellquiz.modell_strom(fag, tema, stil, SPORSMAL_PER_TEMA)
+    for q, bit, m in strom:
         tema_m = _tema_for_kapittel(fag, m.kapittel)
+        kilde = q.get("kilde") or m.kilde
         laget_av = modellnavn() if q["stil"] in ("velg modell", "bruk modellen") else MODELLARK
         fasit = json.dumps(q["fasit"], ensure_ascii=False) if isinstance(q["fasit"], list) else q["fasit"]
         sid = lagre_sporsmal(db, fag=fag, tema=tema_m, ovingsmate=q["type"], sporsmal=q["sporsmal"],
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=fasit,
-                             forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=m.kilde, modell=laget_av,
+                             forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=laget_av,
                              kildetekst=m.tekst)
-        yield {**q, "tema": tema_m}, bit, sid, m.kilde
+        yield {**q, "tema": tema_m}, bit, sid, kilde
 
 
 def riktig_stil(type_, stil):
     """Stilen som hører til typen. Rester fra forrige type («forklar» for modeller) gir standardvalget."""
     if type_ == "modeller":
-        return stil if stil in modellquiz.TYPER else "blandet"
+        return stil if stil in modellquiz.TYPER or stil in signaler.TYPER else "blandet"
     return stil if stil in (*STILER, "blandet") else "forklar"
 
 
@@ -273,13 +279,24 @@ def _poeng(okt) -> str:
             f'<div>Riktige <b>{okt["riktige"]}</b></div><div>Treff <b>{andel:.0%}</b></div></div>')
 
 
+def _sporsmalstekst(tekst: str) -> str:
+    """En hel eksamenscase får vanlig skrift i en egen rulleboks, og bare spørsmålet står i fet skrift."""
+    linjer = lambda s: escape(s).replace(chr(10), "<br>")
+    if tekst.startswith("📄") and "\n\n" in tekst:
+        tittel, rest = tekst.split("\n\n", 1)
+        case, sporsmal = rest.rsplit("\n\n", 1)
+        return (f'<div class="sporsmal">{linjer(tittel)}</div><div class="casetekst">{linjer(case)}</div>'
+                f'<div class="sporsmal">{linjer(sporsmal)}</div>')
+    return f'<div class="sporsmal">{linjer(tekst)}</div>'
+
+
 def _sporsmalskort(fag, q, nr, kilde: str = "") -> str:
     """kilde: hvor i pensum spørsmålet er laget fra, så du kan slå det opp hvis du står fast."""
     stil = f' · {escape(q["stil"])}' if q.get("stil") and q["stil"] != "forklar" else ""
     return (f'<div class="kort" style="--fag:{farge(fag)}"><div class="topplinje">'
             f'<span>{merke(fag)} &nbsp;{escape(kort_tema(q.get("tema") or ""))}</span>'
             f'<span>Spørsmål {nr} · {OVINGSNAVN[q["type"]]}{stil}</span></div>'
-            f'<div class="sporsmal">{escape(q["sporsmal"]).replace(chr(10), "<br>")}</div>'
+            f'{_sporsmalstekst(q["sporsmal"])}'
             f'{f"<div class=fra>📖 Laget fra: {escape(kilde)}</div>" if kilde else ""}</div>')
 
 
@@ -422,17 +439,25 @@ def svar_quiz(valgt, tekst, flere, request: gr.Request):
         return _melding("Trykk «Nytt spørsmål» først."), _poeng(okt), *INGEN_ENDRING
     q, bit, sid = okt["q"], okt["bit"], okt["sid"]
     if q["type"] == "avkrysning":
+        modellvalg = signaler.er_modellvalg(q)
         if not flere:
-            return _melding("Kryss av for elementene som hører til modellen."), _poeng(okt), *INGEN_ENDRING
+            return (_melding("Kryss av for modellene som passer." if modellvalg
+                             else "Kryss av for elementene som hører til modellen."), _poeng(okt), *INGEN_ENDRING)
         riktig, glemt, gale = modellquiz.rett_avkrysning(q, flere)
         svar = json.dumps(flere, ensure_ascii=False)
-        dom = "Riktig! Du fant alle elementene." if riktig else (
-            f"Ikke helt. {len(q['fasit']) - len(glemt)} av {len(q['fasit'])} riktige"
-            + (f", og {len(gale)} som ikke hører til" if gale else ""))
+        funnet = len(q["fasit"]) - len(glemt)
+        if modellvalg:
+            dom = (f"{'Godkjent' if riktig else 'Ikke godkjent'}: du fant {funnet} av {len(q['fasit'])} modeller"
+                   + (f", og valgte {len(gale)} som ikke passer" if gale else "")
+                   + ("" if riktig or gale else f". Du trenger {signaler.krav(len(q['fasit']))}"))
+        else:
+            dom = "Riktig! Du fant alle elementene." if riktig else (
+                f"Ikke helt. {funnet} av {len(q['fasit'])} riktige"
+                + (f", og {len(gale)} som ikke hører til" if gale else ""))
         linjer = "".join(f"<li>✓ {escape(a)}</li>" for a in q["fasit"] if a not in glemt)
         linjer += "".join(f"<li>· Du glemte: {escape(a)}</li>" for a in glemt)
-        linjer += "".join(f"<li>✗ Hører ikke til: {escape(a)}</li>" for a in gale)
-        innhold = f"<ul>{linjer}</ul><p>{escape(q.get('forklaring') or '')}</p>"
+        linjer += "".join(f"<li>✗ {'Ikke i løsningsforslaget' if modellvalg else 'Hører ikke til'}: {escape(a)}</li>" for a in gale)
+        innhold = f"<ul>{linjer}</ul><p>{escape(q.get('forklaring') or '').replace(chr(10), '<br>')}</p>"
         tilbakemelding = None
     elif q["type"] == "flervalg":
         if not valgt:
@@ -780,10 +805,12 @@ TEMA = gr.themes.Soft(primary_hue="indigo", neutral_hue="slate", radius_size="lg
 CSS = (Path(__file__).parent / "app.css").read_text(encoding="utf-8")
 
 
-def stilvalg(type_):
-    """Stil-menyen: kortsvar har forklar/hvorfor/…, modeller har kjenn/velg/bruk."""
+def stilvalg(type_, fag=None):
+    """Stil-menyen: kortsvar har forklar/hvorfor/…, modeller har kjenn/velg/bruk, og «finn modellene»
+    for fag med signalkatalog (config/signaler_{fag}.yaml)."""
     if type_ == "modeller":
-        return gr.update(choices=MODELLSTILER, value="blandet", label="Øvingsmåte", visible=True)
+        ekstra = [(navn, verdi) for verdi, navn in signaler.TYPER.items()] if fag and signaler.har_signaler(fag) else []
+        return gr.update(choices=MODELLSTILER + ekstra, value="blandet", label="Øvingsmåte", visible=True)
     return gr.update(choices=[*STILER, "blandet"], value="forklar", label="Stil", visible=type_ == "kortsvar")
 
 
@@ -803,7 +830,7 @@ def ov_paa_modeller(fag, kapittel):
     tema = kapittel if kapittel != ALLE_KAPITLER else None
     return (gr.Tabs(selected="quiz"), gr.update(value=fag),
             gr.update(choices=temaer_for(fag, med_alle=False), value=tema),
-            gr.update(value="modeller"), stilvalg("modeller"))
+            gr.update(value="modeller"), stilvalg("modeller", fag))
 
 
 def lag_app() -> gr.Blocks:
@@ -979,7 +1006,8 @@ def lag_app() -> gr.Blocks:
         nytt_knapp.click(nytt_sporsmal, [quiz_fag, quiz_tema, quiz_type, quiz_stil], sporsmal_ut)
         feil_knapp.click(ta_feil_paa_nytt, quiz_fag, sporsmal_ut)
         prov_knapp.click(prov_igjen, quiz_tekst, quiz_resultat)
-        quiz_type.input(stilvalg, quiz_type, quiz_stil)
+        quiz_type.input(stilvalg, [quiz_type, quiz_fag], quiz_stil)
+        quiz_fag.input(lambda f, t: stilvalg(t, f) if t == "modeller" else gr.update(), [quiz_fag, quiz_type], quiz_stil)
         svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst, quiz_flere], [quiz_resultat, poeng, *knapper])
 
         # .input (ikke .change): bare når du selv bytter fag, så «Øv nå» ikke nullstiller temaet

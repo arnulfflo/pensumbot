@@ -27,7 +27,7 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - 🧩 **Modeller og teorier for MRK og ORG**: 239 modeller hentet fra egne notater, med øving i å kjenne dem igjen, velge riktig modell til en case og analysere casen med den
 - 🧭 **Studieveileder-agent**: «Jeg har to timer i kveld, hva bør jeg øve på?» gir en ferdig økt med «Øv nå»-knapper
 - 🔒 **100 % lokalt og privat**, og ett konfigurasjonsvalg fra å bruke Claude i stedet
-- 🧪 **Målt kvalitet** med eget testsett og 188 automatiske tester
+- 🧪 **Målt kvalitet** med eget testsett og 205 automatiske tester
 
 ## 🧩 Funksjoner
 
@@ -60,6 +60,8 @@ På MRK- og ORG-eksamen skal du bruke modeller og teorier på en case. Fanen «M
 - **Kjenn modellen**: kryss av for alle elementene i en modell, hvilken modell består av disse elementene, hvilket element hører til, hvilket mangler, og hva betyr et element. Spørsmålene lages i Python fra modellarket, uten språkmodell, og de gale svarene er sjekket mot modellen så det bare finnes én riktig fasit
 - **Velg modell til casen**: språkmodellen skriver en kort case der én modell passer, og du velger hvilken. Koden stopper caser som røper navnet, forfatteren eller elementene
 - **Bruk modellen på casen**: du viser hvordan hvert element kommer til uttrykk i casen. Koden sjekker at du har brukt hvert element ved navn, og språkmodellen sier fra hvis du bruker et element i strid med modellen
+- **Finn modellene (MRK)**: du får en hel eksamenscase med oppgavene og krysser av for modellene du ville brukt. Fasiten er hentet fra løsningsforslagene til fem ekte caser (Apiir, Comfyballs, Grandiosa, Kari Traa og Spike). Rettingen viser signalene i casen og modellene de peker på, og hvilke modeller løsningsforslaget sier ikke passer, som Ansoff i Kari Traa. Godkjent når du finner minst halvparten (høyst seks) uten å velge noen som ikke passer
+- **Finn signalet (MRK)**: ett signal om gangen, som «markedsandel på 75 % innen 3 år» eller «lav panteandel», og du krysser av for modellene det peker på. Signalene står i `config/signaler_MRK1001.yaml`, med kilde for hvert. Kapittel 12, 13 og 15 mangler løsningsforslag, så signalene der er utledet fra notatene og merket slik
 - Ligger som typen «modeller og teorier» i quiz-fanen, med repetisjon av feilsvar og mestring per kapittel
 
 ### 🧭 Studieveilederen
@@ -176,7 +178,7 @@ Målt mot håndlagde testsett (`tester/testsett_*.yaml`) med `uv run python -m s
 | Organisasjon og ledelse | 14 av 15 | 0,882 | 3 av 3 | 0 |
 | Markedsføring | 15 av 15 | 0,967 | 3 av 3 | 0 |
 
-Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **188 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
+Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **205 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
 
 ## 🛠️ Teknologi
 
@@ -198,7 +200,7 @@ Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue O
 | **PyYAML** · **python-dotenv** | Innstillinger, eksamensdatoer og API-nøkkel |
 | **pytest** | Enhetstester |
 
-Rundt 5 700 linjer Python fordelt på 26 filer. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
+Rundt 6 200 linjer Python fordelt på 27 filer. Hver del (innlesing, indeks, henting, svar, quiz, flashcards, repetisjon, planlegger, app) kan kjøres og testes for seg.
 
 ## 🚀 Kom i gang
 

@@ -15,6 +15,7 @@ import argparse
 import random
 import re
 
+from src import signaler
 from src.henting import Bit
 from src.kontroll import _stammer, avslorer_svaret, normaliser
 from src.llm import generer_json
@@ -204,6 +205,8 @@ def rett_avkrysning(q: dict, valgt: list[str]) -> tuple[bool, list[str], list[st
     """(riktig, de du glemte, de du krysset av for som ikke hører til)."""
     glemt = [a for a in q["fasit"] if a not in valgt]
     feil = [a for a in valgt if a not in q["fasit"]]
+    if signaler.er_modellvalg(q):       # finn modellene: nok av dem, og ingen som ikke passer
+        return signaler.godkjent(len(q["fasit"]), len(q["fasit"]) - len(glemt), len(feil)), glemt, feil
     return not glemt and not feil, glemt, feil
 
 

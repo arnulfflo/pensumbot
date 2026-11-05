@@ -195,6 +195,74 @@ signaler:
     kilder: [Grandiosa]
     hvorfor: "En svært god kandidat drøfter forslaget om å forby private merkevarer."
 
+  # ---------- utledet fra notatene (kap. 12, 13 og 15) ----------
+  # Ingen av løsningsforslagene dekker disse kapitlene. Signalene er slutninger fra modellnotatene, ikke sensortekst.
+  - signal: "Kundene bytter ofte leverandør, lav gjenkjøpsrate, kundene forsvinner til konkurrenten"
+    type: case
+    utledet: true
+    modeller: ["Offensiv og defensiv strategi og byttebarrierer", "Fire nivåer av lojalitet (Oliver)",
+               "Seks drivere for langsiktige kunderelasjoner"]
+    begreper: ["defensiv strategi: behold kundene du har", "positive og negative byttebarrierer"]
+    kilder: [notatene]
+    hvorfor: "Å holde på kundene er en defensiv strategi. Spør hvilke byttebarrierer som mangler, og hvilket lojalitetsnivå kundene er på."
+  - signal: "Kundene er fornøyde, men kjøper likevel hos andre («høy tilfredshet, men lav lojalitet»)"
+    type: case
+    utledet: true
+    modeller: ["Kundetilfredshet og forventningsbrøken", "Fire nivåer av lojalitet (Oliver)", "Norsk Kundebarometer (NKB)"]
+    kilder: [notatene]
+    hvorfor: "Tilfredshet gir ikke automatisk lojalitet. NKB skiller tilfredshet, omdømme og tilknytning fra lojalitet."
+  - signal: "Medlemsklubb, bonusprogram, lojalitetskort, kundeklubb"
+    type: case
+    utledet: true
+    modeller: ["Relasjonsfremmende insentiver", "Seks drivere for langsiktige kunderelasjoner"]
+    kilder: [notatene]
+    hvorfor: "Fordelsprogram er bare én av fire typer insentiver, og insentiver er bare én av seks drivere for relasjonen."
+  - signal: "Kunden kjøper sjelden eller én gang, lavt engasjement, prisen avgjør"
+    type: case
+    utledet: true
+    modeller: ["Når relasjonsmarkedsføring ikke passer", "Transaksjons- og relasjonsorientering"]
+    kilder: [notatene]
+    hvorfor: "Relasjonsmarkedsføring lønner seg ikke alltid. Drøft om transaksjonsorientering passer bedre."
+  - signal: "Klager på servicen, lang ventetid, reklamen lover mer enn bedriften leverer"
+    type: case
+    utledet: true
+    modeller: ["Gap-modellen", "Servqual"]
+    begreper: ["kommunikasjonsgapet", "forventet og opplevd kvalitet"]
+    kilder: [notatene]
+    hvorfor: "Plasser problemet i et av gapene. Servqual viser hvilken kvalitetsdimensjon som svikter."
+  - signal: "Høy turnover blant de ansatte, misfornøyde frontansatte, ansatte som ikke vet hva de skal levere"
+    type: case
+    utledet: true
+    modeller: ["Service Profit Chain", "Internmarkedsføringsmodellen (Wilson)", "Servicetrianglet (Andreassen)"]
+    kilder: [notatene]
+    hvorfor: "Fornøyde ansatte gir fornøyde kunder (Service Profit Chain). Internmarkedsføring gjør at bedriften kan levere serviceløftet."
+  - signal: "Bedriften selger en tjeneste (restaurant, hotell, treningssenter), og kunden er med i produksjonen"
+    type: case
+    utledet: true
+    modeller: ["Produktelementmodellen (Troye)", "Servicetrianglet (Andreassen)", "Gap-modellen"]
+    kilder: [notatene]
+    hvorfor: "Beskriv tjenesten med produktelementene. Kunden og de ansatte er en del av det som leveres."
+  - signal: "Ny teknologi som entusiastene elsker, men som vanlige kunder ikke tar i bruk"
+    type: case
+    utledet: true
+    modeller: ["Avgrunnen (Moore, Crossing the Chasm)", "UTAUT: adopsjon av ny teknologi", "Diffusjon av innovasjoner (Rogers)"]
+    kilder: [notatene]
+    hvorfor: "Avgrunnen ligger mellom tidlige adoptører og tidlig majoritet. UTAUT viser hva som får folk til å ta teknologien i bruk. Passer også Apiir."
+  - signal: "Liten bedrift med et patent eller en teknologi, men uten penger til egen produksjon og distribusjon"
+    type: case
+    utledet: true
+    modeller: ["Produktstrategier for høyteknologi"]
+    begreper: ["lisensiering", "salg av patent"]
+    kilder: [notatene]
+    hvorfor: "Drøft om bedriften bør lisensiere, selge kunnskapen eller selge komplette produkter selv."
+  - signal: "Ny teknologi som kan gjøre dagens løsninger overflødige"
+    type: case
+    utledet: true
+    modeller: ["Fire inndelinger av innovasjoner"]
+    begreper: ["omveltende innovasjon (Christensen)", "radikal innovasjon"]
+    kilder: [notatene]
+    hvorfor: "Avgjør om innovasjonen er bevarende eller omveltende, inkrementell eller radikal. Det styrer strategien."
+
   # ---------- når en modell IKKE passer ----------
   - signal: "Oppgaven handler om reposisjonering av et merke, ikke om vekst i nye markeder eller produkter"
     type: ikke
