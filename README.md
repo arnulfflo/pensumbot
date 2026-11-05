@@ -27,7 +27,7 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - 🧩 **Modeller og teorier for MRK og ORG**: 239 modeller hentet fra egne notater, med øving i å kjenne dem igjen, velge riktig modell til en case og analysere casen med den
 - 🧭 **Studieveileder-agent**: «Jeg har to timer i kveld, hva bør jeg øve på?» gir en ferdig økt med «Øv nå»-knapper
 - 🔒 **100 % lokalt og privat**, og ett konfigurasjonsvalg fra å bruke Claude i stedet
-- 🧪 **Målt kvalitet** med eget testsett og 226 automatiske tester
+- 🧪 **Målt kvalitet** med eget testsett og 242 automatiske tester
 
 ## 🧩 Funksjoner
 
@@ -60,7 +60,7 @@ På MRK- og ORG-eksamen skal du bruke modeller og teorier på en case. Fanen «M
 - **Kjenn modellen**: kryss av for alle elementene i en modell, hvilken modell består av disse elementene, hvilket element hører til, hvilket mangler, og hva betyr et element. Spørsmålene lages i Python fra modellarket, uten språkmodell, og de gale svarene er sjekket mot modellen så det bare finnes én riktig fasit
 - **Velg modell til casen**: språkmodellen skriver en kort case der én modell passer, og du velger hvilken. Koden stopper caser som røper navnet, forfatteren eller elementene
 - **Bruk modellen på casen**: du viser hvordan hvert element kommer til uttrykk i casen. Koden sjekker at du har brukt hvert element ved navn, og språkmodellen sier fra hvis du bruker et element i strid med modellen
-- **Finn modellene (MRK og ORG)**: du får en hel eksamenscase med oppgavene og krysser av for modellene du ville brukt. Fasiten kommer fra løsningsforslag, sensorveiledninger og studass-løsninger: Apiir, Comfyballs, Grandiosa, Kari Traa og Spike i MRK, Schjødt (eksamen 2024), Elkjøp, Easee og Umoe i ORG. Rettingen viser signalene i casen og modellene de peker på, og modeller sensor sier ikke passer, som Ansoff i Kari Traa. Godkjent når du finner minst halvparten (høyst seks) uten å velge noen som ikke passer
+- **Finn modellene (MRK og ORG)**: du får en hel eksamenscase med oppgavene og krysser av for modellene du ville brukt. Fasiten kommer fra løsningsforslag, sensorveiledninger og studass-løsninger: Apiir, Comfyballs, Grandiosa, Kari Traa og Spike i MRK, pluss Los Tacos og Hiking Patrol med fasit fra besvarelser, Schjødt (eksamen 2024), Elkjøp, Easee og Umoe i ORG. Rettingen viser signalene i casen og modellene de peker på, og modeller sensor sier ikke passer, som Ansoff i Kari Traa. Godkjent når du finner minst halvparten (høyst seks) uten å velge noen som ikke passer
 - **Finn signalet**: ett signal om gangen, som «markedsandel på 75 % innen 3 år» eller «frykt og penger», og du krysser av for modellene det peker på
 - **Ny case (generert)**: en ny, oppdiktet case hver gang. Python velger først 2–3 signaler fra katalogen som peker på ulike modeller. Språkmodellen skriver én setning per signal og så bakgrunnen rundt dem. Fasiten er modellene til signalene, ikke det språkmodellen mener. Casen forkastes hvis den nevner modellnavnene eller mangler en av signalsetningene. Rettingen viser hvilken setning som var signalet, og det samme signalet i den ekte eksamenen
 - **Signalark**: i fanen «Modeller» velger du «Signalark» for å lese alle signalene: ordene å se etter, et sitat fra en ekte eksamenscase, modellene de peker på, hvorfor, og hva sensor ser etter i alle oppgaver. Nederst står et oppslag per modell. Signalene ligger i `config/signaler_MRK1001.yaml` og `config/signaler_ORG1100.yaml`, og en test sjekker at hvert sitat står ordrett i casen. Signaler uten sensorkilde er merket «utledet fra notatene»
@@ -180,7 +180,7 @@ Målt mot håndlagde testsett (`tester/testsett_*.yaml`) med `uv run python -m s
 | Organisasjon og ledelse | 14 av 15 | 0,882 | 3 av 3 | 0 |
 | Markedsføring | 15 av 15 | 0,967 | 3 av 3 | 0 |
 
-Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **226 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
+Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **242 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
 
 ## 🛠️ Teknologi
 

@@ -169,3 +169,24 @@ def test_ny_case_signalene_peker_paa_ulike_modeller():
         for i, s in enumerate(valgt):
             for t in valgt[i + 1:]:
                 assert not any(_samme_tema(alle[a], alle[b]) for a in s.modeller for b in t.modeller)
+
+
+@pytest.mark.parametrize("fag,navn", ALLE_CASER)
+def test_modeller_som_ogsaa_passer_vises_aldri_som_gale(fag, navn):
+    from src.modeller import modeller
+    from src.signaler import aldri_feil, ogsaa_ok
+    finnes = {m.navn for m in modeller(fag)}
+    assert (aldri_feil(fag) | ogsaa_ok(fag, navn)) <= finnes, "skrivefeil i modellnavn i YAML"
+    for seed in range(5):
+        q = lag_finn(fag, navn, random.Random(seed))
+        gale = set(q["alternativer"]) - set(q["fasit"])
+        assert not gale & (aldri_feil(fag) | ogsaa_ok(fag, navn))
+
+
+def test_besvarelsene_gir_fasit_for_los_tacos_og_hiking_patrol():
+    riktige, _ = fasit_for_case(FAG, "Los Tacos")
+    assert {"Segmenteringskriterier", "Porters bransjeanalyse (fem krefter, utvidet)", "Psykologiske produktfordeler"} <= set(riktige)
+    riktige, _ = fasit_for_case(FAG, "Hiking Patrol")
+    assert {"Persepsjonskart", "Segmenteringsvariabler", "Skimming og penetrasjonspris"} <= set(riktige)
+    q = lag_finn(FAG, "Hiking Patrol", random.Random(0))
+    assert "karakter ikke oppgitt" in q["kilde"]

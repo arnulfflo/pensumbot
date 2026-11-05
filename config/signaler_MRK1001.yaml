@@ -1,6 +1,9 @@
 # Signaler: hva i en case eller oppgavetekst peker på hvilken modell (MRK1001).
 # Hentet 05.11.2026 fra løsningsforslagene til Apiir, Comfyballs, Grandiosa, Kari Traa og Spike
 # (pensum/MRK1001/eksamener/losning/) og A-besvarelsen til Spike (eksamener/eksempelsvar/).
+# Utvidet 05.11.2026 med fire besvarelser (eksamener/eksempelsvar/): A-besvarelsen til Spike 2022 (kandidat 10425),
+# A-besvarelsen til Los Tacos 2023 (kandidat 10365), en Los Tacos-besvarelse (kandidat 10254) og Hiking Patrol 2024
+# (kandidat 10458). For de to siste oppgir filene ikke karakter.
 #
 # Hvert signal:
 #   signal:   ord, setning eller situasjon i casen eller oppgaven
@@ -21,6 +24,28 @@ caser:
   Grandiosa: {fil: oppgaver/Grandiosa.docx}
   Kari Traa: {fil: oppgaver/Karitraacase.docx}
   Spike: {fil: oppgaver/Spike.docx}
+  # ogsaa_ok: modeller som kan passe selv om besvarelsen ikke brukte dem. De vises ikke som gale alternativer.
+  Los Tacos:
+    fil: oppgaver/Lostacos.docx
+    fasit: "A-besvarelsen (kandidat 10365)"
+    ogsaa_ok: ["Produktelementmodellen (Troye)", "Servqual", "Gap-modellen", "Servicetrianglet (Andreassen)",
+               "Service Profit Chain", "Internmarkedsføringsmodellen (Wilson)", "Kundetilfredshet og forventningsbrøken",
+               "EKB-modellen: forbrukerens kjøpsprosess", "Forhold som påvirker kjøpsatferden (Kotler og Keller)",
+               "Skimming og penetrasjonspris", "Integrert markedskommunikasjon", "Transaksjons- og relasjonsorientering",
+               "Seks drivere for langsiktige kunderelasjoner", "Fire nivåer av lojalitet (Oliver)", "Ansoffs ekspansjonsmatrise",
+               "Fem differensieringsområder", "Personas"]
+  Hiking Patrol:
+    fil: oppgaver/Hikingpatrol.docx
+    fasit: "besvarelsen fra 2024 (kandidat 10458, karakter ikke oppgitt)"
+    ogsaa_ok: ["Segmenteringskriterier", "Målrettingsstrategier", "Diffusjon av innovasjoner (Rogers)", "Tre produktnivåer",
+               "Sortimentets tre dimensjoner", "Produktets livssyklus (PLC)", "Konkurranseformer", "Integrert markedskommunikasjon",
+               "Fishbeins holdningsmodell", "Personas", "Fem differensieringsområder",
+               "Intensiv, selektiv og eksklusiv distribusjon", "Distribusjonsstrategiens 6 C-er"]
+
+# Passer i nesten enhver case. Vises aldri som gale alternativer i «Finn modellene» og «Ny case».
+aldri_feil: ["Marketing mix (5 P)", "Markedsplanleggingsprosessen", "STP-rammeverket", "SWOT-analyse",
+             "Tre delsystemer: mikro, interessent og makro", "Markedsførerens eksterne arbeidsbetingelser",
+             "Visjon, forretningsidé og kjerneverdier", "Strategisk problemdefinisjon (SPD) og kritiske suksessfaktorer (KSF)"]
 
 signaler:
   # ---------- oppgaveord: ordene i selve oppgaven ----------
@@ -255,6 +280,180 @@ signaler:
     begreper: ["det offentlige miljøet", "PESTEL"]
     kilder: [Grandiosa]
     hvorfor: "En svært god kandidat drøfter forslaget om å forby private merkevarer."
+
+  # ---------- fra besvarelsene (05.11.2026) ----------
+  # Ingen sensorveiledning: fasiten er det besvarelsen brukte. Los Tacos 10365 og Spike 10425 er A.
+  - signal: "Handelslekkasje: produktet er billigere i nabolandet"
+    sitat: "Det er også grunn til å tro at det er en betydelig handelslekkasje til Sverige for denne type produkter, da de er vesentlig billigere å kjøpe der enn i Norge."
+    sitat_fra: Spike
+    type: case
+    modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", "Distribusjonsveier", "Prisnivå i forhold til markedsprisen"]
+    begreper: ["substitutter", "grensehandel som kanal"]
+    kilder: [Spike]
+    hvorfor: "A-besvarelsen 10425: selg der nordmenn grensehandler. A-besvarelsen 10010: Sverige er en substitutt som presser prisen."
+  - signal: "Et fast prisintervall i markedet («fra 18 til 36 kroner»)"
+    sitat: "Prisen for drikkene i detaljhandelsleddet i Norge varierer fra kroner 18 til kroner 36 avhengig av hvor man kjøper dem."
+    sitat_fra: Spike
+    type: case
+    modeller: ["Prisnivå i forhold til markedsprisen", "Skimming og penetrasjonspris"]
+    begreper: ["lavinvolveringsprodukt: hold deg innenfor intervallet", "hurtig innarbeidelse, så høyere pris"]
+    kilder: [Spike]
+    hvorfor: "A-besvarelsen 10425: hold prisen innenfor intervallet, bruk hurtig innarbeidelse og øk prisen når merket er i evoked set."
+  - signal: "Sponser en idrett som er liten i Norge, eller er profilert annerledes enn konkurrentene"
+    sitat: "SPIKE sponser i hovedsak boksesport og alle former for sykling, og er dermed profilert noe annerledes enn de største konkurrentene."
+    sitat_fra: Spike
+    type: case
+    modeller: ["Integrert markedskommunikasjon", "Psykologiske produktfordeler"]
+    begreper: ["sponsing som passer profilen", "norsk idrettsutøver (Red Bull og Northug)"]
+    kilder: [Spike]
+    hvorfor: "A-besvarelsen 10425: boksing er ikke stort i Norge. Spons en kjent norsk utøver som passer profilen og som målgruppen liker."
+
+  - signal: "«vurder produktsortimentet» / «med utgangspunkt i produktstrategi»"
+    sitat: "Med utgangspunkt i produktstrategi. Gjør en vurdering av strategien til Los Tacos."
+    sitat_fra: Los Tacos
+    type: oppgaveord
+    modeller: ["Sortimentets tre dimensjoner", "Tre produktnivåer", "Segmenteringskriterier"]
+    begreper: ["bredde, dybde og sammenheng", "kvalitet gir gjenkjøp og vareprat"]
+    kilder: [Los Tacos]
+    hvorfor: "Eksamen 2023 spurte om sortimentet med fokus på segmentering. A-besvarelsen testet segmentet med kriteriene og vurderte smalt sortiment mot trygghet."
+  - signal: "Stort marked for kategorien, og en vane i befolkningen («taco hver fredag»)"
+    sitat: "I Norge spises det litt over 14 millioner taco-måltider i året, og 1 million nordmenn spiser taco hver fredag."
+    sitat_fra: Los Tacos
+    type: case
+    modeller: ["Segmenteringskriterier", "Segmenteringsvariabler"]
+    begreper: ["stort nok segment", "livsstil og kultur", "atferdsbasert segmentering"]
+    kilder: [Los Tacos]
+    hvorfor: "A-besvarelsen: segmentet er stort nok (14 millioner måltider), tilgjengelig og mulig å betjene (12 restauranter). Fredagstaco = livsstil og atferd."
+  - signal: "Lav pris på én vare for å trekke en bestemt gruppe («studentvennlig pris på øl»)"
+    sitat: "«Vi har et bredt utvalg, og vi har svært studentvennlig pris på øl», er konseptet Kovary lokker med."
+    sitat_fra: Los Tacos
+    type: case
+    modeller: ["Psykologiske produktfordeler", "Prisnivå i forhold til markedsprisen", "Målrettingsstrategier"]
+    begreper: ["point of difference: studentvennlig", "point of parity: hygiene og rask servering", "lokkevare"]
+    kilder: [Los Tacos]
+    hvorfor: "A-besvarelsen: øl til 49 kr viser segmentet (studenter) og er en POD. POP: ryddig og hygienisk. Rask servering kan bli en POD."
+  - signal: "«vurder posisjoneringsstrategien», «gi et faglig råd»"
+    sitat: "Gjør en vurdering av posisjoneringsstrategien til Los Tacos, og gi et markedsføringsmessig faglig råd til bedriften."
+    sitat_fra: Los Tacos
+    type: oppgaveord
+    modeller: ["Psykologiske produktfordeler", "Persepsjonskart"]
+    begreper: ["points of parity og points of difference", "skille seg ut uten å falle utenfor kategorien"]
+    kilder: [Los Tacos]
+    hvorfor: "A-besvarelsen balanserte likhets- og forskjellsmomenter mot både meksikanske konkurrenter og hele restaurantmarkedet."
+  - signal: "Navngitte lokale konkurrenter med omsetning, resultat og profil i en tabell"
+    sitat: "I byen er det 4 store konkurrenter til Los Tacos innen konseptet mexicansk mat som befolkningen kan velge mellom."
+    sitat_fra: Los Tacos
+    type: case
+    modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", "Strategiklokken (Faulkner og Bowman)"]
+    begreper: ["regn markedsandeler fra tabellen (Hector 61,5 %)", "3 av 4 går med underskudd = høy konkurranseintensitet"]
+    kilder: [Los Tacos]
+    hvorfor: "A-besvarelsen gikk gjennom kreftene én for én og regnet markedsandeler fra omsetningen. Hector er dyr, så Los Tacos kan skille seg på pris."
+  - signal: "Mange andre tilbud for samme behov («pizza, sushi og hamburger», lage mat hjemme)"
+    sitat: "Konkurransen i byen er knallhard da er vanvittig mange etablerte konsepter innenfor pizza, sushi og hamburger."
+    sitat_fra: Los Tacos
+    type: case
+    modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", "Konkurranseformer"]
+    begreper: ["trussel fra substitutter", "monopolistisk konkurranse"]
+    kilder: [Los Tacos]
+    hvorfor: "A-besvarelsen: substituttene er andre restauranter og å lage mat hjemme (29 % spiser ute minst én gang i uka)."
+  - signal: "Beliggenhet, uteliv og hjemlevering («Solsiden», «Wolt og Foodora», matvogner)"
+    sitat: "De samarbeider også med Wolt, Foodora og Delivia for hjemlevering av mat fra menyen."
+    sitat_fra: Los Tacos
+    type: case
+    modeller: ["Distribusjonsveier", "Intensiv, selektiv og eksklusiv distribusjon"]
+    begreper: ["beliggenhet", "nattmat", "matvogner der folk er", "plattformer som kanal"]
+    kilder: [Los Tacos]
+    hvorfor: "A-besvarelsen: lave marginer krever volum og intensiv distribusjon. Beliggenhet på vei hjem fra byen, matvogner på Solsiden, prioritet hos Wolt."
+  - signal: "En tidligere etablering som gikk konkurs, svært varierende lønnsomhet"
+    sitat: "Det hører med til historien at Kovary startet i Drammen 1/1-2023, men måtte slå Los Tacos konkurs etter et resultat på minus 5,5 millioner kroner allerede i september 2023."
+    sitat_fra: Los Tacos
+    type: case
+    modeller: ["SWOT-analyse", "Produktets livssyklus (PLC)"]
+    begreper: ["introduksjonsstadiet gir ofte tap", "risiko i vurderingen av om de bør starte"]
+    kilder: [Los Tacos]
+    hvorfor: "Besvarelsen 10254 (karakter ikke oppgitt) brukte SWOT og pekte på at introduksjonsstadiet ofte gir tap."
+
+  - signal: "«Segmentering og kjøpsatferd», «hvilke kundegrupper bør de satse på»"
+    sitat: "Segmentering og kjøpsatferd er sentrale begreper i markedsføring. Hvilke kundegrupper bør Hiking Patrol satse på?"
+    sitat_fra: Hiking Patrol
+    type: oppgaveord
+    modeller: ["Segmenteringsvariabler", "EKB-modellen: forbrukerens kjøpsprosess",
+               "Forhold som påvirker kjøpsatferden (Kotler og Keller)", "Adopsjonsprosessen"]
+    begreper: ["Maslow: anerkjennelse og status", "fire segmenteringsvariabler gått gjennom én for én"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen startet med behovet (Maslow), gikk gjennom de fire variablene og endte i to kundegrupper: unge voksne med statusbehov, og turister."
+  - signal: "Luksus uten logo, status og eksklusivitet («Quiet outdoor luxury»)"
+    sitat: "Sentralt i konseptet er at det skal være « Quiet outdoor luxury»."
+    sitat_fra: Hiking Patrol
+    type: case
+    modeller: ["Psykologiske produktfordeler", "Strategiklokken (Faulkner og Bowman)"]
+    begreper: ["symbolske fordeler", "prestisje", "statusbehov"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen koblet konseptet til statusbehovet. Høy pris og høy kvalitet = rute 5 i strategiklokken."
+  - signal: "«Bruk teori fra posisjonering og merkevarebygging», «hvilken strategi benytter de»"
+    sitat: "Bruk teori fra posisjonering og merkevarebygging. Hvilken strategi benytter Hiking Patrol?"
+    sitat_fra: Hiking Patrol
+    type: oppgaveord
+    modeller: ["Persepsjonskart", "Psykologiske produktfordeler", "Fire modeller for merkevaren"]
+    begreper: ["pris × kvalitet-kart med Norrøna, Amundsen og Helly Hansen", "merkekjennskap"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen plasserte konkurrentene i et persepsjonskart (pris × kvalitet) og pekte på stilen som differensiering."
+  - signal: "Eksklusive konkurrenter som vokser mens resten av bransjen faller"
+    sitat: "Amundsen Sports forventer en omsetning på NOK: 300.000.000.- i 2024, en vekst på 30% fra 2023."
+    sitat_fra: Hiking Patrol
+    type: case
+    modeller: ["Persepsjonskart", "Porters bransjeanalyse (fem krefter, utvidet)"]
+    begreper: ["markedet for høypris er ikke mettet"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen: Amundsen lykkes med høye priser, altså er kundene villige til å betale."
+  - signal: "Høy rente, dyr strøm og dyrere mat gir lavere kjøpekraft"
+    sitat: "Årsaken til fallet sies å være høy rente, dyr strøm og at matvareprisene har økt."
+    sitat_fra: Hiking Patrol
+    type: case
+    modeller: ["Tre delsystemer: mikro, interessent og makro", "Markedsførerens eksterne arbeidsbetingelser"]
+    begreper: ["økonomiske makrofaktorer", "kjøpekraft"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen åpnet oppgave 3 med de økonomiske makrofaktorene bedriften ikke kan kontrollere."
+  - signal: "Produseres på samme fabrikk som konkurrentene"
+    sitat: "Plaggene lages i Kina på samme sted som andre av de ledende friluftstøyprodusentene på markedet."
+    sitat_fra: Hiking Patrol
+    type: case
+    modeller: ["Porters bransjeanalyse (fem krefter, utvidet)"]
+    begreper: ["leverandørenes forhandlingsmakt"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen brukte det under leverandørenes makt i bransjeanalysen."
+  - signal: "Høy pris for en ny aktør uten etablert status"
+    sitat: "Prisnivået på plaggene ligger på rundt NOK: 4500.- og nedover for jakkene, og fra NOK: 1450.- og nedover for buksene."
+    sitat_fra: Hiking Patrol
+    type: case
+    modeller: ["Skimming og penetrasjonspris", "Prisnivå i forhold til markedsprisen"]
+    begreper: ["skumming krever status", "vurder å senke prisen"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen: skummingsstrategi kan være et dumt valg før merket har høy nok status. En prisnedgang kan gi raskere resultater."
+  - signal: "Selger bare på nett (egen nettbutikk og andres)"
+    sitat: "produktene selges i dag via egen nettbutikk, samt andre nettbutikker i Europa"
+    sitat_fra: Hiking Patrol
+    type: case
+    modeller: ["Distribusjonsveier", "Tre strategiske valg for netthandel", "Forbrukeratferd på nett"]
+    begreper: ["direkte distribusjon", "senere butikk eller agent"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen: direkte via egen nettbutikk og indirekte via andre nettbutikker. Agent eller butikk senere ved vekst."
+  - signal: "En stor følgerskare på sosiale medier før lansering"
+    sitat: "Kontoen kan sies å være en suksess, da den pr november 2024 har rundt 218 tusen følgere."
+    sitat_fra: Hiking Patrol
+    type: case
+    modeller: ["Adopsjonsprosessen", "Influensere etter følgertall", "SWOT-analyse"]
+    begreper: ["oppmerksomhet er allerede skapt", "styrke i SWOT"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen: adopsjonsprosessen er i gang fordi mange kjenner kontoen. Det er en styrke i SWOT."
+  - signal: "«Gjør en vurdering av markedssituasjonen», «er det mulig å lykkes»"
+    sitat: "Konkluder deretter om du tror det er mulig for Hiking Patrol å lykkes i klesmarkedet"
+    sitat_fra: Hiking Patrol
+    type: oppgaveord
+    modeller: ["SWOT-analyse", "Porters bransjeanalyse (fem krefter, utvidet)", "Marketing mix (5 P)"]
+    begreper: ["alle konkurransemidlene, også personell"]
+    kilder: [Hiking Patrol]
+    hvorfor: "Besvarelsen: SWOT og bransjeanalyse, så produkt, pris, distribusjon, kommunikasjon og personell (kundeservice på nett)."
 
   # ---------- utledet fra notatene (kap. 12, 13 og 15) ----------
   # Ingen av løsningsforslagene dekker disse kapitlene. Signalene er slutninger fra modellnotatene, ikke sensortekst.

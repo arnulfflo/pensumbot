@@ -78,6 +78,16 @@ def prinsipper(fag: str) -> list[str]:
     return _data(fag).get("prinsipper", [])
 
 
+def aldri_feil(fag: str) -> set[str]:
+    """Modeller som passer i nesten enhver case (marketing mix, SWOT, STP). De vises aldri som gale alternativer."""
+    return set(_data(fag).get("aldri_feil", []))
+
+
+def ogsaa_ok(fag: str, navn: str) -> set[str]:
+    """Modeller som også kan passe casen, selv om fasiten (ofte én besvarelse) ikke brukte dem."""
+    return set(caser(fag)[navn].get("ogsaa_ok", []))
+
+
 def _modell_etter_navn(fag: str) -> dict[str, Modell]:
     return {m.navn: m for m in modeller(fag)}
 
@@ -257,7 +267,8 @@ def lag_finn(fag: str, navn: str, rng: random.Random) -> dict | None:
     tekst = casetekst(fag, navn)
     fasit = list(riktige)
     antall_gale = max(4, min(10, math.ceil(len(fasit) / 2))) - len(feller)
-    gale = list(feller) + _gale_modeller(fag, fasit, rng, antall=max(2, antall_gale), unngaa=set(feller))
+    unngaa = set(feller) | aldri_feil(fag) | ogsaa_ok(fag, navn)
+    gale = list(feller) + _gale_modeller(fag, fasit, rng, antall=max(2, antall_gale), unngaa=unngaa)
     alternativer = fasit + gale
     rng.shuffle(alternativer)
     kilde = caser(fag)[navn].get("fasit", "løsningsforslaget")
@@ -405,7 +416,7 @@ def lag_ny(fag: str, kap: int | None, rng: random.Random, forsok: int = 3) -> tu
 
 def _ny_sporsmal(fag: str, data: dict, valgt: list[Signal], rng: random.Random) -> dict:
     fasit = list(dict.fromkeys(n for s in valgt for n in s.modeller))
-    gale = _gale_modeller(fag, fasit, rng, antall=max(4, 8 - len(fasit)))
+    gale = _gale_modeller(fag, fasit, rng, antall=max(4, 8 - len(fasit)), unngaa=aldri_feil(fag))
     alternativer = fasit + gale
     rng.shuffle(alternativer)
     spor = {p["nr"]: p["setning"].strip() for p in data["spor"]}

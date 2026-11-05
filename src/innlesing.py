@@ -52,11 +52,16 @@ def finn_tittel(tekst: str) -> str:
     return ""
 
 
+# Vannmerker fra Studocu på hver side av nedlastede besvarelser, med navn og e-post til den som lastet ned.
+_STUDOCU = re.compile(r"Downloaded by [^\n]*?\)|lOMoARcPSD\|\d+|Scan to open on Studocu|messages\.[a-z_]+|"
+                      r"Studocu is not sponsored or endorsed by any college or university")
+
+
 def fjern_stoy(tekst: str) -> str:
     """Fjerner tekst som står på mange sider (som NTNU-slagordet) og ikke sier noe om innholdet."""
     for stoy in last_innstillinger()["innlesing"].get("fjern_tekst") or []:
         tekst = tekst.replace(stoy, "")
-    return tekst.strip()
+    return _STUDOCU.sub("", tekst).strip()
 
 
 def _les_pdf(fil: Path, meta: dict, min_tegn: int) -> tuple[list[Document], int]:
