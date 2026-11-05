@@ -120,7 +120,8 @@ def _daarlig(s) -> bool:
     from src.kontroll import avslorer_svaret, viser_til_ukjent
     # Laget i Python fra modellarket eller signalkatalogen, med alt du trenger i spørsmålet. «Hva mangler?»
     # viser de andre elementene med vilje, og en eksamenscase sier «pensum» uten å vise til noe du ikke ser.
-    if s["modell"] == MODELLARK:
+    from src.signaler import er_modellvalg
+    if s["modell"] == MODELLARK or er_modellvalg({"sporsmal": s["sporsmal"]}):     # en ny case fra språkmodellen har også alt i spørsmålet
         return False
     if viser_til_ukjent(s["sporsmal"], s["kildetekst"] or ""):
         return True

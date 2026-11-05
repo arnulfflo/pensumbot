@@ -13,12 +13,15 @@ import sys
 from src.konfig import last_innstillinger
 
 
-def generer(system: str, melding: str, skjema: dict | None = None) -> str:
+def generer(system: str, melding: str, skjema: dict | None = None, temperatur: float | None = None) -> str:
     """system = instruksen (hvordan modellen skal oppføre seg), melding = det brukeren sender.
 
     skjema: et JSON-skjema svaret må følge. Brukes av generer_json().
+    temperatur: overstyrer innstillingen, f.eks. høyere for nye caser som skal være forskjellige.
     """
-    innst = last_innstillinger()["sprakmodell"]
+    innst = dict(last_innstillinger()["sprakmodell"])
+    if temperatur is not None:
+        innst["temperatur"] = temperatur
     leverandor = innst["leverandor"]
 
     if leverandor == "ollama":
@@ -31,13 +34,13 @@ def generer(system: str, melding: str, skjema: dict | None = None) -> str:
     raise ValueError(f"Ukjent leverandør i innstillinger.yaml: {leverandor!r} (bruk ollama eller anthropic)")
 
 
-def generer_json(system: str, melding: str, skjema: dict) -> dict:
+def generer_json(system: str, melding: str, skjema: dict, temperatur: float | None = None) -> dict:
     """Som generer(), men svaret er strukturert data (dict) i stedet for fri tekst.
 
     Ollama tvinges til å følge skjemaet (structured outputs). Claude får skjemaet i
     instruksen. Eventuelle ```json-gjerder rundt svaret fjernes før tolkning.
     """
-    tekst = generer(system, melding, skjema).strip()
+    tekst = generer(system, melding, skjema, temperatur).strip()
     tekst = re.sub(r"^```(?:json)?\s*|\s*```$", "", tekst)
     return json.loads(tekst)
 

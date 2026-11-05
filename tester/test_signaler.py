@@ -109,3 +109,63 @@ def test_signalarket_for_ett_kapittel_viser_bare_det_kapittelet():
     from src.signaler import signalark
     ark = signalark("ORG1100", 14)
     assert "Competing Values Framework" in ark and "Forventningsteori" not in ark.split("### Oppslag per modell")[1]
+
+
+# ---------- ny case (språkmodellen byttes ut med faste svar) ----------
+
+def _falsk_modell(monkeypatch, case_lager):
+    """Setningskallet gir «Signal nr N …», casekallet gir det case_lager(setningene) returnerer."""
+    setninger = []
+    def generer_json(system, melding, skjema, temperatur=None):
+        if "setning" in skjema["properties"]:
+            setninger.append(f"Dette er setning nummer {len(setninger) + 1} som viser signalet tydelig i casen.")
+            return {"setning": setninger[-1]}
+        return {"case": case_lager(setninger)}
+    monkeypatch.setattr("src.llm.generer_json", generer_json)
+    return setninger
+
+
+BAKGRUNN = " ".join(["Bedriften har mange ansatte og kunder over hele landet."] * 10)
+
+
+@pytest.mark.parametrize("fag", ["MRK1001", "ORG1100"])
+def test_ny_case_fasit_er_modellene_til_signalene(fag, monkeypatch):
+    from src.signaler import SPORSMAL_NY, lag_ny
+    _falsk_modell(monkeypatch, lambda ss: BAKGRUNN + " " + " ".join(ss))
+    q, grunn = lag_ny(fag, None, random.Random(3))
+    assert q, grunn
+    assert er_modellvalg(q) and q["sporsmal"].endswith(SPORSMAL_NY) and q["stil"] == "ny case"
+    assert set(q["fasit"]) <= set(q["alternativer"]) and len(q["alternativer"]) - len(q["fasit"]) >= 4
+    signalmodeller = {n for s in signaler(fag) for n in s.modeller if s.type != "ikke"}
+    assert set(q["fasit"]) <= signalmodeller
+    assert "setning nummer 1" in q["forklaring"]
+
+
+def test_ny_case_forkastes_naar_setningen_mangler(monkeypatch):
+    from src.signaler import lag_ny
+    _falsk_modell(monkeypatch, lambda ss: BAKGRUNN)           # casen tok ikke med signalsetningene
+    q, grunn = lag_ny(FAG, None, random.Random(0))
+    assert q is None and "mangler setningen" in grunn
+
+
+def test_ny_case_forkastes_naar_den_nevner_modellen(monkeypatch):
+    from src.modeller import modeller
+    from src.signaler import lag_ny
+    alle_navn = ". ".join(m.navn for m in modeller(FAG))
+    _falsk_modell(monkeypatch, lambda ss: BAKGRUNN + " " + " ".join(ss) + " " + alle_navn)
+    q, grunn = lag_ny(FAG, None, random.Random(0))
+    assert q is None and "nevner" in grunn
+
+
+def test_ny_case_signalene_peker_paa_ulike_modeller():
+    from src.modellquiz import _samme_tema
+    from src.modeller import modeller
+    from src.signaler import _velg_signaler
+    alle = {m.navn: m for m in modeller("ORG1100")}
+    for seed in range(20):
+        valgt = _velg_signaler("ORG1100", None, random.Random(seed), 3)
+        navn = [n for s in valgt for n in s.modeller]
+        assert len(valgt) >= 2 and len(navn) == len(set(navn))
+        for i, s in enumerate(valgt):
+            for t in valgt[i + 1:]:
+                assert not any(_samme_tema(alle[a], alle[b]) for a in s.modeller for b in t.modeller)

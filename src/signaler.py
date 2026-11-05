@@ -1,10 +1,13 @@
 """Finn modellene: tren på å se hvilke modeller en eksamenscase ber om.
 
 Bygget på config/signaler_{fag}.yaml, som er hentet fra løsningsforslagene til ekte caser.
-To øvingsmåter, begge uten språkmodell, så fasiten er alltid den løsningsforslaget gir:
+Tre øvingsmåter:
   signal  ett signal fra en case eller oppgavetekst. Kryss av for modellene det peker på.
   finn    en hel eksamenscase med oppgavene. Kryss av for modellene du ville brukt.
           Rettingen viser signalet bak hver modell, og modeller løsningsforslaget sier ikke passer.
+  ny      en ny, oppdiktet case. Python velger 2–3 signaler fra katalogen først, og språkmodellen skriver
+          en case med akkurat de signalene. Fasiten er modellene til signalene, ikke det språkmodellen mener.
+          Casen forkastes hvis den nevner modellene, eller hvis setningen med signalet ikke står i casen.
 
 Kjør:  uv run python -m src.signaler MRK1001 --type finn -n 1     (viser spørsmål og fasit)
 """
@@ -22,9 +25,10 @@ import yaml
 from src.konfig import ROT, pensum_mappe
 from src.modeller import Modell, kapittel_i, modeller
 
-TYPER = {"signal": "Finn signalet", "finn": "Finn modellene i en eksamenscase"}
+TYPER = {"signal": "Finn signalet", "finn": "Finn modellene i en eksamenscase", "ny": "Ny case (generert)"}
 SPORSMAL_FINN = "Hvilke modeller fra pensum bør du bruke for å svare godt på oppgavene? Kryss av for modellene som passer."
 SPORSMAL_SIGNAL = "Hvilke modeller peker dette på? Kryss av for modellene som passer."
+SPORSMAL_NY = "Hvilke modeller bør du bruke for å analysere denne casen? Kryss av for modellene som passer."
 
 
 @dataclass
@@ -80,7 +84,7 @@ def _modell_etter_navn(fag: str) -> dict[str, Modell]:
 
 def er_modellvalg(q: dict) -> bool:
     """Spørsmål fra denne øvelsen, også når de kommer tilbake i repetisjonen."""
-    return q.get("sporsmal", "").endswith((SPORSMAL_FINN, SPORSMAL_SIGNAL))
+    return q.get("sporsmal", "").endswith((SPORSMAL_FINN, SPORSMAL_SIGNAL, SPORSMAL_NY))
 
 
 def krav(antall_riktige: int) -> int:
@@ -271,6 +275,157 @@ def lag_finn(fag: str, navn: str, rng: random.Random) -> dict | None:
             "kilde": f"eksamener/{caser(fag)[navn]['fil']} (fasit fra {caser(fag)[navn].get('fasit', 'løsningsforslaget')})"}
 
 
+# ---------- ny case: språkmodellen skriver, signalkatalogen gir fasiten ----------
+
+BRANSJER = ["dagligvare", "sportsutstyr", "reiseliv og hotell", "sjømat", "kommune og helse", "bank og forsikring",
+            "IT og programvare", "bygg og anlegg", "kafé og restaurant", "klær og mote", "energi", "treningssenter",
+            "frivillig organisasjon", "transport og logistikk", "skole og utdanning", "media", "landbruk og mat",
+            "industri", "kosmetikk", "elektronikkbutikk", "eldreomsorg", "oppstartsbedrift innen app", "advokatfirma",
+            "brukthandel", "møbler", "festival og kultur", "bryggeri", "bilforhandler"]
+
+_FORLEDD = ["Nord", "Fjell", "Vest", "Lys", "Bølge", "Elv", "Tind", "Furu", "Kyst", "Sol", "Fjord", "Lyng", "Stein",
+            "Breen", "Skog", "Havn", "Mjøs", "Varde", "Orkla", "Bjørke"]
+_ETTERLEDD = ["vik", "heim", "kraft", "gruppen", "partner", "hus", "verk", "lab", "torget", "linja"]
+
+SYSTEM_SETNING = """Du skriver ÉN setning til en oppdiktet eksamenscase i {fagnavn}. Bedriften heter {navn} ({bransje}).
+
+Du får et SIGNAL: en opplysning som gjør en bestemt modell relevant, og hvorfor. Skriv en ny, konkret setning om
+{navn} som viser akkurat dette signalet tydelig, så en student som kan pensum kjenner det igjen.
+- {hva}
+- Ikke kopier eksempelet. Lag en ny situasjon som passer bransjen.
+- ALDRI nevn navnet på modellen, forfattere eller navnene på elementene. Bare situasjonen.
+- Hold deg til dette ene signalet.
+Skriv på norsk bokmål."""
+
+_HVA = {"case": "Setningen er en opplysning i casen (hva som skjer, hva noen sier, tall), ikke et spørsmål.",
+        "oppgaveord": "Setningen er en eksamensoppgave til casen, og den skal bruke samme verb eller ord som signalet "
+                      "(for eksempel «segmenter», «drøft», «analyser … fra et ledelsesperspektiv»)."}
+
+SYSTEM_NY = """Du skriver en kort eksamenscase i {fagnavn} om {navn} ({bransje}), en oppdiktet norsk bedrift.
+
+Du får noen setninger som MÅ stå i casen, ordrett og uendret. Skriv 6–10 setninger totalt: kort bakgrunn om
+bedriften (hva de gjør, størrelse, kunder) og de gitte setningene flettet inn der de passer naturlig.
+- Ikke legg til nye problemer, konflikter eller strategier utover det de gitte setningene sier.
+- Ikke nevn modeller, teorier eller forfattere.
+- Ikke skriv oppgaver eller spørsmål.
+Skriv på norsk bokmål."""
+
+SKJEMA_SETNING = {"type": "object", "properties": {"setning": {"type": "string"}}, "required": ["setning"]}
+SKJEMA_NY = {"type": "object", "properties": {"case": {"type": "string"}}, "required": ["case"]}
+
+
+def _velg_signaler(fag: str, kap: int | None, rng: random.Random, antall: int) -> list[Signal]:
+    """Signaler som peker på helt ulike modeller, så fasiten blir entydig. Det første er fra kapittelet."""
+    from src.modellquiz import _samme_tema
+    alle = _modell_etter_navn(fag)
+    utvalg = [s for s in signaler(fag) if s.type != "ikke" and s.modeller and all(n in alle for n in s.modeller)]
+    rng.shuffle(utvalg)
+    utvalg.sort(key=lambda s: not _i_kapittel(fag, s.modeller, kap))
+    valgt: list[Signal] = []
+    for s in utvalg:
+        if not valgt and not _i_kapittel(fag, s.modeller, kap):
+            return []
+        brukt = [alle[n] for v in valgt for n in v.modeller]
+        nye = [alle[n] for n in s.modeller]
+        if any(a.navn == b.navn or _samme_tema(a, b) for a in nye for b in brukt):
+            continue
+        if sum(v.type == "oppgaveord" for v in valgt + [s]) > 1:
+            continue                    # ett oppgaveord holder, ellers blir oppgaven en liste med verb
+        valgt.append(s)
+        if len(valgt) == antall:
+            break
+    return valgt
+
+
+def _signalmelding(fag: str, s: Signal) -> str:
+    alle = _modell_etter_navn(fag)
+    linjer = [f"Signal: {s.signal}", "Peker på: " + "; ".join(s.modeller), f"Hvorfor: {s.hvorfor}"]
+    if s.begreper:
+        linjer.append("Begreper: " + ", ".join(s.begreper))
+    if s.sitat:
+        linjer.append(f"Eksempel fra en ekte eksamen (ikke kopier): «{s.sitat.strip('«»')}»")
+    return "\n".join(linjer)
+
+
+def _avslorer(fag: str, tekst: str, valgt: list[Signal]) -> str | None:
+    from src.modellquiz import case_avslorer
+    alle = _modell_etter_navn(fag)
+    for s in valgt:
+        for n in s.modeller:
+            if grunn := case_avslorer(tekst, alle[n]):
+                return f"{grunn} ({n})"
+    return None
+
+
+def lag_ny(fag: str, kap: int | None, rng: random.Random, forsok: int = 3) -> tuple[dict | None, str]:
+    """En ny case med 2–3 signaler. Først én setning per signal, så bakgrunn rundt dem.
+    Prøver på nytt med nye signaler hvis noe ikke består kontrollen."""
+    from src.kontroll import sitat_finnes
+    from src.llm import generer_json
+    from src.modellquiz import FAGNAVN
+    fagnavn = FAGNAVN.get(fag, fag)
+    grunn = "fant ingen signaler i kapittelet"
+    for _ in range(forsok):
+        valgt = _velg_signaler(fag, kap, rng, rng.choice([2, 3, 3]))
+        if len(valgt) < 2:
+            return None, "for få signaler i kapittelet som peker på ulike modeller"
+        bransje = rng.choice(BRANSJER)
+        navn = rng.choice(_FORLEDD) + rng.choice(_ETTERLEDD) + " AS"
+        try:
+            setninger = []
+            for s in valgt:
+                system = SYSTEM_SETNING.format(fagnavn=fagnavn, navn=navn, bransje=bransje,
+                                               hva=_HVA["oppgaveord" if s.type == "oppgaveord" else "case"])
+                setninger.append(generer_json(system, _signalmelding(fag, s), SKJEMA_SETNING,
+                                              temperatur=0.8)["setning"].strip())
+            fakta = [x for x, s in zip(setninger, valgt) if s.type != "oppgaveord"]
+            if grunn := _avslorer(fag, "\n".join(setninger), valgt):
+                continue
+            case = generer_json(SYSTEM_NY.format(fagnavn=fagnavn, navn=navn, bransje=bransje),
+                                "Setninger som må stå i casen:\n" + "\n".join(f"- {x}" for x in fakta),
+                                SKJEMA_NY, temperatur=0.6)["case"].strip()
+        except (ValueError, TimeoutError, KeyError, TypeError) as feil:
+            grunn = f"språkmodellen feilet ({type(feil).__name__})"
+            continue
+        if len(case.split()) < 60:
+            grunn = "for kort case"
+            continue
+        if grunn := _avslorer(fag, case, valgt):
+            continue
+        if mangler := [x for x in fakta if not sitat_finnes(x, case)]:
+            grunn = f"casen mangler setningen «{mangler[0][:60]}…»"
+            continue
+        oppgave = next((x for x, s in zip(setninger, valgt) if s.type == "oppgaveord"),
+                       f"Analyser situasjonen i {navn} med relevant teori, og gi råd til ledelsen.")
+        data = {"navn": navn, "case": case, "oppgave": oppgave,
+                "spor": [{"nr": i, "setning": x} for i, x in enumerate(setninger, start=1)]}
+        return _ny_sporsmal(fag, data, valgt, rng), ""
+    return None, grunn
+
+
+def _ny_sporsmal(fag: str, data: dict, valgt: list[Signal], rng: random.Random) -> dict:
+    fasit = list(dict.fromkeys(n for s in valgt for n in s.modeller))
+    gale = _gale_modeller(fag, fasit, rng, antall=max(4, 8 - len(fasit)))
+    alternativer = fasit + gale
+    rng.shuffle(alternativer)
+    spor = {p["nr"]: p["setning"].strip() for p in data["spor"]}
+    linjer = [f"Du må finne minst {krav(len(fasit))} av de {len(fasit)} modellene, uten å velge noen som ikke passer. "
+              "Casen er skrevet av språkmodellen rundt signaler fra ekte eksamener:"]
+    for nr, s in enumerate(valgt, start=1):
+        linjer.append(f"• «{spor[nr].strip('«»')}» → " + ", ".join(s.modeller))
+        linjer.append(f"   Signal: {s.signal}. {s.hvorfor}")
+        if s.sitat:
+            linjer.append(f"   Samme signal i {s.sitat_fra}: «{s.sitat.strip('«»')}»")
+    linjer.append("Andre modeller kan også gi litt, men det er disse casen er skrevet for å teste.")
+    navn = data["navn"].strip()
+    tekst = f"{data['case'].strip()}\n\nOppgave: {data['oppgave'].strip()}"
+    return {"sporsmal": f"📄 Ny case: {navn} (oppdiktet)\n\n{tekst}\n\n{SPORSMAL_NY}",
+            "alternativer": alternativer, "fasit": fasit, "forklaring": "\n".join(linjer), "sitat": "",
+            "type": "avkrysning", "stil": "ny case", "case": navn,
+            "kilde": "ny case fra språkmodellen (fasit fra signalkatalogen: "
+                     + ", ".join(dict.fromkeys(k for s in valgt for k in s.kilder)) + ")"}
+
+
 # ---------- strømmen til quiz-fanen ----------
 
 def _i_kapittel(fag: str, navn: list[str], kap: int | None) -> bool:
@@ -283,7 +438,9 @@ def signal_strom(fag: str, tema: str | None, stil: str, antall: int = 15, rng: r
     rng = rng or random.Random()
     kap = kapittel_i(tema or "")
     alle = _modell_etter_navn(fag)
-    if stil == "finn":
+    if stil == "ny":
+        laget = (lag_ny(fag, kap, rng) for _ in range(antall))      # (spørsmål, grunn til at det feilet)
+    elif stil == "finn":
         navn = [n for n in caser(fag) if _i_kapittel(fag, list(fasit_for_case(fag, n)[0]), kap)]
         rng.shuffle(navn)
         laget = ((lag_finn(fag, n, rng), n) for n in navn)

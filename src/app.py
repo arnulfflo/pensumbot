@@ -199,7 +199,7 @@ def _tema_for_kapittel(fag, kapittel) -> str:
 
 def _modellstrom(fag, tema, stil):
     db = koble()
-    if stil in signaler.TYPER:          # finn modellene: fasit fra løsningsforslagene, ingen språkmodell
+    if stil in signaler.TYPER:          # fasit fra signalkatalogen (bare «ny case» bruker språkmodellen, til teksten)
         strom = ((q, Bit(m.tekst, {"fil": m.fil}, 0.0), m)
                  for q, m in signaler.signal_strom(fag, tema, stil, SPORSMAL_PER_TEMA))
     else:
@@ -207,7 +207,7 @@ def _modellstrom(fag, tema, stil):
     for q, bit, m in strom:
         tema_m = _tema_for_kapittel(fag, m.kapittel)
         kilde = q.get("kilde") or m.kilde
-        laget_av = modellnavn() if q["stil"] in ("velg modell", "bruk modellen") else MODELLARK
+        laget_av = modellnavn() if q["stil"] in ("velg modell", "bruk modellen", "ny case") else MODELLARK
         fasit = json.dumps(q["fasit"], ensure_ascii=False) if isinstance(q["fasit"], list) else q["fasit"]
         sid = lagre_sporsmal(db, fag=fag, tema=tema_m, ovingsmate=q["type"], sporsmal=q["sporsmal"],
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=fasit,
@@ -828,8 +828,8 @@ def vis_modellark(fag, kapittel, ark="Modellark") -> str:
         if not signaler.har_signaler(fag):
             return f"*Ingen signalkatalog for {fag} ennå.*"
         return ("*Signalene er hentet fra sensorveiledninger, løsningsforslag og A-besvarelser til ekte eksamenscaser. "
-                "Les et signal, se sitatet fra casen, og lær hvilken modell det peker på. Øv etterpå med «Finn signalet» "
-                "og «Finn modellene i en eksamenscase».*\n\n" + signaler.signalark(fag, kap))
+                "Les et signal, se sitatet fra casen, og lær hvilken modell det peker på. Øv etterpå med «Finn signalet», "
+                "«Finn modellene i en eksamenscase» og «Ny case (generert)».*\n\n" + signaler.signalark(fag, kap))
     tekst = modellark(fag, kap)
     antall = tekst.count("\n**")
     return (f"*{antall} modeller og teorier, hentet fra modellnotatene dine. Elementene er det du bruker "
