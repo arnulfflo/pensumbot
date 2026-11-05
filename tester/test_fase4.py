@@ -136,3 +136,27 @@ def test_sikkerhetskopi_en_per_dag_og_bare_de_nyeste(db, tmp_path):
     assert ta_sikkerhetskopi(db) == dagens                   # ny dag: ny kopi, og de eldste slettes
     filer = sorted(mappe.glob("studie-*.db"))
     assert len(filer) == SIKKERHETSKOPIER and filer[-1] == dagens
+
+
+def test_avkrysning_kommer_igjen_i_repetisjonen(db, monkeypatch):
+    """Feil 05.11.2026: «Finn modellene» og «kryss av for alle elementene» sa «Kommer igjen for repetisjon»,
+    men repetisjonen hentet bare flervalg og kortsvar."""
+    import json
+    import random
+    from src.app import _repetisjonsstrom
+    from src.modellquiz import rett_avkrysning
+    from src.repetisjon import MODELLARK
+    from src.signaler import krav, lag_finn
+    q = lag_finn("ORG1100", "Easee", random.Random(0))
+    sid = lagre_sporsmal(db, fag="ORG1100", tema="Organisasjonskultur (kap. 14)", ovingsmate="avkrysning",
+                         sporsmal=q["sporsmal"], alternativer=q["alternativer"],
+                         fasit=json.dumps(q["fasit"], ensure_ascii=False), forklaring=q["forklaring"], sitat="",
+                         kilde="x", modell=MODELLARK, kildetekst="")
+    lagre_resultat(db, sid, "[]", riktig=False)
+    _gjor_forfalt(db, sid)
+    assert sid in [s["id"] for s in forfalte_sporsmal(db)]
+    import src.app
+    monkeypatch.setattr(src.app, "koble", lambda: db)
+    r, _, rid, _ = next(e for e in _repetisjonsstrom("ORG1100") if e[2] == sid)
+    assert r["type"] == "avkrysning" and r["fag"] == "ORG1100" and set(r["fasit"]) == set(q["fasit"])
+    assert rett_avkrysning(r, r["fasit"][:krav(len(r["fasit"]))])[0]       # samme retting som første gang

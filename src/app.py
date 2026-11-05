@@ -189,7 +189,7 @@ def _repetisjonsstrom(fag):
         else:
             q = {"sporsmal": s["sporsmal"], "nokkelpunkter": liste, "modellsvar": s["fasit"], "fasit": s["fasit"],
                  "sitat": s["sitat"], "type": "kortsvar", "tema": s["tema"]}
-        yield q, bit, s["id"], s["kilde"]
+        yield {**q, "fag": s["fag"]}, bit, s["id"], s["kilde"]
 
 
 def _tema_for_kapittel(fag, kapittel) -> str:
@@ -213,7 +213,7 @@ def _modellstrom(fag, tema, stil):
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=fasit,
                              forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=laget_av,
                              kildetekst=m.tekst)
-        yield {**q, "tema": tema_m}, bit, sid, kilde
+        yield {**q, "tema": tema_m, "fag": fag}, bit, sid, kilde
 
 
 def riktig_stil(type_, stil):
@@ -237,7 +237,7 @@ def _ny_strom(fag, tema, type_, stil):
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],
                              forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=modellnavn(),
                              kildetekst=bit.tekst)
-        yield {**q, "type": type_, "tema": tema}, bit, sid, kilde
+        yield {**q, "type": type_, "tema": tema, "fag": fag}, bit, sid, kilde
 
 
 def _start_okt(fag, tema, type_, stil) -> dict:
@@ -341,6 +341,7 @@ INGEN_ENDRING = (gr.update(),) * 4
 def _vis(okt, fag, element):
     """Viser et spørsmål (fra køen eller fra en øvingsrunde med feilsvar)."""
     q, bit, sid, kilde = element
+    fag = q.get("fag") or fag             # feilsvar fra et annet fag beholder sitt eget fagmerke
     okt.update(q=q, bit=bit, sid=sid, kilde=kilde, nr=okt["nr"] + 1)
     kort = _sporsmalskort(fag, q, okt["nr"], kilde)
     if okt.get("ovelse"):

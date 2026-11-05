@@ -17,6 +17,7 @@ Kjør:  uv run python -m src.repetisjon            (alt som skal repeteres i dag
 
 import argparse
 import json
+import re
 from datetime import datetime, timedelta
 
 from src.database import lagre_forsok, naa
@@ -107,7 +108,7 @@ def mestring_per_tema(db) -> dict:
 
 
 def forfalte_sporsmal(db, fag: str | None = None) -> list:
-    """Flervalg og kortsvar der siste forsøk sier at spørsmålet skal vises igjen nå.
+    """Flervalg, avkrysning og kortsvar der siste forsøk sier at spørsmålet skal vises igjen nå.
 
     Spørsmål som er laget før en kontroll kom til (svaret står i spørsmålet, eller det viser til en
     oppgave du ikke ser), hoppes over, så de ikke kommer igjen og igjen.
@@ -117,10 +118,12 @@ def forfalte_sporsmal(db, fag: str | None = None) -> list:
 
 def _daarlig(s) -> bool:
     from src.kontroll import avslorer_svaret, viser_til_ukjent
+    # Laget i Python fra modellarket eller signalkatalogen, med alt du trenger i spørsmålet. «Hva mangler?»
+    # viser de andre elementene med vilje, og en eksamenscase sier «pensum» uten å vise til noe du ikke ser.
+    if s["modell"] == MODELLARK:
+        return False
     if viser_til_ukjent(s["sporsmal"], s["kildetekst"] or ""):
         return True
-    if s["modell"] == MODELLARK:
-        return False        # laget i Python fra modellarket: «Hva mangler?» viser de andre elementene med vilje
     if s["ovingsmate"] == "flervalg" and s["alternativer"]:
         gale = [a for a in json.loads(s["alternativer"]) if a != s["fasit"]]
         return bool(avslorer_svaret(s["sporsmal"], s["fasit"], gale))
@@ -130,7 +133,7 @@ def _daarlig(s) -> bool:
 def _forfalte(db, fag: str | None) -> list:
     return db.execute(
         "SELECT s.* FROM sporsmal s JOIN forsok f ON f.id = (SELECT MAX(id) FROM forsok WHERE sporsmal_id = s.id)"
-        " WHERE s.ovingsmate IN ('flervalg', 'kortsvar') AND f.neste_repetisjon <= ? AND (? IS NULL OR s.fag = ?)"
+        " WHERE s.ovingsmate IN ('flervalg', 'avkrysning', 'kortsvar') AND f.neste_repetisjon <= ? AND (? IS NULL OR s.fag = ?)"
         " ORDER BY f.neste_repetisjon",
         (naa(), fag, fag),
     ).fetchall()
@@ -155,6 +158,10 @@ def repeter(db, fag: str | None = None) -> int:
         if s["ovingsmate"] == "flervalg":
             q = {"sporsmal": s["sporsmal"], "alternativer": liste, "fasit": s["fasit"], "forklaring": s["forklaring"]}
             still = still_flervalg
+        elif s["ovingsmate"] == "avkrysning":
+            q = {"sporsmal": s["sporsmal"], "alternativer": liste, "fasit": json.loads(s["fasit"]),
+                 "forklaring": s["forklaring"]}
+            still = still_avkrysning
         else:
             q = {"sporsmal": s["sporsmal"], "nokkelpunkter": liste, "modellsvar": s["fasit"], "fasit": s["fasit"]}
             still = still_kortsvar
@@ -168,6 +175,33 @@ def repeter(db, fag: str | None = None) -> int:
         print(f"   Kilde: {s['kilde']}")
         print(f"   Neste gang: {neste:%d.%m}\n" if neste else "   Lært! Spørsmålet kommer ikke igjen.\n")
     return besvart
+
+
+def still_avkrysning(q: dict, bit) -> tuple[str, bool, None] | None:
+    """Avkrysning i terminalen: skriv numrene du krysser av for, f.eks. «1,3,4». None betyr avslutt."""
+    from src.modellquiz import rett_avkrysning
+    for nr, alt in enumerate(q["alternativer"], start=1):
+        print(f"   {nr}) {alt}")
+    while True:
+        inn = input("   Kryss av (numre med komma, q for å avslutte): ").strip().lower()
+        if inn == "q":
+            return None
+        try:
+            valgt = [q["alternativer"][int(x) - 1] for x in re.split(r"[,\s]+", inn) if x]
+        except (ValueError, IndexError):
+            print("   Skriv numre fra listen, f.eks. 1,3,4.")
+            continue
+        if valgt:
+            break
+    riktig, glemt, feil = rett_avkrysning(q, valgt)
+    print("   ✓ Riktig!" if riktig else "   ✗ Ikke helt.")
+    for a in glemt:
+        print(f"     · Du glemte: {a}")
+    for a in feil:
+        print(f"     ✗ Hører ikke til: {a}")
+    if q.get("forklaring"):
+        print("   " + q["forklaring"].replace("\n", "\n   "))
+    return json.dumps(valgt, ensure_ascii=False), riktig, None
 
 
 def vis_mestring(db, fag: str | None):
