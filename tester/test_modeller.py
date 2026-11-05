@@ -10,7 +10,7 @@ import pytest
 
 from src.kontroll import normaliser
 from src.modeller import FILER, element, kapittel_i, manglende_nokler, modeller, seksjoner
-from src.modellquiz import (_likt, _samme_tema, case_avslorer, lag_alle_elementer, rett_avkrysning, lag_betydning, lag_hvilken_modell, lag_hvilket_element, lag_kjenn,
+from src.modellquiz import (_kort_forklaring, er_case_oppgave, nevner_element, _likt, _samme_tema, case_avslorer, lag_alle_elementer, rett_avkrysning, lag_betydning, lag_hvilken_modell, lag_hvilket_element, lag_kjenn,
                             lag_mangler, modell_strom)
 
 FAG = list(FILER)
@@ -186,3 +186,24 @@ def test_avkrysning_rettes_som_alt_eller_ingenting():
     assert rett_avkrysning(q, ["Endre", "Stabilisere", "Mobilisere"]) == (True, [], [])
     assert rett_avkrysning(q, ["Endre", "Mobilisere"]) == (False, ["Stabilisere"], [])
     assert rett_avkrysning(q, ["Endre", "Mobilisere", "Stabilisere", "Lojalitet"]) == (False, [], ["Lojalitet"])
+
+
+@pytest.mark.parametrize("navn, svar, ventet", [
+    ("Målkonflikt mellom avdelinger", "det er tydelig målkonflikt mellom avdeligenen", True),   # skrivefeil i svaret
+    ("Relasjoner mellom avdelinger", "dårlige relasjoner mellom avdelingene", True),
+    ("Ledersignaler", "Bedriften mangler ledersignaler", True),
+    ("Sentralisering", "Bedriften bør bli mer markedsorientert", False),
+    ("Insentiver", "ingen blir belønnet for samarbeid", False),
+])
+def test_case_rettingen_ser_etter_elementet_i_svaret(navn, svar, ventet):
+    """Skjermbilde 05.11: et svar som brukte alle elementene fikk 0 av 6, fordi casepåstandene ble sjekket mot notatet."""
+    assert nevner_element(navn, svar) is ventet
+
+
+def test_noekkelpunkt_viser_betydningen_ikke_tallet_fra_figuren():
+    assert _kort_forklaring("+.32 – ansatte følger lederens holdning") == "Ansatte følger lederens holdning"
+
+
+def test_case_oppgaver_kjennes_igjen_ogsaa_i_repetisjonen():
+    assert er_case_oppgave({"sporsmal": "Casen …\n\nAnalyser casen med «BCG-matrisen». Bruk elementene i modellen."})
+    assert not er_case_oppgave({"sporsmal": "Forklar hva BCG-matrisen er."})

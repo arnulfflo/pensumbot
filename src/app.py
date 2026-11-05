@@ -402,12 +402,18 @@ def _vurdering_html(q, v) -> tuple[str, str]:
         dom += f" · {len(v['feil'])} {'påstand' if len(v['feil']) == 1 else 'påstander'} å sjekke"
     punkter = "".join(f"<li>{'✓' if d else '·'} {escape(p)}</li>" for p, d in zip(q["nokkelpunkter"], v["dekket"]))
     for f, sitat in zip(v["feil"], v.get("feil_sitat") or [""] * len(v["feil"])):
-        punkter += (f"<li>⚠️ Sjekk mot notatet: «{escape(f)}»"
+        merke = "✗ Brukt i strid med modellen" if modellquiz.er_case_oppgave(q) else "⚠️ Sjekk mot notatet"
+        punkter += (f"<li>{merke}: «{escape(f)}»"
                     + (f"<br><span class=notis>Notatet sier: «{escape(sitat)}»</span>" if sitat else "") + "</li>")
     innhold = (f"<ul>{punkter}</ul><p>{escape(v['tilbakemelding'])}</p>"
                f'<div class="modellsvar"><b>Modellsvar:</b> {escape(q["modellsvar"])}</div>'
                f'<p class="notis">Vurderingen er en indikasjon fra en liten modell, ikke en karakter.</p>')
     return dom, innhold
+
+
+def _vurder(q, svar, kildetekst):
+    """Case-analyser rettes mot elementene i modellen, vanlige kortsvar mot notatet."""
+    return (modellquiz.vurder_case if modellquiz.er_case_oppgave(q) else vurder)(q, svar, kildetekst)
 
 
 def svar_quiz(valgt, tekst, flere, request: gr.Request):
@@ -441,7 +447,7 @@ def svar_quiz(valgt, tekst, flere, request: gr.Request):
             return _melding("Skriv et svar på 2–4 setninger."), _poeng(okt), *INGEN_ENDRING
         svar = tekst
         try:
-            v = vurder(q, svar, bit.tekst)
+            v = _vurder(q, svar, bit.tekst)
         except (TimeoutError, ValueError):
             return (_tilbakemelding(False, "Vurderingen feilet",
                                     f'<div class="modellsvar"><b>Sammenlign selv med modellsvaret:</b><br>'
@@ -475,7 +481,7 @@ def prov_igjen(tekst, request: gr.Request):
     if len((tekst or "").split()) < 3:
         return _melding("Skriv det nye svaret ditt i feltet over, og trykk «Prøv igjen».")
     try:
-        v = vurder(q, tekst, bit.tekst)
+        v = _vurder(q, tekst, bit.tekst)
     except (TimeoutError, ValueError):
         return _melding("Vurderingen feilet. Prøv igjen.")
     dom, innhold = _vurdering_html(q, v)
