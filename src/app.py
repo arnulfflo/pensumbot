@@ -19,7 +19,7 @@ import gradio as gr
 
 from src.database import koble, lagre_sporsmal
 from src.flashcards import forfalte, lag_nye_kort
-from src import formler, modellquiz, signaler
+from src import eksamensvekt, formler, modellquiz, signaler
 from src.henting import Bit, hent
 from src.innlesing import alle_fag, standardfag
 from src.kortsvar import STILER, vurder
@@ -203,7 +203,8 @@ def _modellstrom(fag, tema, stil):
         strom = ((q, Bit(m.tekst, {"fil": m.fil}, 0.0), m)
                  for q, m in signaler.signal_strom(fag, tema, stil, SPORSMAL_PER_TEMA))
     else:
-        strom = modellquiz.modell_strom(fag, tema, stil, SPORSMAL_PER_TEMA)
+        mestret, stilt = eksamensvekt.nylig_ovd(db, fag)
+        strom = modellquiz.modell_strom(fag, tema, stil, SPORSMAL_PER_TEMA, mestret=mestret, stilt=stilt)
     for q, bit, m in strom:
         tema_m = _tema_for_kapittel(fag, m.kapittel)
         kilde = q.get("kilde") or m.kilde
@@ -231,7 +232,7 @@ def _ny_strom(fag, tema, type_, stil):
         yield from _modellstrom(fag, tema, stil)
         return
     db = koble()
-    for q, bit in sporsmal_strom(fag, tema, SPORSMAL_PER_TEMA, type_, stil):
+    for q, bit in sporsmal_strom(fag, tema, SPORSMAL_PER_TEMA, type_, stil, db=db):
         kilde = f"{fag}/{bit.kilde}"
         sid = lagre_sporsmal(db, fag=fag, tema=tema, ovingsmate=type_, sporsmal=q["sporsmal"],
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],

@@ -15,7 +15,7 @@ import argparse
 import random
 import re
 
-from src import signaler
+from src import eksamensvekt, signaler
 from src.henting import Bit
 from src.kontroll import _stammer, avslorer_svaret, normaliser
 from src.llm import generer_json
@@ -23,7 +23,8 @@ from src.modeller import FILER, Element, Modell, kapittel_i, modeller
 
 TYPER = {"blandet": "Blandet", "kjenn": "Kjenn modellen", "velg": "Velg modell til casen",
          "bruk": "Bruk modellen på casen"}
-BLANDET = ["kjenn", "velg", "kjenn", "bruk"]      # «kjenn» går fort, casene tar litt tid å lage
+# Eksamen er case: to av tre spørsmål er case. «kjenn» går fort og fyller køen mens casene lages.
+BLANDET = ["kjenn", "velg", "bruk"]
 FAGNAVN = {"MRK1001": "markedsføring", "ORG1100": "organisasjon og ledelse"}
 
 
@@ -213,8 +214,17 @@ def rett_avkrysning(q: dict, valgt: list[str]) -> tuple[bool, list[str], list[st
 KJENN = [lag_alle_elementer, lag_hvilken_modell, lag_hvilket_element, lag_mangler, lag_betydning]
 
 
+FORSTAA = [lag_betydning, lag_hvilken_modell]      # hva elementet betyr, hvilken modell det hører til
+
+
 def lag_kjenn(m: Modell, alle: list[Modell], rng: random.Random) -> dict | None:
-    for lag in rng.sample(KJENN, len(KJENN)):
+    """Prøver forståelse først. Pugg («hvilket element mangler?») bare når modellen ikke gir noe annet,
+    eller i ett av tre tilfeller, så det fortsatt er litt variasjon."""
+    pugg = [lag for lag in KJENN if lag not in FORSTAA]
+    rekkefolge = rng.sample(FORSTAA, len(FORSTAA)) + rng.sample(pugg, len(pugg))
+    if rng.random() < 1 / 3:
+        rekkefolge = rng.sample(KJENN, len(KJENN))
+    for lag in rekkefolge:
         if q := lag(m, alle, rng):
             return q
     return None
@@ -225,7 +235,7 @@ def lag_kjenn(m: Modell, alle: list[Modell], rng: random.Random) -> dict | None:
 SYSTEM_CASE = """Du lager en kort eksamenscase i {fagnavn}. Du får én modell eller teori fra pensum.
 
 Regler:
-1. «case»: 3–5 setninger om en tenkt norsk bedrift eller organisasjon (finn på et navn). Beskriv en konkret
+1. «case»: 3–5 setninger om {navn}, en oppdiktet norsk bedrift innen {bransje}. Beskriv en konkret
    situasjon der akkurat denne modellen er det naturlige verktøyet for å analysere eller løse problemet.
    Ta med nok detaljer til at studenten kan bruke elementene i modellen på casen.
 2. Casen skal IKKE nevne navnet på modellen, forfatterne bak den eller navnene på elementene.
@@ -268,12 +278,14 @@ def case_avslorer(case: str, m: Modell) -> str | None:
     return None
 
 
-def lag_case(m: Modell) -> tuple[dict | None, str]:
+def lag_case(m: Modell, rng: random.Random | None = None) -> tuple[dict | None, str]:
     melding = (f"Modell: {m.navn}\nElementer:\n"
                + "\n".join(f"- {e.navn}" + (f": {e.forklaring}" if e.forklaring else "") for e in m.elementer)
                + f"\n\nFra notatene:\n{m.tekst[:2500]}")
     try:
-        data = generer_json(SYSTEM_CASE.format(fagnavn=FAGNAVN.get(m.fag, m.fag)), melding, SKJEMA_CASE)
+        navn, bransje = signaler.tilfeldig_bedrift(rng or random.Random())
+        data = generer_json(SYSTEM_CASE.format(fagnavn=FAGNAVN.get(m.fag, m.fag), navn=navn, bransje=bransje),
+                            melding, SKJEMA_CASE)
     except ValueError:
         return None, "ugyldig JSON"
     except TimeoutError:
@@ -291,7 +303,7 @@ def lag_velg(m: Modell, alle: list[Modell], rng: random.Random) -> tuple[dict | 
     andre = [a for a in _andre_modeller(m, alle, rng) if a.kapittel != m.kapittel]
     if len(andre) < 3:
         return None, "for få andre modeller å velge mellom"
-    data, grunn = lag_case(m)
+    data, grunn = lag_case(m, rng)
     if data is None:
         return None, grunn
     q = _flervalg(f"{data['case'].strip()}\n\nHvilken modell eller teori passer best for å analysere denne casen?",
@@ -373,11 +385,11 @@ def vurder_case(q: dict, svar: str, kildetekst: str) -> dict:
             "riktig": sum(dekket) >= len(punkter) / 2}
 
 
-def lag_bruk(m: Modell) -> tuple[dict | None, str]:
+def lag_bruk(m: Modell, rng: random.Random | None = None) -> tuple[dict | None, str]:
     """Casen + «Analyser casen med X». Nøkkelpunktene er elementene, så rettingen sjekker at du bruker dem."""
     if len(m.elementer) < 2:
         return None, "modellen har ingen elementer å rette mot"
-    data, grunn = lag_case(m)
+    data, grunn = lag_case(m, rng)
     if data is None:
         return None, grunn
     # «Formalisering (n.s.)»: ikke signifikant i modellen, så det er ikke noe å bruke på casen
@@ -391,12 +403,17 @@ def lag_bruk(m: Modell) -> tuple[dict | None, str]:
 
 # ---------- strømmen til quiz-fanen ----------
 
-def modell_strom(fag: str, tema: str | None, stil: str = "blandet", antall: int = 15, rng: random.Random | None = None):
-    """Gir (spørsmål, bit, modell) ett om gangen. Hver modell brukes bare én gang per økt."""
+def modell_strom(fag: str, tema: str | None, stil: str = "blandet", antall: int = 15, rng: random.Random | None = None,
+                 mestret: set[str] = frozenset(), stilt: set[str] = frozenset()):
+    """Gir (spørsmål, bit, modell) ett om gangen. Hver modell brukes bare én gang per økt.
+
+    Modeller som ofte er fasit på eksamen, kommer først. Modeller du har svart riktig på nylig (mestret) eller
+    fått nylig (stilt), skyves bak. Begge er sett med modelltekster (m.tekst), se eksamensvekt.nylig_ovd()."""
     rng = rng or random.Random()
     alle = list(modeller(fag))
-    omfang = i_omfang(fag, tema)
-    rng.shuffle(omfang)
+    omfang = eksamensvekt.vektet_rekkefolge(
+        i_omfang(fag, tema), lambda m: eksamensvekt.modellvekt(fag, m.navn) * eksamensvekt.demping(m.tekst, mestret, stilt),
+        rng)
     laget = 0
     for m in omfang:
         if laget == antall:
@@ -407,7 +424,7 @@ def modell_strom(fag: str, tema: str | None, stil: str = "blandet", antall: int 
         elif type_ == "velg":
             q, grunn = lag_velg(m, alle, rng)
         else:
-            q, grunn = lag_bruk(m)
+            q, grunn = lag_bruk(m, rng)
         if q is None and type_ != "kjenn" and stil == "blandet":
             q, grunn = lag_kjenn(m, alle, rng), grunn      # casen feilet: ta et raskt spørsmål i stedet
         if q is None:

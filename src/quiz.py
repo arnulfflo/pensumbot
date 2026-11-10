@@ -15,6 +15,7 @@ import random
 import re
 from datetime import datetime
 
+from src import eksamensvekt
 from src.database import koble, lagre_sporsmal, resultater
 from src.agent import uten_latex
 from src.henting import Bit, hent
@@ -74,7 +75,8 @@ SKJEMA_FLERVALG = {
 BOKSTAVER = "ABCD"
 
 
-def kandidat_biter(fag: str, tema: str, antall: int) -> list[Bit]:
+def kandidat_biter(fag: str, tema: str, antall: int, mestret: set[str] = frozenset(),
+                   stilt: set[str] = frozenset(), rng: random.Random | None = None) -> list[Bit]:
     """Biter om temaet, med nok tekst til å lage et spørsmål.
 
     Før var det bare én bit per kilde, men et Word-notat er én kilde uansett lengde, så et helt
@@ -92,7 +94,13 @@ def kandidat_biter(fag: str, tema: str, antall: int) -> list[Bit]:
             continue
         if len(bit.tekst) >= 300:
             biter.append(bit)
-    return biter
+    if rng is None:
+        return biter
+    # Ikke alltid de samme bitene først: de mest relevante er fortsatt mest sannsynlige, men biter du nylig
+    # har øvd på, havner bak, og ellers blir rekkefølgen litt tilfeldig fra økt til økt.
+    rang = {id(b): nr for nr, b in enumerate(biter)}
+    return eksamensvekt.vektet_rekkefolge(
+        biter, lambda b: eksamensvekt.demping(b.tekst, mestret, stilt) / (1 + 0.15 * rang[id(b)]), rng)
 
 
 def lag_flervalg(bit: Bit) -> tuple[dict | None, str]:
@@ -143,11 +151,21 @@ def lag_flervalg(bit: Bit) -> tuple[dict | None, str]:
     return {**data, "alternativer": alternativer, "fasit": data["riktig_svar"]}, ""
 
 
-def sporsmal_strom(fag: str, tema: str, antall: int, type_: str = "flervalg", stil: str = "forklar"):
-    """Gir ferdige spørsmål ett om gangen, og hopper over biter som ikke gir gode spørsmål."""
-    duplikater = Duplikatfilter()
+def sporsmal_strom(fag: str, tema: str, antall: int, type_: str = "flervalg", stil: str = "forklar",
+                   db=None, rng: random.Random | None = None):
+    """Gir ferdige spørsmål ett om gangen, og hopper over biter som ikke gir gode spørsmål.
+
+    Med db husker den hva du har øvd på før: biter du nylig har fått skyves bak, og spørsmål som likner
+    et du har fått de siste 14 dagene, hoppes over."""
+    if db is not None:
+        mestret, stilt = eksamensvekt.nylig_ovd(db, fag)
+        duplikater = Duplikatfilter(eksamensvekt.nylige_sporsmal(db, fag))
+        biter = kandidat_biter(fag, tema, antall, mestret, stilt, rng or random.Random())
+    else:
+        duplikater = Duplikatfilter()
+        biter = kandidat_biter(fag, tema, antall)
     laget = 0
-    for bit in kandidat_biter(fag, tema, antall):
+    for bit in biter:
         if laget == antall:
             return
         if type_ == "flervalg":

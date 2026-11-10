@@ -301,6 +301,11 @@ _FORLEDD = ["Nord", "Fjell", "Vest", "Lys", "Bølge", "Elv", "Tind", "Furu", "Ky
             "Breen", "Skog", "Havn", "Mjøs", "Varde", "Orkla", "Bjørke"]
 _ETTERLEDD = ["vik", "heim", "kraft", "gruppen", "partner", "hus", "verk", "lab", "torget", "linja"]
 
+
+def tilfeldig_bedrift(rng: random.Random) -> tuple[str, str]:
+    """(navn, bransje) til en oppdiktet case. Python velger, ellers kaller språkmodellen alt «Fjord-noe»."""
+    return rng.choice(_FORLEDD) + rng.choice(_ETTERLEDD) + " AS", rng.choice(BRANSJER)
+
 SYSTEM_SETNING = """Du skriver ÉN setning til en oppdiktet eksamenscase i {fagnavn}. Bedriften heter {navn} ({bransje}).
 
 Du får et SIGNAL: en opplysning som gjør en bestemt modell relevant, og hvorfor. Skriv en ny, konkret setning om
@@ -383,8 +388,7 @@ def lag_ny(fag: str, kap: int | None, rng: random.Random, forsok: int = 3) -> tu
         valgt = _velg_signaler(fag, kap, rng, rng.choice([2, 3, 3]))
         if len(valgt) < 2:
             return None, "for få signaler i kapittelet som peker på ulike modeller"
-        bransje = rng.choice(BRANSJER)
-        navn = rng.choice(_FORLEDD) + rng.choice(_ETTERLEDD) + " AS"
+        navn, bransje = tilfeldig_bedrift(rng)
         try:
             setninger = []
             for s in valgt:
