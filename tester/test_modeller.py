@@ -221,3 +221,12 @@ def test_signalene_viser_til_modeller_som_finnes(fag):
         assert s.get("modeller") or s.get("begreper"), s["signal"]
         for m in s.get("modeller", []):
             assert m in navn, (m, s["signal"])
+
+
+def test_case_som_merker_av_elementene_forkastes():
+    """En SWOT-case med «(Styrke)» og «(Trussel)» i teksten har gjort analysen for studenten."""
+    swot = next(m for m in modeller("MRK1001") if m.navn == "SWOT-analyse")
+    merket = ("Bakeriet har et sterkt omdømme for håndlagde brød (Styrke). Kjedene presser prisene (Trussel). "
+              "Trussel: nye konkurrenter.")
+    assert case_avslorer(merket, swot)
+    assert case_avslorer("Bakeriet har sterke sider, men kjedene presser prisene og truer marginene.", swot) is None

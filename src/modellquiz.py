@@ -275,6 +275,13 @@ def case_avslorer(case: str, m: Modell) -> str | None:
         n = normaliser(o)
         if len(n) >= 2 and re.search(rf"\b{re.escape(n)}", tekst):
             return f"casen nevner «{o}»"
+    # Elementnavn på ett ord er vanlige ord («styrke», «pris») og er lov i teksten. Men står de som merkelapp,
+    # «håndlagde brød (Styrke)» eller «Trussel: lave priser», har casen gjort analysen for studenten.
+    for e in m.elementer:
+        for ord_ in re.findall(r"[a-zæøåé]{4,}", e.navn.lower()):
+            stamme = re.escape(ord_[:5])
+            if re.search(rf"\(\s*{stamme}\w*\s*\)|\b{stamme}\w*\s*:", case.lower()):
+                return f"casen merker av elementet «{e.navn}»"
     return None
 
 
@@ -295,6 +302,8 @@ def lag_case(m: Modell, rng: random.Random | None = None) -> tuple[dict | None, 
         return None, "for kort case eller manglende modellsvar"
     if grunn := case_avslorer(case, m):
         return None, grunn
+    if navn.removesuffix(" AS").lower() not in case.lower():
+        return None, f"casen brukte ikke bedriftsnavnet {navn}"      # ellers samme «InnovasjonsTek» hver gang
     return data, ""
 
 
