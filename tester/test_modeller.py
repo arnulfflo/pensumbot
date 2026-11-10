@@ -230,3 +230,13 @@ def test_case_som_merker_av_elementene_forkastes():
               "Trussel: nye konkurrenter.")
     assert case_avslorer(merket, swot)
     assert case_avslorer("Bakeriet har sterke sider, men kjedene presser prisene og truer marginene.", swot) is None
+
+
+def test_swot_elementer_gjenkjennes_i_vanlige_ordformer():
+    """Ekte svar 10.11.2026 fikk 2 av 4: «svekker» og «truet» ble ikke regnet som svakhet og trussel."""
+    from src.modellquiz import nevner_element
+    svar = ("Internt i Solvik AS har de en solid kundebase med høy tillit noe som peker på en styrke ved bedriften. "
+            "Deres digitale tilbud oppleves som utdatert, noe som svekker bedriften. Eksternt finner vi muligheter "
+            "innenfor bærekraftige finansielle løsninger, men blir truet av økende regulatorisk press.")
+    assert all(nevner_element(e, svar) for e in ("Styrker", "Svakheter", "Muligheter", "Trusler"))
+    assert not nevner_element("Trusler", "Bedriften har sterke sider og gode muligheter.")

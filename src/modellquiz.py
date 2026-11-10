@@ -351,8 +351,23 @@ SKJEMA_VURDER_CASE = {
 }
 
 
+# Elementnavn der vanlig norsk bruker en annen stamme enn navnet: «svekker» er svakhet, «truet» er trussel.
+# Stammen på seks bokstaver («svakhe», «trusle») finner dem ikke.
+ORDFAMILIER = {
+    "styrke": r"\b(styrk|sterk)\w*",
+    "svakhet": r"\b(svak|svekk)\w*",
+    "mulighet": r"\bmulig\w*",
+    "trussel": r"\b(trus|true)\w*",
+    "trusler": r"\b(trus|true)\w*",
+}
+
+
 def nevner_element(navn: str, svar: str) -> bool:
     """Står elementet i svaret? «Målkonflikt mellom avdelinger» finnes i «målkonflikt mellom avdelingene»."""
+    rent = re.sub(r"\([^)]*\)", "", navn).strip().lower()
+    for ord_, monster in ORDFAMILIER.items():
+        if rent.startswith(ord_[:5]) and len(rent.split()) == 1 and re.search(monster, svar.lower()):
+            return True
     stammer = _stammer(re.sub(r"\([^)]*\)", "", navn))
     if not stammer:
         return normaliser(navn) in normaliser(svar)
