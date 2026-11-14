@@ -136,3 +136,24 @@ footer { display: none !important; }
 .formel .snudd span { background: color-mix(in srgb, var(--fag) 12%, transparent); border-radius: 8px; padding: 2px 8px; }
 .formel .ordliste, .formel .naboer, .formel .kilde { font-size: .75rem; color: var(--body-text-color-subdued); margin-top: 4px; }
 .tilbakemelding .kilde { font-size: .8rem; color: var(--body-text-color-subdued); margin-top: 8px; }
+
+/* Dekningsoversikten i Mestring: eksamensmodellene og hva du har øvd på */
+.dekning { margin-top: 12px; padding: 10px 14px; border-radius: 14px; background: var(--block-background-fill);
+  border: 1px solid var(--border-color-primary); }
+.dekning summary { cursor: pointer; font-weight: 600; }
+.dekning .info { color: var(--body-text-color-subdued); font-size: 0.85rem; margin: 8px 0; }
+.dekrad { display: grid; grid-template-columns: minmax(0, 3fr) 5.5rem 4rem 4rem 6.5rem; gap: 8px; align-items: center;
+  padding: 5px 8px; border-radius: 8px; font-size: 0.92rem; }
+.dekrad > div:not(:first-child) { text-align: center; }
+.dekrad.hode { font-size: 0.78rem; color: var(--body-text-color-subdued); font-weight: 600; }
+.dekrad.mangler { background: color-mix(in srgb, #e5484d 8%, transparent); }
+.dekrad .kap { color: var(--body-text-color-subdued); font-size: 0.78rem; white-space: nowrap; }
+.dekrad .ok { color: #2fa36b; font-weight: 600; }
+.dekrad .svak { color: #e5484d; font-weight: 600; }
+.dekrad .tom-celle, .dekrad .vekt { color: var(--body-text-color-subdued); }
+@media (max-width: 640px) { .dekrad { grid-template-columns: minmax(0, 1fr) 3rem 3rem 3rem; } .dekrad .vekt, .dekrad.hode > div:nth-child(2) { display: none; } }
+
+/* Eksamensmodus */
+.kort .oppgaver { margin-top: 14px; padding: 12px 16px; border-radius: 12px; background: var(--background-fill-secondary); }
+.kort .oppgaver ol { margin: 6px 0 0 4px; padding-left: 20px; line-height: 1.6; }
+.tilbakemelding .notis { display: inline; }

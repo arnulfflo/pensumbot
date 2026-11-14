@@ -10,6 +10,8 @@ Regler:
 - Innenfor et fag velges temaene som er lengst siden du øvde på, vektet med mestring
   (lav mestring = oftere). Temaer du aldri har øvd på kommer først.
 - Øvingsmåten følger hvor nær eksamen er: flashcards → flervalg → kortsvar → repetisjon.
+- Fag med modellark (MRK, ORG) får modelløving annenhver blokk de siste tre ukene: eksamen er en case,
+  og da er det modellene du skal bruke.
 - Ingen blokk for et fag på eller etter eksamensdagen.
 
 Kjør:  uv run python -m src.planlegger --lag            (lag planen på nytt fra i dag)
@@ -67,6 +69,15 @@ def ovingsmate_for(dager_igjen: int, repetisjonsdager: int, gang: int = 0) -> st
     return "flashcards" if gang % 2 == 0 else "flervalg"
 
 
+MODELLOVING_FRA = 21        # dager før eksamen: herfra er annenhver blokk modelløving (case)
+
+
+def med_modelloving(modus: str, nr: int, har_modeller: bool) -> str:
+    """Annenhver flervalgs- eller kortsvarblokk blir «modeller» for fag med modellark. nr: blokkens nummer
+    for faget den dagen (0 først), så den første blokken alltid er modelløving."""
+    return "modeller" if har_modeller and modus in ("flervalg", "kortsvar") and nr % 2 == 0 else modus
+
+
 def fordel_heltall(andeler: dict[str, float], antall: int) -> dict[str, int]:
     """Gjør andeler om til et helt antall blokker som summerer til `antall` (største rest-metoden)."""
     raa = {k: v * antall for k, v in andeler.items()}
@@ -80,12 +91,13 @@ def fordel_heltall(andeler: dict[str, float], antall: int) -> dict[str, int]:
 def lag_plan(eksamener: dict[str, date], temaer: dict[str, list[str]], start: date,
              timer_per_dag: float, blokk_minutter: int, repetisjonsdager: int,
              mestring: dict | None = None, sist_ovd: dict | None = None,
-             hoppes_over: set[date] = frozenset()) -> list[Blokk]:
+             hoppes_over: set[date] = frozenset(), modellfag: set[str] = frozenset()) -> list[Blokk]:
     """Ren funksjon: samme input gir alltid samme plan. Ingen database, så den kan testes direkte.
 
     mestring:  {(fag, tema): 0–1}, standard 0,5
     sist_ovd:  {(fag, tema): dato} for temaer du allerede har øvd på
     hoppes_over: datoer det ikke skal planlegges noe på
+    modellfag: fag med modellark, som får modelløving annenhver blokk de siste tre ukene
     """
     mestring = mestring or {}
     sist = dict(sist_ovd or {})
@@ -108,9 +120,11 @@ def lag_plan(eksamener: dict[str, date], temaer: dict[str, list[str]], start: da
             andeler = {f: (1 / d) / totalt for f, d in aktive.items()}
 
         for fag, antall in fordel_heltall(andeler, blokker_per_dag).items():
-            for _ in range(antall):
+            for nr in range(antall):
                 tema = _neste_tema(fag, temaer[fag], dag, sist, mestring)
                 modus = ovingsmate_for(aktive[fag], repetisjonsdager, ganger[(fag, tema)])
+                if aktive[fag] <= MODELLOVING_FRA:
+                    modus = med_modelloving(modus, nr, fag in modellfag)
                 plan.append(Blokk(dag, fag, tema, modus, blokk_minutter))
                 sist[(fag, tema)] = dag
                 ganger[(fag, tema)] += 1
@@ -160,8 +174,9 @@ def lag_og_lagre(db, start: date | None = None) -> tuple[list[Blokk], list[str]]
             sist_ovd[nokkel] = max(dato, sist_ovd.get(nokkel, dato))
     hoppes_over = {date.fromisoformat(r["dato"]) for r in db.execute(
         "SELECT DISTINCT dato FROM plan WHERE status = 'hoppet_over' AND dato >= ?", (start.isoformat(),))}
+    from src.modeller import FILER as modellfag
     plan = lag_plan(eksamener, temaer, start, innst["timer_per_dag"], innst["blokk_minutter"],
-                    innst["repetisjonsdager"], mestring_per_tema(db), sist_ovd, hoppes_over)
+                    innst["repetisjonsdager"], mestring_per_tema(db), sist_ovd, hoppes_over, set(modellfag))
 
     db.execute("DELETE FROM plan WHERE status = 'planlagt' AND dato >= ?", (start.isoformat(),))
     db.executemany("INSERT INTO plan (dato, fag, tema, ovingsmate, minutter, status) VALUES (?, ?, ?, ?, ?, 'planlagt')",

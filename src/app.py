@@ -11,7 +11,7 @@ import queue
 import random
 import re
 import threading
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from html import escape
 from pathlib import Path
 
@@ -19,7 +19,7 @@ import gradio as gr
 
 from src.database import koble, lagre_sporsmal
 from src.flashcards import forfalte, lag_nye_kort
-from src import eksamensvekt, formler, modellquiz, signaler
+from src import dekning, eksamensmodus, eksamensvekt, formler, modellquiz, nyheter, signaler
 from src.henting import Bit, hent
 from src.innlesing import alle_fag, standardfag
 from src.kortsvar import STILER, vurder
@@ -610,8 +610,23 @@ def _uke_html(db) -> str:
     return f'<div class="uke">{"".join(dager)}</div>'
 
 
+_PLANLAGT = {}          # datoen planen sist ble lagt på nytt i denne appen
+
+
+def _oppfrisk_plan(db):
+    """Én gang per dag legges planen på nytt, så den følger det du faktisk har øvd på (også uten «Ferdig»).
+    Har du allerede gjort eller hoppet over noe i dag, står dagens blokker urørt, og resten legges fra i morgen."""
+    i_dag = date.today()
+    if _PLANLAGT.get("dato") == i_dag:
+        return
+    _PLANLAGT["dato"] = i_dag
+    urort = all(b["status"] == "planlagt" for b in blokker_for(db, i_dag))
+    lag_og_lagre(db, i_dag if urort else i_dag + timedelta(days=1))
+
+
 def vis_plan():
     db = koble()
+    _oppfrisk_plan(db)
     if not _dagens(db):
         lag_og_lagre(db)
     dagens = _dagens(db)
@@ -634,8 +649,8 @@ def ov_paa(fag, tema, ovingsmate):
     if ovingsmate == "flashcards":
         return (gr.Tabs(selected="kort"), gr.update(), gr.update(), gr.update(), gr.update(),
                 gr.update(value=fag), gr.update(choices=temaer_for(fag), value=tema or ALLE_KORT))
-    type_ = {"flervalg": "flervalg", "feilsvar": "repetisjon"}.get(ovingsmate, "kortsvar")
-    stil = {**stilvalg(type_), "value": "blandet"} if type_ == "kortsvar" else stilvalg(type_)
+    type_ = {"flervalg": "flervalg", "feilsvar": "repetisjon", "modeller": "modeller"}.get(ovingsmate, "kortsvar")
+    stil = {**stilvalg(type_), "value": "blandet"} if type_ == "kortsvar" else stilvalg(type_, fag)
     return (gr.Tabs(selected="quiz"), gr.update(value=fag),
             gr.update(choices=temaer_for(fag, med_alle=False), value=tema or None),
             gr.update(value=type_), stil, gr.update(), gr.update())
@@ -672,6 +687,8 @@ def _forklaring_html(f, oppsummering) -> str:
               f"<li>De siste {f['repetisjonsdager']} dagene før en eksamen brukes bare på det faget.</li>"
               f"<li>Øvingen endrer seg mot eksamen: først gjenkjenne (flashcards), så hente frem (flervalg), "
               f"siste uke forklare med egne ord (kortsvar).</li>"
+              f"<li>De siste tre ukene er annenhver blokk i MRK og ORG modelløving: du kjenner igjen modellen "
+              f"i en case og bruker den, slik eksamen krever.</li>"
               f"<li>Temaer du ikke har øvd på eller er svak på, kommer oftere. Temaer du nettopp har øvd på, venter litt.</li>"
               f"<li>Når du trykker «Ferdig», legges planen på nytt fra i morgen ut fra mestringen din.</li></ul>")
     return (f'<div class="planforklaring"><h3>De neste {f["dager"]} dagene · {f["blokker"]} blokker à '
@@ -790,7 +807,133 @@ def svar_formel(valgt, tekst, okt):
     return html, _poeng(okt), okt
 
 
+# ---------- Eksamensmodus ----------
+
+EKSAMENSFAG = [f for f in FAG if eksamensmodus.har_eksamensmodus(f)]
+TIDLIGERE, NYHET = "Tidligere eksamen", "Fersk nyhetssak"
+
+
+def eksamensvalg(fag, kilde, ferske=False):
+    """Fyller menyen med tidligere eksamenscaser, eller med nyhetssakene som passer faget best."""
+    if kilde == TIDLIGERE:
+        navn = list(signaler.caser(fag))
+        return gr.update(choices=navn, value=navn[0] if navn else None, label="Case"), []
+    saker = nyheter.for_fag(fag, 20, ferske)
+    if not saker:
+        gr.Warning("Fant ingen nyhetssaker. Sjekk at du er på nett, og trykk «Hent nyheter».")
+    valg = [n.etikett for n in saker]
+    return gr.update(choices=valg, value=valg[0] if valg else None, label="Nyhetssak (de mest relevante først)"), \
+        [vars(n) for n in saker]
+
+
+def _eksamenskort(case) -> str:
+    linjer = lambda s: escape(s).replace(chr(10), "<br>")
+    oppgaver = "".join(f"<li>{escape(o)}</li>" for o in case.oppgaver)
+    lenke = (f' · <a href="{escape(case.lenke)}" target="_blank" rel="noopener noreferrer">les saken hos kilden</a>'
+             if case.lenke else "")
+    return (f'<div class="kort" style="--fag:{farge(case.fag)}"><div class="topplinje"><span>{merke(case.fag)} &nbsp;'
+            f'Eksamensmodus</span><span>{len(case.tekst.split())} ord</span></div>'
+            f'<div class="sporsmal">📝 {escape(case.tittel)}</div><div class="casetekst">{linjer(case.tekst)}</div>'
+            + (f'<div class="oppgaver"><b>Oppgaver</b><ol>{oppgaver}</ol></div>' if oppgaver else "")
+            + f'<div class="fra">📖 {escape(case.kilde)}{lenke}</div></div>')
+
+
+def start_eksamen(fag, kilde, valg, saker):
+    skjul = gr.update(visible=False)
+    if not valg:
+        return _melding("Velg en case først."), skjul, skjul, "", None
+    if kilde == TIDLIGERE:
+        case = eksamensmodus.tidligere(fag, valg)
+    else:
+        sak = next((s for s in saker or [] if nyheter.Nyhet(**s).etikett == valg), None)
+        case = eksamensmodus.fra_nyhet(fag, nyheter.Nyhet(**sak)) if sak else None
+        if case is None:
+            return (_melding("Saken kunne ikke hentes, eller den er for kort til å være en case (kanskje bak "
+                             "betalingsmur). Velg en annen sak."), skjul, skjul, "", None)
+    okt = {"case": case, "start": datetime.now().isoformat(timespec="seconds")}
+    return (_eksamenskort(case), gr.update(value="", visible=True), gr.update(visible=True),
+            '<div class="tom">Skriv hele besvarelsen i feltet. Bruk gjerne overskrifter per oppgave. '
+            'Du har boka med på MRK-eksamen, ikke på ORG.</div>', okt)
+
+
+def _eksamensresultat_html(case, r, minutter) -> str:
+    def rad(p):
+        if p.brukt:
+            el = (f' <span class="notis">({len(p.elementer)} av {p.antall_elementer} elementer nevnt)</span>'
+                  if p.antall_elementer else "")
+            return f"<li>✓ <b>{escape(p.modell)}</b>{el}</li>"
+        return (f"<li>· <b>{escape(p.modell)}</b> mangler<br><span class=notis>Hvorfor den hører hjemme: "
+                f"{escape(p.hvorfor)} ({escape(p.signal)})</span></li>")
+    brukt = sum(p.brukt for p in r.punkter)
+    dom = (f"{'Godkjent' if r.godkjent else 'Ikke godkjent'} · {brukt} av {len(r.punkter)} modeller fra fasiten "
+           f"(du trenger {r.krav}) · {r.ord} ord på {minutter} min")
+    punkter = "".join(rad(p) for p in sorted(r.punkter, key=lambda p: not p.brukt))
+    feller = "".join(f"<li>✗ <b>{escape(n)}</b> gir lite uttelling her: {escape(h)}</li>" for n, h in r.feller)
+    sjekk = "".join(f"<li>{'✓' if ok else '·'} {escape(t)}</li>" for t, ok in r.sjekk)
+    k = r.kommentar or {}
+    kommentar = "".join(f"<p><b>{tittel}</b></p><ul>{''.join(f'<li>{escape(x)}</li>' for x in k[n])}</ul>"
+                        for n, tittel in (("bra", "Dette gjør du godt"), ("forbedre", "Dette bør du forbedre")) if k.get(n))
+    if not kommentar:
+        kommentar = '<p class="notis">Språkmodellen ga ingen kommentar denne gangen. Rettingen over står likevel.</p>'
+    fasit = ("Fasiten er modellene oppgaveordene peker på i signalkatalogen. En nyhetssak har ingen sensorveiledning."
+             if case.type == "nyhet" else "Fasiten er hentet fra sensorveiledning, løsningsforslag eller A-besvarelse.")
+    return _tilbakemelding(r.godkjent, dom,
+                           f"<p><b>Modellene i fasiten</b></p><ul>{punkter}{feller}</ul>"
+                           f"<p><b>Det sensor ser etter</b></p><ul>{sjekk}</ul>{kommentar}"
+                           f'<p class="notis">{fasit} Rettingen ser etter om modellene er brukt, ikke hvor godt. '
+                           f"Den er en indikasjon, ikke en karakter.</p>")
+
+
+def lever_eksamen(svar, okt):
+    """Retter besvarelsen og lagrer den, så den teller i dekningsoversikten."""
+    if not okt or not okt.get("case"):
+        yield _melding("Trykk «Start» først."), okt
+        return
+    if len((svar or "").split()) < 50:
+        yield _melding("Besvarelsen er for kort til å rettes. Skriv minst noen avsnitt."), okt
+        return
+    case = okt["case"]
+    yield _melding("Retter besvarelsen … (Python sjekker modellene, språkmodellen skriver en kommentar)"), okt
+    r = eksamensmodus.rett(case, svar)
+    minutter = round((datetime.now() - datetime.fromisoformat(okt["start"])).total_seconds() / 60)
+    if not okt.get("levert"):                  # bare første levering lagres
+        db = koble()
+        sid = lagre_sporsmal(db, fag=case.fag, tema=eksamensmodus.TEMA, ovingsmate=dekning.EKSAMEN,
+                             sporsmal=f"📝 {case.tittel}" + "".join(f"\n{nr}. {o}" for nr, o in enumerate(case.oppgaver, 1)),
+                             fasit=json.dumps([p.modell for p in r.punkter], ensure_ascii=False), kilde=case.kilde,
+                             modell=modellnavn())
+        lagre_resultat(db, sid, svar, r.godkjent, json.dumps(
+            {"brukt": r.brukt, "mangler": r.mangler, "feller": [n for n, _ in r.feller], "ord": r.ord,
+             "minutter": minutter}, ensure_ascii=False))
+        okt = {**okt, "levert": True}
+    yield _eksamensresultat_html(case, r, minutter), okt
+
+
 # ---------- Mestring ----------
+
+def _dekning_html(db, fag) -> str:
+    """Eksamensmodellene i faget, tyngst først, med hva du har øvd på: kjenn, case og funnet i en hel case."""
+    rader = dekning.dekning(db, fag)
+    if not rader:
+        return ""
+    brukt, alle = dekning.oppsummering(rader)
+
+    def celle(t):
+        if not t.forsok:
+            return '<div class="tom-celle">–</div>'
+        return f'<div class="{"ok" if t.riktige else "svak"}">{t.riktige}/{t.forsok}</div>'
+
+    linjer = "".join(
+        f'<div class="dekrad{"" if r.brukt_paa_case else " mangler"}">'
+        f'<div>{escape(r.modell.navn)} <span class="kap">kap. {r.modell.kapittel}</span></div>'
+        f'<div class="vekt" title="Antall eksamenscaser der modellen er fasit, pluss et halvt poeng per oppgaveord">'
+        f'{r.treff:g}</div>{celle(r.kjenn)}{celle(r.case)}{celle(r.funnet)}</div>' for r in rader)
+    return (f'<details class="dekning"><summary>🧩 Eksamensmodellene: <b>{brukt} av {alle}</b> brukt riktig på en case'
+            f'</summary><p class="info">Modellene som har vært fasit på tidligere eksamener, de vanligste først. '
+            f'Tallene er riktige/forsøk. Rader i rødt har du ennå ikke brukt eller funnet riktig i en case.</p>'
+            f'<div class="dekrad hode"><div>Modell</div><div>På eksamen</div><div>Kjenn</div><div>Case</div>'
+            f'<div>Funnet i case</div></div>{linjer}</details>')
+
 
 def vis_mestring():
     db = koble()
@@ -821,7 +964,7 @@ def vis_mestring():
                       f'{f"{snitt:.0%}" if snitt is not None else "–"}</div>'
                       f'<div class="tekst">{escape(NAVN.get(fag, fag))} · {len(ovde)} temaer øvd</div></div>')
         seksjoner.append(f'<div class="fagseksjon" style="--fag:{farge(fag)}"><h3>{merke(fag)} {escape(NAVN.get(fag, fag))}</h3>'
-                         f'{"".join(rader)}</div>')
+                         f'{"".join(rader)}{_dekning_html(db, fag)}</div>')
     return f'<div class="fliser">{"".join(fliser)}</div>{"".join(seksjoner)}'
 
 
@@ -964,6 +1107,27 @@ def lag_app() -> gr.Blocks:
                 quiz_resultat = gr.HTML()
                 feil_knapp = gr.Button("🔁 Ta feilsvarene på nytt nå", visible=False, size="sm")
 
+            with gr.Tab("📝 Eksamen", id="eksamen"):
+                eks_okt = gr.State(None)
+                eks_saker = gr.State([])
+                efag0 = fag0 if fag0 in EKSAMENSFAG else (EKSAMENSFAG or [fag0])[0]
+                with gr.Group(elem_classes="panel"):
+                    with gr.Row():
+                        eks_fag = gr.Dropdown(EKSAMENSFAG, value=efag0, label="Fag")
+                        eks_kilde = gr.Radio([TIDLIGERE, NYHET], value=TIDLIGERE, label="Case fra", scale=2)
+                        eks_valg = gr.Dropdown(list(signaler.caser(efag0)), label="Case", scale=3,
+                                               value=next(iter(signaler.caser(efag0)), None))
+                    with gr.Row():
+                        eks_start = gr.Button("Start", variant="primary")
+                        eks_hent = gr.Button("🔄 Hent nyheter", size="sm", visible=False)
+                eks_case = gr.HTML(_melding("Velg en tidligere eksamen eller en fersk nyhetssak, og trykk «Start». "
+                                            "Du får hele casen med oppgaver, skriver én besvarelse, og får den rettet "
+                                            "mot modellene sensor ser etter."))
+                eks_svar = gr.Textbox(label="Din besvarelse", lines=18, visible=False,
+                                      placeholder="Oppgave 1\n…\n\nOppgave 2\n…")
+                eks_lever = gr.Button("Lever besvarelsen", variant="primary", visible=False)
+                eks_resultat = gr.HTML()
+
             with gr.Tab("🗂️ Flashcards", id="kort"):
                 ko = gr.State([])
                 with gr.Group(elem_classes="panel"):
@@ -1048,6 +1212,14 @@ def lag_app() -> gr.Blocks:
         quiz_type.input(stilvalg, [quiz_type, quiz_fag], quiz_stil)
         quiz_fag.input(lambda f, t: stilvalg(t, f) if t == "modeller" else gr.update(), [quiz_fag, quiz_type], quiz_stil)
         svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst, quiz_flere], [quiz_resultat, poeng, *knapper])
+
+        for felt in (eks_fag, eks_kilde):
+            felt.input(eksamensvalg, [eks_fag, eks_kilde], [eks_valg, eks_saker])
+        eks_kilde.input(lambda k: gr.update(visible=k == NYHET), eks_kilde, eks_hent)
+        eks_hent.click(lambda f, k: eksamensvalg(f, k, ferske=True), [eks_fag, eks_kilde], [eks_valg, eks_saker])
+        eks_start.click(start_eksamen, [eks_fag, eks_kilde, eks_valg, eks_saker],
+                        [eks_case, eks_svar, eks_lever, eks_resultat, eks_okt])
+        eks_lever.click(lever_eksamen, [eks_svar, eks_okt], [eks_resultat, eks_okt])
 
         # .input (ikke .change): bare når du selv bytter fag, så «Øv nå» ikke nullstiller temaet
         kort_fag.input(lambda f: gr.update(choices=temaer_for(f), value=ALLE_KORT), kort_fag, kort_temavalg)

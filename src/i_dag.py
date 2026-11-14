@@ -23,6 +23,7 @@ OVELSER = {
     "flervalg": "5 flervalgsspørsmål",
     "kortsvar": "4 oppgaver: case, hvorfor, sammenlign og forklar",
     "repetisjon": "4 oppgaver i blandet stil (repetisjon før eksamen)",
+    "modeller": "4 spørsmål om modellene: kjenn igjen, velg modell til en case, bruk modellen",
 }
 
 
@@ -37,8 +38,49 @@ def start_ovelse(db, blokk):
             print("Ingen kort å øve på i dette temaet nå.")
     elif modus == "flervalg":
         kjor_quiz(fag, tema, 5, "flervalg")
+    elif modus == "modeller":
+        ov_modeller(db, fag, tema, 4)
     else:
         kjor_quiz(fag, tema, 4, "kortsvar", stil="blandet")
+
+
+def ov_modeller(db, fag: str, tema: str, antall: int):
+    """Modelløving i terminalen: de samme spørsmålene som i appen (Quiz → modeller og teorier → blandet)."""
+    import json
+
+    from src import eksamensvekt, modellquiz
+    from src.database import lagre_sporsmal
+    from src.quiz import modellnavn, still_flervalg
+    from src.repetisjon import MODELLARK, lagre_resultat, still_avkrysning
+
+    mestret, stilt = eksamensvekt.nylig_ovd(db, fag)
+    for nr, (q, bit, m) in enumerate(modellquiz.modell_strom(fag, tema, "blandet", antall, mestret=mestret, stilt=stilt), 1):
+        print(f"\n{nr}. [{q['stil']}] {q['sporsmal']}")
+        if q["type"] == "flervalg":
+            resultat = still_flervalg(q, bit)
+        elif q["type"] == "avkrysning":
+            resultat = still_avkrysning(q, bit)
+        else:
+            svar = ""
+            while len(svar.split()) < 3:
+                svar = les("Din analyse (q for å avslutte): ")
+                if svar.lower() == "q":
+                    return
+            try:
+                v = modellquiz.vurder_case(q, svar, bit.tekst)
+            except (TimeoutError, ValueError):
+                print(f"   Vurderingen feilet. Modellsvar:\n   {q['modellsvar']}")
+                continue
+            print(f"   {'✓ Godkjent' if v['riktig'] else '✗ Ikke godkjent'}: {v['tilbakemelding']}\n   Modellsvar: {q['modellsvar']}")
+            resultat = (svar, v["riktig"], v["tilbakemelding"])
+        if resultat is None:
+            return
+        fasit = json.dumps(q["fasit"], ensure_ascii=False) if isinstance(q["fasit"], list) else q["fasit"]
+        sid = lagre_sporsmal(db, fag=fag, tema=tema, ovingsmate=q["type"], sporsmal=q["sporsmal"],
+                             alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=fasit,
+                             forklaring=q.get("forklaring"), sitat="", kilde=m.kilde, kildetekst=m.tekst,
+                             modell=MODELLARK if q["stil"] not in ("velg modell", "bruk modellen") else modellnavn())
+        lagre_resultat(db, sid, *resultat)
 
 
 def antall_til_repetisjon(db) -> tuple[int, int]:

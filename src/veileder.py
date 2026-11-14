@@ -27,7 +27,7 @@ from datetime import date, datetime
 from src.agent import Steg, tall_i, tall_som_tekst
 from src.database import koble
 from src.llm import chat_med_verktoy
-from src.planlegger import blokker_for, last_eksamener, ovingsmate_for
+from src.planlegger import MODELLOVING_FRA, blokker_for, last_eksamener, med_modelloving, ovingsmate_for
 from src.repetisjon import forfalte_sporsmal, mestring_per_tema
 
 MAKS_STEG = 8
@@ -74,7 +74,7 @@ VERKTOY = [
 class Oktblokk:
     fag: str
     tema: str             # tom for «alle kort som skal repeteres» og feilsvar
-    ovingsmate: str       # flashcards, flervalg, kortsvar, repetisjon, feilsvar
+    ovingsmate: str       # flashcards, flervalg, kortsvar, modeller, repetisjon, feilsvar
     minutter: int
     grunn: str
 
@@ -182,10 +182,15 @@ def lag_okt(db, minutter: int, fag: str | None = None, idag: date | None = None)
             grunn = (f"mestring {round(m * 100)} %" if (f, tema) in mestring else "aldri øvd på") + \
                     f", eksamen om {dager} dager"
             kandidater.append((-poeng, len(kandidater), f, tema, grunn))
+    from src.modeller import FILER as modellfag
+    nr = {}                 # blokker per fag så langt, så annenhver blir modelløving (som i planen)
     for *_, f, tema, grunn in sorted(kandidater):
         if igjen < MIN_BLOKK:
             break
         mate = ovingsmate_for(aktive[f], innst["repetisjonsdager"])
+        if aktive[f] <= MODELLOVING_FRA:
+            mate = med_modelloving(mate, nr.get(f, 0), f in modellfag)
+        nr[f] = nr.get(f, 0) + 1
         legg_til(f, tema, mate, blokk, grunn)
     return okt
 

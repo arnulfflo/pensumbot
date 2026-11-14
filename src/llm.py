@@ -34,13 +34,18 @@ def _ollama_feil(feil: Exception, modell: str) -> Exception:
     return feil
 
 
-def generer(system: str, melding: str, skjema: dict | None = None, temperatur: float | None = None) -> str:
+def generer(system: str, melding: str, skjema: dict | None = None, temperatur: float | None = None,
+            ollama: dict | None = None) -> str:
     """system = instruksen (hvordan modellen skal oppføre seg), melding = det brukeren sender.
 
     skjema: et JSON-skjema svaret må følge. Brukes av generer_json().
     temperatur: overstyrer innstillingen, f.eks. høyere for nye caser som skal være forskjellige.
+    ollama: overstyrer Ollama-innstillingene for dette kallet, f.eks. {"kontekst": 8192, "tidsgrense_sekunder": 180}
+            når en hel eksamensbesvarelse skal leses (standard kontekst er for liten til det).
     """
     innst = dict(last_innstillinger()["sprakmodell"])
+    if ollama:
+        innst["ollama"] = {**innst["ollama"], **ollama}
     if temperatur is not None:
         innst["temperatur"] = temperatur
     leverandor = innst["leverandor"]
@@ -55,13 +60,14 @@ def generer(system: str, melding: str, skjema: dict | None = None, temperatur: f
     raise ValueError(f"Ukjent leverandør i innstillinger.yaml: {leverandor!r} (bruk ollama eller anthropic)")
 
 
-def generer_json(system: str, melding: str, skjema: dict, temperatur: float | None = None) -> dict:
+def generer_json(system: str, melding: str, skjema: dict, temperatur: float | None = None,
+                 ollama: dict | None = None) -> dict:
     """Som generer(), men svaret er strukturert data (dict) i stedet for fri tekst.
 
     Ollama tvinges til å følge skjemaet (structured outputs). Claude får skjemaet i
     instruksen. Eventuelle ```json-gjerder rundt svaret fjernes før tolkning.
     """
-    tekst = generer(system, melding, skjema, temperatur).strip()
+    tekst = generer(system, melding, skjema, temperatur, ollama).strip()
     tekst = re.sub(r"^```(?:json)?\s*|\s*```$", "", tekst)
     return json.loads(tekst)
 
@@ -82,7 +88,8 @@ def _ollama(system: str, melding: str, innst: dict, skjema: dict | None = None) 
             ],
             # Lav temperatur = mindre tilfeldighet. Vi vil ha saklige svar, ikke kreative.
             # num_predict: øvre grense for svarets lengde, så modellen aldri kan gå i løkke.
-            options={"temperature": innst["temperatur"], "num_predict": innst["ollama"].get("maks_tokens", 1500)},
+            options={"temperature": innst["temperatur"], "num_predict": innst["ollama"].get("maks_tokens", 1500),
+                     **({"num_ctx": innst["ollama"]["kontekst"]} if innst["ollama"].get("kontekst") else {})},
             # Tenkende modeller skriver skjult resonnering før svaret. Det koster tid.
             think=innst["ollama"].get("tenkning"),
             format=skjema,   # None = fri tekst, ellers må svaret følge JSON-skjemaet
