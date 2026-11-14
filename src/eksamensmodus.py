@@ -3,9 +3,11 @@
 To slags caser:
   tidligere  en ekte eksamenscase fra pensum (config/signaler_{fag}.yaml). Fasiten er modellene
              sensorveiledningen, løsningsforslaget eller A-besvarelsen brukte, med grunnen til hver.
-  nyhet      en fersk nyhetssak (src/nyheter.py) med tre oppgaver formulert som på eksamen. Fasiten er
-             modellene oppgaveordene peker på i signalkatalogen. Det finnes ingen sensorveiledning til
-             en nyhetssak, så rettingen sier hvilke modeller oppgavene ber om, ikke hva som er «riktig svar».
+  nyhet      en nyhetssak som boten velger selv. Først fra casebanken (config/nyhetscaser.yaml): utvalgte
+             saker fra de siste årene, med tre oppgaver skrevet til hver sak og modellene oppgavene er
+             skrevet for. Er banken brukt opp, velger språkmodellen en fersk sak (src/nyheter.py), og den
+             får oppgaver fra en mal. Det finnes ingen sensorveiledning til en nyhetssak, så rettingen
+             sier hvilke modeller oppgavene ber om, ikke hva som er «riktig svar».
 
 Rettingen gjøres i Python, så den er lik hver gang:
   - hver modell i fasiten: er den brukt (navnet, eller minst to av elementene, står i besvarelsen)?
@@ -22,6 +24,9 @@ import argparse
 import random
 import re
 from collections import Counter
+from functools import lru_cache
+
+import yaml
 from dataclasses import dataclass, field
 
 from src import nyheter, signaler
@@ -178,7 +183,52 @@ def fra_nyhet(fag: str, n: nyheter.Nyhet, rng: random.Random | None = None, hvem
                         hvorfor)
 
 
-# ---------- boten velger nyhetssaken ----------
+# ---------- casebanken: utvalgte nyhetssaker med oppgaver skrevet til hver sak ----------
+
+BANKFIL = signaler.ROT / "config" / "nyhetscaser.yaml"
+
+
+@lru_cache(maxsize=1)
+def _bank() -> dict:
+    return (yaml.safe_load(BANKFIL.read_text(encoding="utf-8")) or {}) if BANKFIL.exists() else {}
+
+
+def bank(fag: str) -> list[dict]:
+    """Sakene i casebanken for faget."""
+    return _bank().get(fag) or []
+
+
+def fra_bank(fag: str, sak: dict) -> Eksamenscase | None:
+    """En sak fra casebanken som case. None hvis artikkelen ikke lenger kan hentes hos kilden."""
+    n = nyheter.Nyhet(sak["tittel"], "", sak["lenke"], sak["kilde"], str(sak.get("dato") or ""))
+    tekst = nyheter.artikkel(n)
+    for stopp in sak.get("kutt_ved") or []:          # det som står etter dette, hører ikke til saken
+        tekst = tekst.split(stopp)[0].strip()
+    if not tekst:
+        return None
+    punkter, sett = [], set()
+    for nr, o in enumerate(sak["oppgaver"], start=1):
+        for m in o["modeller"]:
+            if m not in sett:
+                sett.add(m)
+                punkter.append(Punkt(m, o["hvorfor"], f"oppgave {nr}"))
+    return Eksamenscase(fag, "nyhet", f"Nyhetscase: {sak['tittel']}", tekst, [o["tekst"] for o in sak["oppgaver"]],
+                        punkter, {}, f"{n.kilde}, {n.dato} (fasit: modellene oppgavene er skrevet for)", n.lenke,
+                        sak.get("hvorfor", ""))
+
+
+def _fra_banken(fag: str, unnga, dekket, rng: random.Random) -> Eksamenscase | None:
+    """Saken i banken du ikke har fått før, og som øver flest modeller du ennå ikke har brukt riktig på en case."""
+    ledige = [s for s in bank(fag) if s["tittel"] not in unnga]
+    rng.shuffle(ledige)                              # tilfeldig blant de som står likt
+    nye = lambda s: len({m for o in s["oppgaver"] for m in o["modeller"]} - set(dekket))
+    for sak in sorted(ledige, key=nye, reverse=True)[:MAKS_HENTINGER]:
+        if case := fra_bank(fag, sak):
+            return case
+    return None
+
+
+# ---------- boten velger en fersk nyhetssak ----------
 
 KANDIDATER = 15                  # så mange saker får språkmodellen velge blant
 MAKS_HENTINGER = 8               # så mange artikler prøves før boten gir opp (saker bak betalingsmur gir ingen tekst)
@@ -235,9 +285,15 @@ def ranger_nyheter(fag: str, saker: list[nyheter.Nyhet]) -> list[Valg]:
     return ut + [Valg(n, hvorfor=nod) for nr, n in enumerate(saker, start=1) if nr not in brukt]
 
 
-def velg_nyhet(fag: str, unnga=(), rng: random.Random | None = None, ferske: bool = False) -> Eksamenscase | None:
-    """Boten velger selv en fersk sak som passer faget, og lager casen. unnga er titler du allerede har fått.
-    None hvis det ikke finnes nyheter, eller ingen av sakene lar seg hente."""
+def velg_nyhet(fag: str, unnga=(), rng: random.Random | None = None, ferske: bool = False,
+               dekket=()) -> Eksamenscase | None:
+    """Boten velger selv en nyhetssak som passer faget, og lager casen. unnga er titler du allerede har fått,
+    dekket er modeller du allerede har brukt riktig på en case.
+    Casebanken brukes først: der er oppgavene skrevet til saken. Er den brukt opp, velger språkmodellen en
+    fersk sak. None hvis ingen sak lar seg hente."""
+    rng = rng or random.Random()
+    if case := _fra_banken(fag, unnga, dekket, rng):
+        return case
     kandidater = [n for n in nyheter.for_fag(fag, KANDIDATER + len(unnga), ferske) if n.tittel not in unnga][:KANDIDATER]
     for v in ranger_nyheter(fag, kandidater)[:MAKS_HENTINGER]:
         if case := fra_nyhet(fag, v.nyhet, rng, v.virksomhet, v.hvorfor):

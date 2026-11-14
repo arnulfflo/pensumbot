@@ -1,0 +1,355 @@
+# Casebanken: utvalgte nyhetssaker fra de siste årene som egner seg som eksamenscase, med oppgaver skrevet til hver sak.
+#
+# Boten velger herfra først når du ber om en nyhetssak i eksamensmodus (se src/eksamensmodus.py). Sakene er valgt
+# fordi de handler om én virksomhet i en situasjon pensum kan brukes på, og fordi de kan leses uten abonnement.
+# Artikkelteksten ligger ikke her: den hentes fra kilden første gang saken brukes, og lagres i data/nyheter/.
+#
+# Felt per sak:
+#   tittel      overskriften hos kilden          lenke, kilde, dato   hvor saken står
+#   virksomhet  den oppgavene handler om         hvorfor              hvorfor saken egner seg (vises under casen)
+#   oppgaver    tre oppgaver formulert som på eksamen. Hver har modellene oppgaven er skrevet for (fasiten)
+#               og en setning om hvorfor de hører hjemme. Modellnavnene må stå i modellarket for faget.
+# Legg gjerne til egne saker. tester/test_eksamensmodus.py sjekker at alle modellnavn finnes.
+
+MRK1001:
+  - tittel: "Stadig flere stanser salg av Freia-produkter – Coop ber om hastemøte"
+    lenke: https://e24.no/naeringsliv/i/abkkoA/hotellkjeder-og-flyselskaper-stanser-salg-av-freia-produkter
+    kilde: E24
+    dato: 2023-06-10
+    virksomhet: 'Freia'
+    hvorfor: 'En sterk merkevare som rammes av en boikott den ikke har skapt selv. Viser interessentene rundt en bedrift bedre enn noen lærebokcase.'
+    oppgaver:
+      - tekst: 'Analyser situasjonen Freia står i. Bruk relevant teori om bedriftens omgivelser.'
+        modeller: ["Tre delsystemer: mikro, interessent og makro", Markedsførerens eksterne arbeidsbetingelser, SWOT-analyse]
+        hvorfor: 'Presset kommer fra interessenter (kunder, kjeder, myndigheter) og makroforhold (krig og politikk), ikke fra konkurrentene.'
+      - tekst: 'Vurder hva boikotten kan gjøre med merkevaren Freia, og forklar hvordan du ville målt om merkestyrken er svekket.'
+        modeller: [Fire modeller for merkevaren, Psykologiske produktfordeler, Tre måter å måle merkevarekapital]
+        hvorfor: 'Freia lever av det kundene føler for merket. Oppgaven spør både om merkevaren og om hvordan merkestyrke måles.'
+      - tekst: 'Hva bør Freia gjøre for å beholde kundene og tilliten? Gi en begrunnet anbefaling.'
+        modeller: [Seks områder for samfunnsansvar (Sen og Bhattacharya), Etikk i markedsføring (Hunt og Vittel), Offensiv og defensiv strategi og byttebarrierer]
+        hvorfor: 'Saken handler om samfunnsansvar og etikk, og målet er å holde på kundene man har (defensiv strategi).'
+
+  - tittel: "Norgesgruppen ble tatt på senga av Normal – svaret øyner en halv milliard"
+    lenke: https://e24.no/naeringsliv/i/dw2dEz/norgesgruppen-ble-tatt-paa-senga-av-normal-svaret-oeyner-en-halv-milliard
+    kilde: E24
+    dato: 2023-09-03
+    virksomhet: 'Norgesgruppen'
+    hvorfor: 'En ny konkurrent angriper der de etablerte tjener mest. Gir en ryddig bransjeanalyse og en tydelig vekstbeslutning å vurdere.'
+    oppgaver:
+      - tekst: 'Gjør en situasjonsanalyse av markedet for «bredt vareutvalg», sett fra Norgesgruppen.'
+        modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", SWOT-analyse, Konkurranseformer]
+        hvorfor: 'Normal er en nyetablerer som endrer konkurransen i en bransje med få, store aktører.'
+      - tekst: 'Normal selger kjente merkevarer billigere enn dagligvarekjedene. Bruk teori om pris til å forklare hvorfor det rammer kjedene så hardt.'
+        modeller: [Prisnivå i forhold til markedsprisen, Skimming og penetrasjonspris, Konkurranseorienterte priser, Priselastisitet]
+        hvorfor: 'Kjedene har tatt høy pris på hygienevarer for å finansiere lave priser andre steder. Normal legger seg under markedsprisen.'
+      - tekst: 'Norgesgruppen svarer med Dollarstore og Gigaboks. Vurder dette som vekststrategi, og gi et faglig råd.'
+        modeller: [Ansoffs ekspansjonsmatrise, Sortimentets tre dimensjoner, Strategiklokken (Faulkner og Bowman)]
+        hvorfor: 'Nye kjeder og nytt sortiment er vekst i Ansoff, og konseptene må plasseres på pris og opplevd verdi.'
+
+  - tittel: "XXLs nye eiere: – Det har handlet om å slukke branner"
+    lenke: https://e24.no/naeringsliv/i/7p6p78/xxls-nye-eiere-det-har-handlet-om-aa-slukke-branner
+    kilde: E24
+    dato: 2026-03-16
+    virksomhet: 'XXL'
+    hvorfor: 'En kjede som har tapt markedsandeler og penger, med nye eiere som vil legge om strategien. Likner Kari Traa-casen i oppbygning.'
+    oppgaver:
+      - tekst: 'Gjør en situasjonsanalyse for XXL.'
+        modeller: [SWOT-analyse, "Porters bransjeanalyse (fem krefter, utvidet)", Markedsførerens eksterne arbeidsbetingelser]
+        hvorfor: 'Situasjonsanalysen skal dekke både XXL selv og markedet rundt, med leverandørene og konkurrentene.'
+      - tekst: 'Gjør en vurdering av posisjoneringsstrategien til XXL, og gi et faglig råd.'
+        modeller: [Persepsjonskart, Psykologiske produktfordeler, Strategiklokken (Faulkner og Bowman)]
+        hvorfor: 'XXL har stått for lav pris og bredt utvalg. Spørsmålet er hvor kjeden står i kundenes hode sammenlignet med konkurrentene.'
+      - tekst: 'Ledelsen vil ha lønnsomhet fremfor omsetning. Anbefal en markedsstrategi, og vis hva den betyr for sortiment, pris og kampanjer.'
+        modeller: [Marketing mix (5 P), Sortimentets tre dimensjoner, Rabattpolitikk]
+        hvorfor: 'Anbefalingen må bli konkret i virkemidlene, og kampanjene har spist av marginene.'
+
+  - tittel: "Nå er en av fem elbiler kinesiske: – Du får mye mer for pengene"
+    lenke: https://e24.no/internasjonal-oekonomi/i/0VPxRA/naa-er-en-av-fem-elbiler-kinesiske-du-faar-mye-mer-for-pengene
+    kilde: E24
+    dato: 2025-10-05
+    virksomhet: 'de kinesiske elbilmerkene'
+    hvorfor: 'Et kjøp med høy involvering der nye, ukjente merker vinner frem. God til forbrukeratferd og spredning av nye produkter.'
+    oppgaver:
+      - tekst: 'Ta utgangspunkt i teori om forbrukeratferd, og forklar hvordan en kunde som taxisjåføren i saken velger bil.'
+        modeller: ["EKB-modellen: forbrukerens kjøpsprosess", Fishbeins holdningsmodell, Forhold som påvirker kjøpsatferden (Kotler og Keller)]
+        hvorfor: 'Bilkjøp er et kjøp med høy involvering. Kunden går gjennom hele kjøpsprosessen og veier egenskaper mot hverandre.'
+      - tekst: 'Hvem kjøper et nytt og ukjent bilmerke først, og hva skal til for at flertallet følger etter?'
+        modeller: [Diffusjon av innovasjoner (Rogers), Adopsjonsprosessen, Segmenteringsvariabler]
+        hvorfor: 'Spørsmålet er hvordan et nytt produkt sprer seg fra de første kjøperne til resten av markedet.'
+      - tekst: 'Du er markedssjef for et etablert bilmerke som mister kunder til de kinesiske. Hvordan bør merket forsvare posisjonen sin?'
+        modeller: [Psykologiske produktfordeler, Persepsjonskart, Offensiv og defensiv strategi og byttebarrierer]
+        hvorfor: 'Et etablert merke forsvarer seg med det kundene forbinder med merket, og ved å holde på kundene det har.'
+
+  - tittel: "Nytt prisgrep fra Rema 1000: – Gøy å angripe som utfordrer"
+    lenke: https://e24.no/naeringsliv/i/y6W2B2/nytt-prisgrep-fra-rema-1000-goey-aa-angripe-som-utfordrer
+    kilde: E24
+    dato: 2024-01-29
+    virksomhet: 'Rema 1000'
+    hvorfor: 'En priskrig mellom tre lavpriskjeder, fortalt av den som nettopp har mistet førsteplassen. Passer kapittel 9 om pris.'
+    oppgaver:
+      - tekst: 'Bruk teori om pris til å vurdere priskuttene til Rema 1000.'
+        modeller: [Mål for prispolitikken, Konkurranseorienterte priser, Priselastisitet, Prisnivå i forhold til markedsprisen]
+        hvorfor: 'Rema setter pris ut fra konkurrentene. Du må si hva målet med prisen er, og om kundene reagerer på prisendringen.'
+      - tekst: 'Analyser konkurransesituasjonen i dagligvaremarkedet.'
+        modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", Konkurranseformer]
+        hvorfor: 'Tre store handelshus og mektige leverandører gir en bransje der rivaliseringen og forhandlingsmakten er lett å vise.'
+      - tekst: 'Rema 1000 vil ta tilbake markedsandeler. Hva kan kjeden gjøre i tillegg til å kutte priser?'
+        modeller: [Ansoffs ekspansjonsmatrise, Marketing mix (5 P), Fem differensieringsområder]
+        hvorfor: 'Oppgaven ber om vekst, og om andre virkemidler enn pris når alle tre kjedene sier de er billigst.'
+
+  - tittel: "Knuser konkurrentene: Nå er Kiwi landets største kjede"
+    lenke: https://e24.no/naeringsliv/i/AP51Mq/knuser-konkurrentene-naa-er-kiwi-landets-stoerste-kjede
+    kilde: E24
+    dato: 2023-07-11
+    virksomhet: 'Meny'
+    hvorfor: 'Lavpriskjedene vokser mens supermarkedet Meny faller. Du må velge hvem Meny skal være for, og det er kjernen i STP.'
+    oppgaver:
+      - tekst: 'Gjør en vurdering av markedssituasjonen for Meny.'
+        modeller: [SWOT-analyse, "Porters bransjeanalyse (fem krefter, utvidet)", Markedsførerens eksterne arbeidsbetingelser]
+        hvorfor: 'Meny taper andeler i et marked der dyrtid har gjort kundene mer opptatt av pris.'
+      - tekst: 'Hvilke segmenter bør Meny satse på? Gi en begrunnet anbefaling.'
+        modeller: [Segmenteringsvariabler, Segmenteringskriterier, Målrettingsstrategier, STP-rammeverket]
+        hvorfor: 'Meny kan ikke vinne alle. Du må dele markedet, vurdere segmentene og velge.'
+      - tekst: 'Hvordan bør Meny posisjonere seg mot lavpriskjedene?'
+        modeller: [Persepsjonskart, Strategiklokken (Faulkner og Bowman), Fem differensieringsområder]
+        hvorfor: 'Meny kan ikke være billigst, og må derfor skille seg ut på noe annet enn pris.'
+
+  - tittel: "Moteekspert om Moods-konkursen: Alle har sin storhetstid"
+    lenke: https://www.nrk.no/kultur/moteekspert-om-moods-konkursen_-alle-har-sin-storhetstid-1.13698553
+    kilde: NRK
+    dato: 2017-09-20
+    virksomhet: 'Moods of Norway'
+    hvorfor: 'En merkevare som ble en folkelig suksess og så gikk konkurs. Viser livssyklusen til et motemerke fra start til slutt.'
+    kutt_ved: ["Britisk politi bekrefter"]
+    oppgaver:
+      - tekst: 'Bruk teori om produkters levetid til å forklare utviklingen til Moods of Norway.'
+        modeller: [Produktets livssyklus (PLC), "Classics, trends og fads", Diffusjon av innovasjoner (Rogers)]
+        hvorfor: '«Alle har sin storhetstid» er livssyklusen sagt med andre ord, og spørsmålet er om Moods var en trend eller en fad.'
+      - tekst: 'Vurder merkevaren Moods of Norway. Hva var styrken, og hva skjedde med den?'
+        modeller: [Fire modeller for merkevaren, Psykologiske produktfordeler, Co-branding og merkevareutvidelser]
+        hvorfor: 'Merket hadde et tydelig og særegent uttrykk, og ble strukket til stadig flere produkter og markeder.'
+      - tekst: 'Gründerne kjøper konkursboet og vil starte på nytt. Hvordan bør de reposisjonere merket?'
+        modeller: [Persepsjonskart, Målrettingsstrategier, Marketing mix (5 P), Tre produktnivåer]
+        hvorfor: 'Reposisjonering betyr å velge målgruppe på nytt og endre hvordan merket oppfattes, og det må vises i virkemidlene.'
+
+  - tittel: "Temu-ekspert advarer norske butikker: – Dere er ikke klare"
+    lenke: https://e24.no/naeringsliv/i/zAaRor/temu-ekspert-advarer-norske-butikker-dere-er-ikke-klare
+    kilde: E24
+    dato: 2025-09-20
+    virksomhet: 'en norsk butikkjede'
+    hvorfor: 'En utenlandsk nettaktør som endrer spillereglene for norsk varehandel. God til trusselanalyse og forbrukeratferd på nett.'
+    oppgaver:
+      - tekst: 'Analyser trusselen Temu utgjør for en norsk butikkjede.'
+        modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", Trussel- og mulighetsmatrisen, "Tre delsystemer: mikro, interessent og makro"]
+        hvorfor: 'Temu er en ny konkurrent, og toll og regler (makro) avgjør hvor sterk trusselen blir.'
+      - tekst: 'Eksperten sier at halvparten av varene var «søppel», og at det er «litt som gambling». Forklar med teori om forbrukeratferd hvorfor kundene handler der likevel.'
+        modeller: ["EKB-modellen: forbrukerens kjøpsprosess", Atferdseffekter (Ariely), System 1 og system 2 (Kahneman), Forbrukeratferd på nett]
+        hvorfor: 'Lav pris og spillfølelse gir kjøp med lav involvering, der kunden handler raskt og ikke helt rasjonelt.'
+      - tekst: 'Hva bør en norsk butikkjede gjøre for å møte konkurransen? Anbefal en strategi.'
+        modeller: [Strategiklokken (Faulkner og Bowman), Fem differensieringsområder, Tre strategiske valg for netthandel]
+        hvorfor: 'Kjeden kan ikke vinne på pris, og må velge hvordan den skal skille seg ut og hva den skal gjøre på nett.'
+
+  - tittel: "Norsk suksess vekker oppsikt: – En sinnssyk reise"
+    lenke: https://e24.no/teknologi/i/B0zXE0/norsk-suksess-vekker-oppsikt-en-sinnssyk-reise
+    kilde: E24
+    dato: 2024-11-30
+    virksomhet: 'Remarkable'
+    hvorfor: 'Et norsk teknologiprodukt som selger i hele verden til høy pris. Passer produkt, innovasjon og prisstrategi.'
+    oppgaver:
+      - tekst: 'Vurder produktet til Remarkable med utgangspunkt i produktstrategi.'
+        modeller: [Tre produktnivåer, Produktutviklingsmodellen, Fire inndelinger av innovasjoner]
+        hvorfor: 'Produktet er bygget rundt én kjernefordel, og historien i saken er en produktutvikling fra idé til lansering.'
+      - tekst: 'Hvem er kundene til Remarkable i dag, og hva skal til for å nå det store flertallet?'
+        modeller: ["Avgrunnen (Moore, Crossing the Chasm)", Diffusjon av innovasjoner (Rogers), Segmenteringsvariabler, STP-rammeverket]
+        hvorfor: 'Et høyteknologiprodukt må over avgrunnen mellom de tidlige brukerne og flertallet.'
+      - tekst: 'Remarkable tar en høy pris. Vurder prisstrategien.'
+        modeller: [Skimming og penetrasjonspris, Prisnivå i forhold til markedsprisen, Psykologiske produktfordeler]
+        hvorfor: 'En høy pris ved lansering er skimming, og den må bæres av det kundene opplever at merket gir dem.'
+
+  - tittel: "Oda fortsatte veksten i fjor – sender stikk til Meny"
+    lenke: https://e24.no/naeringsliv/i/mQV8zl/oda-fortsatte-veksten-i-fjor-sender-stikk-til-meny
+    kilde: E24
+    dato: 2023-03-25
+    virksomhet: 'Oda'
+    hvorfor: 'En ren nettaktør mot kjeder som har netthandel som tilleggstjeneste. Passer distribusjon, segmentering og kundelojalitet.'
+    oppgaver:
+      - tekst: 'Sammenlign hvordan Oda og Meny når kundene, med utgangspunkt i teori om distribusjon.'
+        modeller: [Distribusjonsveier, Tre strategiske valg for netthandel, Distribusjonsstrategiens 6 C-er]
+        hvorfor: 'Oda selger bare på nett, mens Meny har netthandel ved siden av butikkene. Det er to ulike valg av kanal.'
+      - tekst: 'Hvilke segmenter bør Oda satse på? Gi en begrunnet anbefaling.'
+        modeller: [Segmenteringsvariabler, Segmenteringskriterier, CLV – kundens livstidsverdi]
+        hvorfor: 'Hjemlevering passer ikke alle. Segmentene må være store og lønnsomme nok, og en fast kunde er verdt mye over tid.'
+      - tekst: 'Oda har investert i lave priser for å få flere kunder. Hvordan bør Oda gå frem for å beholde dem?'
+        modeller: [Fire nivåer av lojalitet (Oliver), Kundetilfredshet og forventningsbrøken, Relasjonsfremmende insentiver]
+        hvorfor: 'Kunder som kom for prisen, er ikke lojale ennå. Lojalitet bygges av tilfredshet og av grunner til å bli.'
+
+  - tittel: "Klarna inn i Vipps – Blivakker-gründer kritisk"
+    lenke: https://e24.no/naeringsliv/i/739oxv/klarna-inn-i-vipps-blivakker-grunder-kritisk
+    kilde: E24
+    dato: 2025-11-11
+    virksomhet: 'Vipps'
+    hvorfor: 'To betalingstjenester som samarbeider, og nettbutikker som er kunder og kritikere på samme tid. En av få saker som passer bedriftsmarkedet (kapittel 5).'
+    oppgaver:
+      - tekst: 'Gjør en situasjonsanalyse for Vipps i markedet for betaling på nett.'
+        modeller: ["Porters bransjeanalyse (fem krefter, utvidet)", SWOT-analyse]
+        hvorfor: 'Vipps møter store internasjonale konkurrenter og sier selv at konkurransen er «kjempetøff».'
+      - tekst: 'Nettbutikkene er kundene til Vipps og Klarna. Bruk teori om bedriftsmarkedet til å forklare hvordan en nettbutikk som Blivakker velger betalingsløsning.'
+        modeller: [Kjøpskriterier på bedriftsmarkedet (Selnes), Kjøpssenteret (Bonoma), Forhandlingsmakt i kunde–leverandørforhold (Hollensen)]
+        hvorfor: 'Kunden er en bedrift, ikke en forbruker. Da gjelder andre kjøpskriterier, flere beslutningstakere og et maktforhold.'
+      - tekst: 'Vurder samarbeidet mellom Vipps og Klarna. Hva kan det gjøre med merkevaren Vipps?'
+        modeller: [Co-branding og merkevareutvidelser, Fire modeller for merkevaren, Psykologiske produktfordeler]
+        hvorfor: 'Når to merker vises sammen, smitter det kundene forbinder med det ene, over på det andre.'
+
+ORG1100:
+  - tittel: "Ansatt-opprør i DNB: «Corporate BS»"
+    lenke: https://e24.no/boers-og-finans/i/xrVWmj/ansatt-opproer-i-dnb-corporate-bs
+    kilde: E24
+    dato: 2026-08-17
+    virksomhet: 'DNB'
+    hvorfor: 'En beslutning ledelsen har rett til å ta, og som likevel skaper opprør. Passer motivasjon, styringsrett og endringsledelse.'
+    oppgaver:
+      - tekst: 'Drøft hvordan beslutningen om hjemmekontor kan påvirke motivasjonen til de ansatte i DNB.'
+        modeller: ["Selvbestemmelsesteorien: tre psykologiske behov", "Selvbestemmelseskontinuumet: indre og ytre motivasjon", Herzbergs tofaktorteori, Jobbkarakteristikamodellen (Hackman og Oldham)]
+        hvorfor: 'Hjemmekontor handler om autonomi. De ansatte mister noe de har hatt, og det rammer både indre motivasjon og hygienefaktorene.'
+      - tekst: 'Analyser beslutningen fra et ledelsesperspektiv. Hvilken rett og hvilken makt har ledelsen, og hvilket syn på de ansatte ligger bak?'
+        modeller: [Arbeidsgivers styringsrett, Åtte kilder til makt (French og Raven m.fl.), Teori X og teori Y (McGregor), Oppgave- og relasjonsorientert ledelse (Ohio State og Michigan)]
+        hvorfor: 'Ledelsen bruker styringsretten og legitim makt. Kravet om å være på kontoret kan leses som mistillit (teori X).'
+      - tekst: 'Hvordan burde DNB ha gjennomført endringen? Bruk teori om endring.'
+        modeller: [Kotters åtte steg, Endringsreaksjoner (Meyer og Stensaker), Psykologisk kontrakt, Fire former for rettferdighet i organisasjoner]
+        hvorfor: 'De ansatte reagerer på begrunnelsen og prosessen, ikke bare på resultatet. Det er et brudd på den psykologiske kontrakten.'
+
+  - tittel: "To uker etter innføring av Helseplattformen på St. Olav: – Sover dårlig om natta"
+    lenke: https://www.nrk.no/trondelag/to-uker-etter-innforing-av-helseplattformen-pa-st.-olav_-_-sover-darlig-om-natta-1.16194674
+    kilde: NRK
+    dato: 2022-11-25
+    virksomhet: 'St. Olavs hospital'
+    hvorfor: 'En stor endring som ble innført tross advarsler fra de ansatte. Likner Norsk Tipping-casen: beslutninger og konsekvensene av dem.'
+    oppgaver:
+      - tekst: 'Diskuter med utgangspunkt i pensumteori beslutningen om å innføre Helseplattformen, og hvilke konsekvenser den fikk.'
+        modeller: [Den rasjonelle beslutningsmodellen, Feilkilder og feller i beslutninger, Tre typer beslutninger]
+        hvorfor: 'Innføringen ble utsatt én gang og så gjennomført tross advarsler. Det åpner for feller som eskalering og gruppetenkning.'
+      - tekst: 'Analyser innføringen som en endringsprosess. Hva gikk galt?'
+        modeller: [Lewins tretrinnsmodell, Kotters åtte steg, Utfordringer ved omstilling, Endringskurven (Scott og Jaffe)]
+        hvorfor: 'Et nytt journalsystem er en episodisk endring som må forankres, og de ansatte er midt i motstands- og utforskingsfasen.'
+      - tekst: 'Drøft hvordan arbeidssituasjonen påvirker de ansatte, og hva ledelsen kan gjøre.'
+        modeller: [Krav–kontroll-modellen (Karasek), Krav–ressurs-modellen (Bakker og Demerouti)]
+        hvorfor: 'Høye krav og lav kontroll over eget arbeid gir stress. Ledelsen kan senke kravene eller øke ressursene.'
+
+  - tittel: "Forsket på Helseplattformen: Flere ansatte vurderte å slutte"
+    lenke: https://www.nrk.no/trondelag/forsket-pa-helseplattformen_-flere-ansatte-vurderte-a-slutte-1.17746008
+    kilde: NRK
+    dato: 2026-02-03
+    virksomhet: 'St. Olavs hospital'
+    hvorfor: 'Forskning på hva en mislykket innføring gjorde med de ansatte. Passer jobbtilfredshet, læring og ledelse i etterkant.'
+    oppgaver:
+      - tekst: 'Bruk teori om jobbtilfredshet og jobbengasjement til å forklare funnene i undersøkelsen.'
+        modeller: [Krav–kontroll-modellen (Karasek), Krav–ressurs-modellen (Bakker og Demerouti), Herzbergs tofaktorteori]
+        hvorfor: 'Utbrenthet og ønske om å slutte er det modellene forutsier når kravene øker og verktøyene svikter.'
+      - tekst: 'Drøft hva sykehuset kan lære av innføringen, og hva som kan hindre læringen.'
+        modeller: [Enkelt- og dobbeltkretslæring (Argyris og Schön), Kolbs læringssirkel]
+        hvorfor: 'Å rette feil i systemet er enkeltkretslæring. Å spørre om beslutningen og prosessen var riktig, er dobbeltkretslæring.'
+      - tekst: 'Hva bør ledelsen gjøre nå for å vinne tilbake tilliten til de ansatte?'
+        modeller: [Sti–mål-teorien (House), Situasjonsbestemt ledelse (Hersey og Blanchard), Psykologisk kontrakt, Endringsreaksjoner (Meyer og Stensaker)]
+        hvorfor: 'Lederen må tilpasse støtten til situasjonen de ansatte står i, og reparere en brutt psykologisk kontrakt.'
+
+  - tittel: "Forsvarssjefen kommenterte kritikken: – Det er et kulturproblem"
+    lenke: https://www.nrk.no/norge/forsvarssjefen-kommenterte-kritikken_-_-det-er-et-kulturproblem-1.16303944
+    kilde: NRK
+    dato: 2023-02-19
+    virksomhet: 'Forsvaret'
+    hvorfor: 'Lederen sier selv at det er et kulturproblem, men ikke en ukultur. Det er en invitasjon til å bruke kulturteorien presist.'
+    oppgaver:
+      - tekst: 'Analyser og diskuter organisasjonskulturen i Forsvaret slik den kommer frem i saken. Er det én kultur eller flere?'
+        modeller: ["Kulturinnhold: verdier, normer og virkelighetsoppfatninger", Fire typer kulturuttrykk, Integrasjons- og differensieringsperspektivet på kultur]
+        hvorfor: 'Forsvarssjefen skiller mellom hele Forsvaret og deler av det. Det er integrasjons- mot differensieringsperspektivet.'
+      - tekst: 'Drøft hvorfor det kan være vanskelig å varsle i en organisasjon som Forsvaret.'
+        modeller: [Åtte kilder til makt (French og Raven m.fl.), Fire former for rettferdighet i organisasjoner, Konstruktiv og destruktiv ledelse]
+        hvorfor: 'Varslere står overfor ledere med stor makt, og opplever at saken ikke behandles rettferdig.'
+      - tekst: 'Hvordan kan ledelsen endre kulturen?'
+        modeller: [Kulturendring (Stensaker og Sverdrup), Kotters åtte steg, Enkelt- og dobbeltkretslæring (Argyris og Schön)]
+        hvorfor: 'Kultur endres langsomt og krever at organisasjonen stiller spørsmål ved egne grunnleggende antakelser.'
+
+  - tittel: "Tesla-ansatte organiserer seg i hemmelighet"
+    lenke: https://www.nrk.no/norge/tesla-ansatte-organiserer-seg-i-hemmelighet-1.16641657
+    kilde: NRK
+    dato: 2023-11-21
+    virksomhet: 'Tesla'
+    hvorfor: 'Et amerikansk selskap som møter den norske arbeidslivsmodellen. Passer oppgavene om nasjonal kultur og den nordiske modellen.'
+    oppgaver:
+      - tekst: 'Drøft med utgangspunkt i teori hvordan nasjonal kultur og den norske modellen påvirker situasjonen i Tesla.'
+        modeller: [Hofstedes kulturdimensjoner, Den nordiske modellen og trepartssamarbeidet, Arbeidsgivers styringsrett]
+        hvorfor: 'Teslas syn på fagforeninger kommer fra en annen nasjonal kultur enn den norske, der partssamarbeidet er en del av modellen.'
+      - tekst: 'Analyser ledelsen i Tesla slik de ansatte beskriver den.'
+        modeller: [Konstruktiv og destruktiv ledelse, Teori X og teori Y (McGregor), Oppgave- og relasjonsorientert ledelse (Ohio State og Michigan)]
+        hvorfor: 'De ansatte beskriver press og mistillit, altså en sterkt oppgaveorientert ledelse med et teori X-syn på medarbeiderne.'
+      - tekst: 'Drøft konflikten mellom ledelsen og de ansatte, og hvordan den kan håndteres.'
+        modeller: [Glasls konflikttrapp, Sakskonflikt og relasjonskonflikt, Fem konflikthåndteringsstiler, Psykologisk kontrakt]
+        hvorfor: 'Konflikten har gått fra sak til relasjon og trappet seg opp, og de ansatte opplever at forventningene deres er brutt.'
+
+  - tittel: "Ansatte i ulykkesrammede Boeing fleipet om sikkerhet"
+    lenke: https://www.nrk.no/urix/ansatte-i-ulykkesrammede-boeing-fleipet-om-sikkerhet-1.14855168
+    kilde: NRK
+    dato: 2020-01-11
+    virksomhet: 'Boeing'
+    hvorfor: 'Interne meldinger viser kulturen bak to ulykker. Likner Norsk Tipping-casen: en alvorlig feil som ble innledet av flere andre.'
+    oppgaver:
+      - tekst: 'Analyser og diskuter organisasjonskulturen i Boeing slik den kommer frem i de interne meldingene.'
+        modeller: ["Kulturinnhold: verdier, normer og virkelighetsoppfatninger", Fire typer kulturuttrykk, Competing Values Framework (CVF)]
+        hvorfor: 'Meldingene er kulturuttrykk som viser hvilke verdier som faktisk gjaldt, og hva kulturen prioriterte.'
+      - tekst: 'Diskuter med utgangspunkt i beslutningsteori hvordan Boeing kunne levere et fly de ansatte selv ikke stolte på.'
+        modeller: [Feilkilder og feller i beslutninger, Den rasjonelle beslutningsmodellen, System 1- og system 2-tenkning]
+        hvorfor: 'Tidspress og konkurransen med Airbus gir feller som gruppetenkning og eskalering, langt fra den rasjonelle modellen.'
+      - tekst: 'Ulykkene ble innledet av flere advarsler. Drøft hva som hindret Boeing i å lære av dem.'
+        modeller: [Enkelt- og dobbeltkretslæring (Argyris og Schön), Kolbs læringssirkel, Teorier om samfunnsansvar]
+        hvorfor: 'Advarslene ble håndtert enkeltvis uten at noen stilte spørsmål ved målene. Det er fravær av dobbeltkretslæring.'
+
+  - tittel: "Tillitsvalgt i Telenor: – Usaklig av bedriften å sparke faste ansatte"
+    lenke: https://e24.no/naeringsliv/i/JQBoKR/tillitsvalgt-i-telenor-usaklig-av-bedriften-aa-sparke-faste-ansatte
+    kilde: E24
+    dato: 2023-01-24
+    virksomhet: 'Telenor'
+    hvorfor: 'En omorganisering med færre ledere og 200 kutt, der ledelsen og de tillitsvalgte er uenige. Passer struktur, omstilling og den norske modellen.'
+    oppgaver:
+      - tekst: 'Telenor vil ha færre ledere og en flatere struktur. Bruk teori om organisasjonsstruktur til å vurdere endringen.'
+        modeller: [Seks strukturelle forhold ved organisasjoner, Mekanistiske og organiske organisasjoner (Burns og Stalker), Vertikal og horisontal arbeidsdeling, Mintzbergs organisasjonsmodell (fem deler)]
+        hvorfor: 'Færre ledernivåer endrer kontrollspennet og den vertikale arbeidsdelingen, og gjør organisasjonen mer organisk.'
+      - tekst: 'Drøft hvordan nedbemanningen kan påvirke de ansatte som blir igjen.'
+        modeller: [Utfordringer ved omstilling, Endringskurven (Scott og Jaffe), Psykologisk kontrakt, Endringsreaksjoner (Meyer og Stensaker)]
+        hvorfor: 'De som blir igjen, får mer å gjøre og mindre trygghet. Reaksjonene deres avgjør om omstillingen lykkes.'
+      - tekst: 'Drøft rollen til de tillitsvalgte i omstillingen, med utgangspunkt i den norske modellen.'
+        modeller: [Den nordiske modellen og trepartssamarbeidet, Arbeidsgivers styringsrett, Sakskonflikt og relasjonskonflikt]
+        hvorfor: 'Ledelsen har styringsrett, men plikter å drøfte med de tillitsvalgte. Uenigheten er foreløpig en sakskonflikt.'
+
+  - tittel: "Oda sier opp 150 ansatte"
+    lenke: https://e24.no/naeringsliv/i/JbE137/oda-sier-opp-150-ansatte
+    kilde: E24
+    dato: 2024-06-04
+    virksomhet: 'Oda'
+    hvorfor: 'En ny toppsjef snur et vekstselskap til lønnsomhet og sier opp 150. Passer omgivelser, ledelse og motivasjon etter en nedbemanning.'
+    oppgaver:
+      - tekst: 'Drøft hvordan omgivelsene har påvirket Oda.'
+        modeller: [Betingelsesteori (contingency theory), Episodisk og kontinuerlig endring]
+        hvorfor: 'Investorene vil ikke lenger betale for vekst. Organisasjonen må tilpasse seg omgivelsene, og det skjer i ett stort grep.'
+      - tekst: 'Analyser den nye toppsjefen fra et ledelsesperspektiv.'
+        modeller: [Management versus ledelse, Situasjonsbestemt ledelse (Hersey og Blanchard), Kotters åtte steg]
+        hvorfor: 'Poad styrer etter tall og frister (management) i en krise, og må samtidig få organisasjonen med på en ny retning.'
+      - tekst: 'Drøft hvordan ledelsen kan motivere de ansatte som blir igjen.'
+        modeller: [Forventningsteori (Vroom), Rettferdighetsteori (Adams), Psykologisk kontrakt, "Selvbestemmelsesteorien: tre psykologiske behov"]
+        hvorfor: 'De som blir igjen, spør om innsatsen lønner seg og om kollegene ble rettferdig behandlet.'
+
+  - tittel: "Kutter hjemmekontor før omorganisering"
+    lenke: https://e24.no/naeringsliv/i/M7k9Vm/kutter-hjemmekontor-foer-omorganisering
+    kilde: E24
+    dato: 2026-09-14
+    virksomhet: 'Entercard'
+    hvorfor: 'En beskjed sendt på e-post fra HR mens de ansatte venter på en omorganisering. Passer kommunikasjon, usikkerhet og påvirkning.'
+    oppgaver:
+      - tekst: 'Analyser hvordan Entercard kommuniserte beslutningen til de ansatte.'
+        modeller: [Tre aspekter ved kommunikasjon, Sensemaking (Weick), "Retorikk: etos, patos og logos"]
+        hvorfor: 'En felles e-post gir lite rom for dialog. De ansatte må selv skape mening i hva beslutningen betyr.'
+      - tekst: 'Drøft hvordan usikkerheten rundt omorganiseringen påvirker de ansatte.'
+        modeller: [Krav–kontroll-modellen (Karasek), Psykologisk kontrakt, Endringskurven (Scott og Jaffe)]
+        hvorfor: 'De ansatte mister kontroll og vet ikke hva som kommer. Det er starten på endringskurven.'
+      - tekst: 'Hvordan kan de ansatte og fagforeningen påvirke ledelsen i en slik situasjon?'
+        modeller: [Påvirkningsteknikker (Yukl), Åtte kilder til makt (French og Raven m.fl.), Den nordiske modellen og trepartssamarbeidet]
+        hvorfor: 'Fagforeningen har makt gjennom avtaleverket, og kan velge mellom flere måter å påvirke på.'

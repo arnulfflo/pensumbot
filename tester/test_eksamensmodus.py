@@ -211,6 +211,7 @@ def test_uten_spraakmodell_brukes_stikkordrekkefolgen(monkeypatch):
 
 def test_boten_hopper_over_brukte_saker_og_saker_bak_betalingsmur(monkeypatch):
     import src.llm
+    monkeypatch.setattr(eksamensmodus, "bank", lambda fag: [])          # banken er brukt opp: da hentes en fersk sak
     monkeypatch.setattr(nyheter, "for_fag", lambda fag, antall=20, ferske=False: _saker())
     monkeypatch.setattr(src.llm, "generer_json", lambda *a, **k: {"valg": [
         {"nr": 1, "virksomhet": "Rema 1000", "hvorfor": "Lansering av ny kjede."},
@@ -221,3 +222,50 @@ def test_boten_hopper_over_brukte_saker_og_saker_bak_betalingsmur(monkeypatch):
     assert case.hvorfor == "Fall i salget." and "Oda" in case.oppgaver[0] and "virksomheten i saken" not in case.som_tekst
     monkeypatch.setattr(nyheter, "artikkel", lambda n: "")
     assert eksamensmodus.velg_nyhet("MRK1001") is None
+
+
+# ---------- casebanken ----------
+
+@pytest.mark.parametrize("fag", ["MRK1001", "ORG1100"])
+def test_casebanken_har_gyldige_saker(fag):
+    from src.modeller import modeller
+    alle = {m.navn for m in modeller(fag)}
+    saker = eksamensmodus.bank(fag)
+    assert len(saker) >= 8 and len({s["tittel"] for s in saker}) == len(saker)
+    for s in saker:
+        assert nyheter._tillatt(s["lenke"]), f"{s['tittel']}: boten henter bare fra kildene sine"
+        assert s["virksomhet"] and s["hvorfor"] and len(s["oppgaver"]) == 3, s["tittel"]
+        for o in s["oppgaver"]:
+            assert o["tekst"].endswith((".", "?")) and o["hvorfor"] and 2 <= len(o["modeller"]) <= 4, o["tekst"]
+            assert set(o["modeller"]) <= alle, f"{s['tittel']}: {set(o['modeller']) - alle} står ikke i modellarket"
+
+
+def test_boten_velger_banksaken_som_ovr_flest_nye_modeller(monkeypatch):
+    lag = lambda tittel, *modeller: {"tittel": tittel, "lenke": "https://e24.no/a/1", "kilde": "E24", "dato": "2024-01-01",
+                                     "virksomhet": "X", "hvorfor": "Passer faget.", "oppgaver": [
+                                         {"tekst": f"Oppgave om {m}.", "modeller": [m], "hvorfor": "h"} for m in modeller]}
+    saker = [lag("Brukt sak", "SWOT-analyse", "Persepsjonskart", "Priselastisitet"),
+             lag("Kjent stoff", "SWOT-analyse", "Marketing mix (5 P)", "Persepsjonskart"),
+             lag("Nytt stoff", "Priselastisitet", "Rabattpolitikk", "SWOT-analyse")]
+    monkeypatch.setattr(eksamensmodus, "bank", lambda fag: list(saker))
+    monkeypatch.setattr(nyheter, "artikkel", lambda n: "Teksten i saken. " * 70 + "Britisk politi bekrefter noe annet.")
+    dekket = {"SWOT-analyse", "Marketing mix (5 P)", "Persepsjonskart"}
+    for seed in range(6):
+        case = eksamensmodus.velg_nyhet("MRK1001", unnga={"Brukt sak"}, rng=random.Random(seed), dekket=dekket)
+        assert case.tittel == "Nyhetscase: Nytt stoff", "to modeller du ikke har brukt på en case, mot ingen"
+    assert case.oppgaver[0] == "Oppgave om Priselastisitet." and [p.modell for p in case.punkter][1] == "Rabattpolitikk"
+    assert case.hvorfor == "Passer faget." and case.type == "nyhet"
+    saker[2]["kutt_ved"] = ["Britisk politi bekrefter"]
+    assert "Britisk politi" not in eksamensmodus.fra_bank("MRK1001", saker[2]).tekst
+    monkeypatch.setattr(nyheter, "artikkel", lambda n: "")
+    assert eksamensmodus.fra_bank("MRK1001", saker[2]) is None, "saken er fjernet hos kilden"
+
+
+def test_artikkelteksten_er_uten_les_ogsaa_bokser_og_ordforklaringer():
+    lang = "Dette er et vanlig avsnitt i saken som er langt nok til å telle som brødtekst hos kilden."
+    side = (f'<p>{lang}</p><a href="/x"><p>Lånetrikset ga Christian treroms leilighet i Oslo: slik fikk han låne mer av '
+            f'banken</p></a><p>Nå er nesten <span role="term">en femtedel<span aria-hidden="true"><span>Tallet inkluderer '
+            f'også Volvo.</span></span></span> av bilene kinesiske, og <a href="/y">andelen</a> øker hver måned i år.</p>')
+    avsnitt = nyheter.avsnitt_i(side)
+    assert len(avsnitt) == 2 and "Lånetrikset" not in " ".join(avsnitt)
+    assert avsnitt[1] == "Nå er nesten en femtedel av bilene kinesiske, og andelen øker hver måned i år."

@@ -151,27 +151,45 @@ class _Avsnitt(HTMLParser):
     """Plukker ut teksten i <p>-avsnittene, uten menyer, bildetekster, skjemaer og skript."""
     UTENFOR = {"script", "style", "figure", "figcaption", "nav", "footer", "aside", "button", "form", "header"}
 
+    TOMME = {"img", "br", "hr", "input", "meta", "link", "source", "wbr"}      # har ingen slutt-tagg
+
     def __init__(self):
         super().__init__()
         self.utenfor, self.i_avsnitt, self.deler, self.avsnitt = 0, False, [], []
+        self.lenker = 0              # <a> åpnet utenfor et avsnitt: «les også»-bokser, ikke brødtekst
+        self.skjult = None           # [tagg, dybde] mens vi er inne i noe med aria-hidden (ordforklaringer)
 
     def handle_starttag(self, tag, attrs):
-        if tag in self.UTENFOR:
+        if self.skjult:
+            self.skjult[1] += tag == self.skjult[0]
+        elif dict(attrs).get("aria-hidden") == "true" and tag not in self.TOMME:
+            self.skjult = [tag, 1]
+        elif tag in self.UTENFOR:
             self.utenfor += 1
-        elif tag == "p" and not self.utenfor:
+        elif tag == "a" and not self.i_avsnitt:
+            self.lenker += 1
+        elif tag == "p" and not self.utenfor and not self.lenker:
             self.i_avsnitt, self.deler = True, []
 
     def handle_endtag(self, tag):
-        if tag in self.UTENFOR and self.utenfor:
+        if self.skjult:
+            if tag == self.skjult[0]:
+                self.skjult[1] -= 1
+                if not self.skjult[1]:
+                    self.skjult = None
+        elif tag in self.UTENFOR and self.utenfor:
             self.utenfor -= 1
+        elif tag == "a" and not self.i_avsnitt and self.lenker:
+            self.lenker -= 1
         elif tag == "p" and self.i_avsnitt:
             self.i_avsnitt = False
             tekst = " ".join("".join(self.deler).split())
-            if len(tekst) > 60 and tekst not in self.avsnitt:      # korte linjer er knapper og bylines
+            henvisning = tekst.lower().startswith(("les også", "les mer", "les hele saken"))
+            if len(tekst) > 60 and tekst not in self.avsnitt and not henvisning:   # korte linjer er knapper og bylines
                 self.avsnitt.append(tekst)
 
     def handle_data(self, data):
-        if self.i_avsnitt and not self.utenfor:
+        if self.i_avsnitt and not self.utenfor and not self.skjult:
             self.deler.append(data)
 
 

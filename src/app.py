@@ -810,7 +810,7 @@ def svar_formel(valgt, tekst, okt):
 # ---------- Eksamensmodus ----------
 
 EKSAMENSFAG = [f for f in FAG if eksamensmodus.har_eksamensmodus(f)]
-TIDLIGERE, NYHET = "Tidligere eksamen", "Fersk nyhetssak"
+TIDLIGERE, NYHET = "Tidligere eksamen", "Nyhetssak"
 
 
 def eksamensvalg(fag, kilde):
@@ -849,10 +849,12 @@ def start_eksamen(fag, kilde, valg, viste):
             return
         case = eksamensmodus.tidligere(fag, valg)
     else:
-        yield (_melding("Leter etter en fersk nyhetssak som passer faget … (henter overskrifter, språkmodellen velger "
-                        "den beste, og artikkelen hentes)"), skjul, skjul, "", None, viste)
+        yield (_melding("Finner en nyhetssak som passer faget, og som øver modeller du ikke har brukt på en case "
+                        "ennå …"), skjul, skjul, "", None, viste)
         unnga = _brukte_nyheter(fag) | set(viste)
-        case = eksamensmodus.velg_nyhet(fag, unnga) or eksamensmodus.velg_nyhet(fag, unnga, ferske=True)
+        dekket = {r.modell.navn for r in dekning.dekning(koble(), fag) if r.brukt_paa_case}
+        case = (eksamensmodus.velg_nyhet(fag, unnga, dekket=dekket)
+                or eksamensmodus.velg_nyhet(fag, unnga, ferske=True, dekket=dekket))
         if case is None:
             yield (_melding("Fant ingen ny nyhetssak som kan brukes akkurat nå. Sjekk at du er på nett, eller prøv "
                             "igjen senere når det har kommet nye saker."), skjul, skjul, "", None, viste)
@@ -883,7 +885,7 @@ def _eksamensresultat_html(case, r, minutter) -> str:
                         for n, tittel in (("bra", "Dette gjør du godt"), ("forbedre", "Dette bør du forbedre")) if k.get(n))
     if not kommentar:
         kommentar = '<p class="notis">Språkmodellen ga ingen kommentar denne gangen. Rettingen over står likevel.</p>'
-    fasit = ("Fasiten er modellene oppgaveordene peker på i signalkatalogen. En nyhetssak har ingen sensorveiledning."
+    fasit = ("Fasiten er modellene oppgavene er skrevet for. En nyhetssak har ingen sensorveiledning."
              if case.type == "nyhet" else "Fasiten er hentet fra sensorveiledning, løsningsforslag eller A-besvarelse.")
     return _tilbakemelding(r.godkjent, dom,
                            f"<p><b>Modellene i fasiten</b></p><ul>{punkter}{feller}</ul>"
@@ -1127,8 +1129,8 @@ def lag_app() -> gr.Blocks:
                                                value=next(iter(signaler.caser(efag0)), None))
                     with gr.Row():
                         eks_start = gr.Button("Start", variant="primary")
-                eks_case = gr.HTML(_melding("Velg en tidligere eksamen, eller «Fersk nyhetssak» (da finner boten selv en "
-                                            "sak som passer faget), og trykk «Start». "
+                eks_case = gr.HTML(_melding("Velg en tidligere eksamen, eller «Nyhetssak» (da finner boten selv en sak "
+                                            "fra de siste årene som passer faget), og trykk «Start». "
                                             "Du får hele casen med oppgaver, skriver én besvarelse, og får den rettet "
                                             "mot modellene sensor ser etter."))
                 eks_svar = gr.Textbox(label="Din besvarelse", lines=18, visible=False,
