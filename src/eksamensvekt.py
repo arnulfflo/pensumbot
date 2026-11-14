@@ -41,18 +41,23 @@ def modellvekt(fag: str, navn: str) -> float:
 
 
 def nylig_ovd(db, fag: str, naa: datetime | None = None) -> tuple[set[str], set[str]]:
-    """(kildetekster svart riktig på de siste 14 dagene, kildetekster stilt de siste 3 dagene)."""
+    """(kildetekster svart riktig på de siste 14 dagene, kildetekster stilt de siste 3 dagene).
+
+    Et riktig svar på et «kjenn modellen»-spørsmål (laget fra modellarket) teller bare som stilt: at du
+    kjenner igjen elementene i Porter, betyr ikke at du kan bruke Porter på en case. Modellen skyves
+    derfor litt bak, men kommer fortsatt som case."""
     naa = naa or datetime.now()
     grense_mestret = (naa - timedelta(days=DAGER_MESTRET)).isoformat(timespec="seconds")
     grense_stilt = (naa - timedelta(days=DAGER_STILT)).isoformat(timespec="seconds")
-    mestret = {r[0] for r in db.execute(
-        "SELECT DISTINCT s.kildetekst FROM forsok f JOIN sporsmal s ON s.id = f.sporsmal_id"
+    riktige = db.execute(
+        "SELECT DISTINCT s.kildetekst, s.modell = 'modellark' FROM forsok f JOIN sporsmal s ON s.id = f.sporsmal_id"
         " WHERE s.fag = ? AND f.riktig = 1 AND f.tidspunkt >= ? AND s.kildetekst IS NOT NULL",
-        (fag, grense_mestret))}
+        (fag, grense_mestret)).fetchall()
+    mestret = {tekst for tekst, pugg in riktige if not pugg}
     stilt = {r[0] for r in db.execute(
         "SELECT DISTINCT kildetekst FROM sporsmal WHERE fag = ? AND laget >= ? AND kildetekst IS NOT NULL",
         (fag, grense_stilt))}
-    return mestret, stilt
+    return mestret, stilt | {tekst for tekst, pugg in riktige if pugg}
 
 
 def nylige_sporsmal(db, fag: str, dager: int = DAGER_MESTRET, naa: datetime | None = None) -> list[str]:

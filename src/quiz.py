@@ -116,6 +116,9 @@ def lag_flervalg(bit: Bit) -> tuple[dict | None, str]:
     # Formler i kilden blir av og til til LaTeX («$\\Delta$FEK»). Gjør dem om til vanlig tekst.
     data = {k: ([uten_latex(x) for x in v] if isinstance(v, list) else uten_latex(v) if isinstance(v, str) else v)
             for k, v in data.items()}
+    # Stor forbokstav i alle svarene: ellers røper «merkevarebygging tydeliggjør …» seg mot «Posisjonering gir …».
+    stor = lambda s: s.strip()[:1].upper() + s.strip()[1:]
+    data["riktig_svar"], data["gale_svar"] = stor(data["riktig_svar"]), [stor(g) for g in data["gale_svar"]]
     gale = [g for g in data["gale_svar"] if g.strip() and g.strip() != data["riktig_svar"].strip()][:3]
     if len(gale) != 3 or not data["sporsmal"].strip():
         return None, "manglende eller like alternativer"
@@ -242,7 +245,7 @@ def kjor_quiz(fag: str, tema: str, antall: int, type_: str = "flervalg", stil: s
     riktige = besvart = 0
     hjelp = "Svar med A, B, C eller D" if type_ == "flervalg" else "Svar med egne ord"
     print(f"\n{type_.capitalize()} i {fag} om «{tema}» ({antall} spørsmål). {hjelp}. Skriv q for å avslutte.\n")
-    for nr, (q, bit) in enumerate(sporsmal_strom(fag, tema, antall, type_, stil), start=1):
+    for nr, (q, bit) in enumerate(sporsmal_strom(fag, tema, antall, type_, stil, db=db), start=1):
         kilde = f"{fag}/{bit.kilde}"
         sid = lagre_sporsmal(db, fag=fag, tema=tema, ovingsmate=type_, sporsmal=q["sporsmal"],
                              alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],

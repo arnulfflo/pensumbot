@@ -120,7 +120,7 @@ def se_mestring(db, fag: str) -> str:
     fag = fag.strip().upper().replace("Ø", "O")
     if fag not in temaer:
         return f"Ukjent fag «{fag}». Fagene er {', '.join(sorted(temaer))}."
-    rader = {r["tema"]: r for r in db.execute("SELECT * FROM temaer WHERE fag = ?", (fag,))}
+    rader = {r["tema"]: r for r in db.execute("SELECT * FROM temaer WHERE fag = ? AND forsok > 0", (fag,))}
     ovd = sorted((r for r in rader.values()), key=lambda r: r["mestring"])
     linjer = [f"{fag}, mestring per tema (svakest først):"]
     linjer += [f"- {r['tema']}: {round(r['mestring'] * 100)} % etter {r['forsok']} forsøk" for r in ovd]

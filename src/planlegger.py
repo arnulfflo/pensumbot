@@ -26,7 +26,7 @@ from datetime import date, timedelta
 import yaml
 
 from src.database import koble
-from src.repetisjon import mestring_per_tema
+from src.repetisjon import mestring_per_tema, sist_ovd_per_tema
 from src.konfig import ROT
 
 
@@ -154,6 +154,10 @@ def lag_og_lagre(db, start: date | None = None) -> tuple[list[Blokk], list[str]]
     eksamener, temaer, innst = last_eksamener()
     sist_ovd = {(r["fag"], r["tema"]): date.fromisoformat(r["sist"]) for r in db.execute(
         "SELECT fag, tema, MAX(dato) AS sist FROM plan WHERE status = 'fullfort' GROUP BY fag, tema")}
+    # Øver du rett i quizen uten å trykke «Ferdig» på blokken, skal planen likevel vite at temaet er øvd på.
+    for nokkel, dato in sist_ovd_per_tema(db).items():
+        if dato <= start:
+            sist_ovd[nokkel] = max(dato, sist_ovd.get(nokkel, dato))
     hoppes_over = {date.fromisoformat(r["dato"]) for r in db.execute(
         "SELECT DISTINCT dato FROM plan WHERE status = 'hoppet_over' AND dato >= ?", (start.isoformat(),))}
     plan = lag_plan(eksamener, temaer, start, innst["timer_per_dag"], innst["blokk_minutter"],

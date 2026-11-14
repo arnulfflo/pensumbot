@@ -103,8 +103,14 @@ def oppdater_tema(db, fag: str, tema: str):
 
 
 def mestring_per_tema(db) -> dict:
-    """{(fag, tema): mestring} for planleggeren."""
-    return {(r["fag"], r["tema"]): r["mestring"] for r in db.execute("SELECT * FROM temaer")}
+    """{(fag, tema): mestring} for planleggeren. Temaer uten forsøk er ikke med (de regnes som ukjente)."""
+    return {(r["fag"], r["tema"]): r["mestring"] for r in db.execute("SELECT * FROM temaer WHERE forsok > 0")}
+
+
+def sist_ovd_per_tema(db) -> dict:
+    """{(fag, tema): datoen du sist svarte på noe i temaet}, uansett om blokken i planen ble merket ferdig."""
+    return {(r["fag"], r["tema"]): datetime.fromisoformat(r["sist_ovd"]).date()
+            for r in db.execute("SELECT * FROM temaer WHERE forsok > 0 AND sist_ovd IS NOT NULL")}
 
 
 def forfalte_sporsmal(db, fag: str | None = None) -> list:

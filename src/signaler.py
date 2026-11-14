@@ -302,9 +302,18 @@ _FORLEDD = ["Nord", "Fjell", "Vest", "Lys", "Bølge", "Elv", "Tind", "Furu", "Ky
 _ETTERLEDD = ["vik", "heim", "kraft", "gruppen", "partner", "hus", "verk", "lab", "torget", "linja"]
 
 
-def tilfeldig_bedrift(rng: random.Random) -> tuple[str, str]:
-    """(navn, bransje) til en oppdiktet case. Python velger, ellers kaller språkmodellen alt «Fjord-noe»."""
-    return rng.choice(_FORLEDD) + rng.choice(_ETTERLEDD) + " AS", rng.choice(BRANSJER)
+# Bransjer der kunden er en vanlig forbruker. En modell om forbrukeratferd (EKB) skal ikke få en case om
+# en industribedrift som kjøper maskindeler (målt 14.11.2026: språkmodellen følger bransjen, ikke modellen).
+FORBRUKERBRANSJER = ["dagligvare", "sportsutstyr", "reiseliv og hotell", "kafé og restaurant", "klær og mote",
+                     "treningssenter", "kosmetikk", "elektronikkbutikk", "møbler", "festival og kultur", "bryggeri",
+                     "bilforhandler", "brukthandel"]
+
+
+def tilfeldig_bedrift(rng: random.Random, forbruker: bool = False) -> tuple[str, str]:
+    """(navn, bransje) til en oppdiktet case. Python velger, ellers kaller språkmodellen alt «Fjord-noe».
+    forbruker: bare bransjer som selger til forbrukere."""
+    return (rng.choice(_FORLEDD) + rng.choice(_ETTERLEDD) + " AS",
+            rng.choice(FORBRUKERBRANSJER if forbruker else BRANSJER))
 
 SYSTEM_SETNING = """Du skriver ÉN setning til en oppdiktet eksamenscase i {fagnavn}. Bedriften heter {navn} ({bransje}).
 

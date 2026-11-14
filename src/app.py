@@ -23,7 +23,7 @@ from src import eksamensvekt, formler, modellquiz, signaler
 from src.henting import Bit, hent
 from src.innlesing import alle_fag, standardfag
 from src.kortsvar import STILER, vurder
-from src.llm import generer
+from src.llm import SprakmodellFeil, generer
 from src.planlegger import UKEDAGER, angre_hopp_over, blokker_for, hopp_over, lag_og_lagre, last_eksamener, marker_fullfort
 from src.quiz import modellnavn, sporsmal_strom
 from src.modeller import FILER as MODELLFAG, kapittel_i, modellark
@@ -75,6 +75,12 @@ def temaer_for(fag: str, med_alle: bool = True) -> list[str]:
     """Temaene fra config/eksamener.yaml, til rullemenyene på quiz og flashcards."""
     temaer = last_eksamener()[1].get(fag, [])
     return [ALLE_KORT, *temaer] if med_alle else temaer
+
+
+def startfag() -> str:
+    """Faget som står valgt når appen åpnes: det med nærmest eksamen, så du slipper å bytte hver gang."""
+    kommende = {f: d for f, d in last_eksamener()[0].items() if d >= date.today() and f in FAG}
+    return min(kommende, key=kommende.get) if kommende else standardfag()
 
 
 def topp() -> str:
@@ -169,6 +175,8 @@ def spor(melding, samtale, utveksling, fag, eksempelsvar, agent=True):
             utveksling = utveksling + [(sporsmal, s.tekst)]
     except TimeoutError:
         samtale[-1] = {"role": "assistant", "content": "Språkmodellen brukte for lang tid. Prøv igjen."}
+    except SprakmodellFeil as feil:
+        samtale[-1] = {"role": "assistant", "content": f"⚠️ {feil}"}
     yield samtale, samtale, utveksling, ""
 
 
@@ -210,11 +218,11 @@ def _modellstrom(fag, tema, stil):
         kilde = q.get("kilde") or m.kilde
         laget_av = modellnavn() if q["stil"] in ("velg modell", "bruk modellen", "ny case") else MODELLARK
         fasit = json.dumps(q["fasit"], ensure_ascii=False) if isinstance(q["fasit"], list) else q["fasit"]
-        sid = lagre_sporsmal(db, fag=fag, tema=tema_m, ovingsmate=q["type"], sporsmal=q["sporsmal"],
-                             alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=fasit,
-                             forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=laget_av,
-                             kildetekst=m.tekst)
-        yield {**q, "tema": tema_m, "fag": fag}, bit, sid, kilde
+        lagre = dict(fag=fag, tema=tema_m, ovingsmate=q["type"], sporsmal=q["sporsmal"],
+                     alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=fasit,
+                     forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=laget_av,
+                     kildetekst=m.tekst)
+        yield {**q, "tema": tema_m, "fag": fag}, bit, lagre, kilde
 
 
 def riktig_stil(type_, stil):
@@ -225,6 +233,8 @@ def riktig_stil(type_, stil):
 
 
 def _ny_strom(fag, tema, type_, stil):
+    """Gir (spørsmål, bit, id eller lagringsdata, kilde). Nye spørsmål lagres først når de vises (se _vis),
+    så spørsmål som lages på forhånd og aldri blir vist, ikke teller som «stilt» eller stopper like spørsmål."""
     if type_ == "repetisjon":
         yield from _repetisjonsstrom(fag)
         return
@@ -234,16 +244,16 @@ def _ny_strom(fag, tema, type_, stil):
     db = koble()
     for q, bit in sporsmal_strom(fag, tema, SPORSMAL_PER_TEMA, type_, stil, db=db):
         kilde = f"{fag}/{bit.kilde}"
-        sid = lagre_sporsmal(db, fag=fag, tema=tema, ovingsmate=type_, sporsmal=q["sporsmal"],
-                             alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],
-                             forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=modellnavn(),
-                             kildetekst=bit.tekst)
-        yield {**q, "type": type_, "tema": tema, "fag": fag}, bit, sid, kilde
+        lagre = dict(fag=fag, tema=tema, ovingsmate=type_, sporsmal=q["sporsmal"],
+                     alternativer=q.get("alternativer") or q.get("nokkelpunkter"), fasit=q["fasit"],
+                     forklaring=q.get("forklaring"), sitat=q["sitat"], kilde=kilde, modell=modellnavn(),
+                     kildetekst=bit.tekst)
+        yield {**q, "type": type_, "tema": tema, "fag": fag}, bit, lagre, kilde
 
 
 def _start_okt(fag, tema, type_, stil) -> dict:
-    stil = riktig_stil(type_, stil)
     """Lager spørsmål i en bakgrunnstråd, to foran det du svarer på, så «Nytt spørsmål» går fort."""
+    stil = riktig_stil(type_, stil)
     okt = {"nokkel": (fag, tema, type_, stil), "ko": queue.Queue(maxsize=2), "stopp": threading.Event(),
            "besvart": 0, "riktige": 0, "nr": 0, "feil": [], "runde": []}
 
@@ -264,8 +274,11 @@ def _start_okt(fag, tema, type_, stil) -> dict:
             for element in _ny_strom(fag, tema, type_, stil):
                 if okt["stopp"].is_set() or not legg_i_ko(element):
                     return
-        except Exception as feil:          # f.eks. Ollama som ikke svarer: vis det i stedet for å henge
-            print(f"Feil under laging av spørsmål: {feil}")
+        except SprakmodellFeil as feil:    # Ollama er ikke startet: si det i appen
+            okt["feilmelding"] = str(feil)
+        except BaseException as feil:      # alt annet: avslutt økten i stedet for å la «Nytt spørsmål» henge
+            okt["feilmelding"] = "Noe gikk galt da spørsmålene skulle lages. Se terminalen, og prøv igjen."
+            print(f"Feil under laging av spørsmål: {type(feil).__name__}: {feil}")
         legg_i_ko(SLUTT)
 
     threading.Thread(target=arbeid, daemon=True).start()
@@ -305,6 +318,12 @@ def _melding(tekst) -> str:
     return f'<div class="tom">{escape(tekst)}</div>'
 
 
+def rydd_okt(request: gr.Request):
+    """Fanen er lukket eller lastet på nytt: stopp bakgrunnstråden, ellers lager den spørsmål til ingen."""
+    if okt := OKTER.pop(request.session_hash, None):
+        okt["stopp"].set()
+
+
 def _ny_okt(request, fag, tema, type_, stil) -> dict:
     """Ny økt for nytt valg. Stopper den gamle bakgrunnstråden, men tar med feilsvarene du ikke har tatt på nytt."""
     gammel = OKTER.get(request.session_hash)
@@ -342,6 +361,8 @@ INGEN_ENDRING = (gr.update(),) * 4
 def _vis(okt, fag, element):
     """Viser et spørsmål (fra køen eller fra en øvingsrunde med feilsvar)."""
     q, bit, sid, kilde = element
+    if isinstance(sid, dict):             # nytt spørsmål: lagres nå som du faktisk får se det
+        sid = lagre_sporsmal(koble(), **sid)
     fag = q.get("fag") or fag             # feilsvar fra et annet fag beholder sitt eget fagmerke
     okt.update(q=q, bit=bit, sid=sid, kilde=kilde, nr=okt["nr"] + 1)
     kort = _sporsmalskort(fag, q, okt["nr"], kilde)
@@ -385,7 +406,8 @@ def nytt_sporsmal(fag, tema, type_, stil, request: gr.Request):
     if element is SLUTT:
         okt["stopp"].set()
         okt["nokkel"] = None
-        tekst = ("Ingen spørsmål skal repeteres nå. 🎉" if type_ == "repetisjon"
+        tekst = (f"⚠️ {okt['feilmelding']}" if okt.get("feilmelding")
+                 else "Ingen spørsmål skal repeteres nå. 🎉" if type_ == "repetisjon"
                  else "Du har vært gjennom alle modellene i utvalget. Trykk «Nytt spørsmål» for en ny runde."
                  if type_ == "modeller"
                  else f"Fant ikke flere gode spørsmål om «{tema}». Prøv et bredere tema.")
@@ -475,7 +497,7 @@ def svar_quiz(valgt, tekst, flere, request: gr.Request):
         svar = tekst
         try:
             v = _vurder(q, svar, bit.tekst)
-        except (TimeoutError, ValueError):
+        except (TimeoutError, ValueError, SprakmodellFeil):
             return (_tilbakemelding(False, "Vurderingen feilet",
                                     f'<div class="modellsvar"><b>Sammenlign selv med modellsvaret:</b><br>'
                                     f'{escape(q["modellsvar"])}</div>'), _poeng(okt), *INGEN_ENDRING)
@@ -509,7 +531,7 @@ def prov_igjen(tekst, request: gr.Request):
         return _melding("Skriv det nye svaret ditt i feltet over, og trykk «Prøv igjen».")
     try:
         v = _vurder(q, tekst, bit.tekst)
-    except (TimeoutError, ValueError):
+    except (TimeoutError, ValueError, SprakmodellFeil):
         return _melding("Vurderingen feilet. Prøv igjen.")
     dom, innhold = _vurdering_html(q, v)
     return _tilbakemelding(v["riktig"], "Nytt forsøk (teller ikke) · " + dom, innhold)
@@ -536,7 +558,10 @@ def hent_kort(fag, tema, nye):
     db = koble()
     tema = "" if not tema or tema == ALLE_KORT else tema
     if nye and tema.strip():
-        lag_nye_kort(db, fag, tema, int(nye))
+        try:
+            lag_nye_kort(db, fag, tema, int(nye))
+        except SprakmodellFeil as feil:       # kortene du har fra før, kan fortsatt øves
+            gr.Warning(str(feil))
     ko = [k["id"] for k in forfalte(db, fag, tema.strip() or None)]
     return ko, _flashcard(ko), gr.update(visible=bool(ko)), gr.update(visible=False)
 
@@ -901,10 +926,11 @@ def lag_app() -> gr.Blocks:
                 samtale = gr.State([])
                 utveksling = gr.State([])
                 with gr.Row():
-                    spor_fag = gr.Dropdown(FAG, value=standardfag(), label="Fag", scale=1)
+                    fag0 = startfag()
+                    spor_fag = gr.Dropdown(FAG, value=fag0, label="Fag", scale=1)
                     spor_eksempel = gr.Checkbox(label="Ta med A-besvarelser (ikke fasit)", scale=2)
                     spor_agent = gr.Checkbox(label="BØA-agent: søker i pensum og regner med kalkulator", value=True,
-                                             scale=2, visible=standardfag() == AGENTFAG)
+                                             scale=2, visible=fag0 == AGENTFAG)
                 chat = gr.Chatbot(height=480, elem_classes="chat", show_label=False,
                                   placeholder="**Spør om hva som helst i pensumet ditt.**<br>"
                                               "Svarene kommer bare fra dine egne filer, med kilde.<br>"
@@ -918,8 +944,8 @@ def lag_app() -> gr.Blocks:
             with gr.Tab("🎯 Quiz", id="quiz"):
                 with gr.Group(elem_classes="panel"):
                     with gr.Row():
-                        quiz_fag = gr.Dropdown(FAG, value=standardfag(), label="Fag")
-                        quiz_tema = gr.Dropdown(temaer_for(standardfag(), med_alle=False), value=None, label="Tema",
+                        quiz_fag = gr.Dropdown(FAG, value=fag0, label="Fag")
+                        quiz_tema = gr.Dropdown(temaer_for(fag0, med_alle=False), value=None, label="Tema",
                                                 allow_custom_value=True, scale=2,
                                                 info="Velg fra listen, eller skriv ditt eget tema")
                         quiz_type = gr.Radio(QUIZTYPER, value="flervalg", label="Type", scale=3)
@@ -942,8 +968,8 @@ def lag_app() -> gr.Blocks:
                 ko = gr.State([])
                 with gr.Group(elem_classes="panel"):
                     with gr.Row():
-                        kort_fag = gr.Dropdown(FAG, value=standardfag(), label="Fag")
-                        kort_temavalg = gr.Dropdown(temaer_for(standardfag()), value=ALLE_KORT, label="Tema",
+                        kort_fag = gr.Dropdown(FAG, value=fag0, label="Fag")
+                        kort_temavalg = gr.Dropdown(temaer_for(fag0), value=ALLE_KORT, label="Tema",
                                                     allow_custom_value=True, scale=2,
                                                     info="Velg fra listen, eller skriv ditt eget tema")
                         kort_nye = gr.Number(value=6, precision=0, label="Lag nye kort først")
@@ -981,7 +1007,7 @@ def lag_app() -> gr.Blocks:
             with gr.Tab("🧩 Modeller", id="modeller"):
                 with gr.Group(elem_classes="panel"):
                     with gr.Row():
-                        mfag0 = "MRK1001" if standardfag() not in MODELLFAG else standardfag()
+                        mfag0 = fag0 if fag0 in MODELLFAG else "MRK1001"
                         modell_fag = gr.Dropdown(list(MODELLFAG), value=mfag0, label="Fag")
                         modell_kap = gr.Dropdown(_kapitler(mfag0), value=ALLE_KAPITLER, label="Kapittel", scale=2)
                         modell_vis = gr.Radio(ARK, value="Modellark", label="Vis", scale=2)
@@ -996,6 +1022,7 @@ def lag_app() -> gr.Blocks:
         plan_ut = [plan_overskrift, plan_data, uke]
         app.load(vis_plan, outputs=plan_ut)
         app.load(vis_mestring, outputs=mestring)
+        app.unload(rydd_okt)
         hopp_knapp.click(hopp_over_i_dag, outputs=plan_ut)
         angre_knapp.click(angre_i_dag, outputs=plan_ut)
         forklar_knapp.click(forklar_plan, outputs=forklaring)

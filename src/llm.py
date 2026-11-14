@@ -13,6 +13,27 @@ import sys
 from src.konfig import last_innstillinger
 
 
+class SprakmodellFeil(RuntimeError):
+    """Språkmodellen kan ikke brukes: Ollama er ikke startet, eller modellen er ikke lastet ned.
+
+    Meldingen er skrevet til brukeren. Appen viser den i stedet for å henge, og i terminalen skrives
+    den uten feilsporing (se src/__init__.py)."""
+
+
+def _ollama_feil(feil: Exception, modell: str) -> Exception:
+    """Gjør en feil fra Ollama om til en feil resten av koden kjenner."""
+    import httpx
+    import ollama
+
+    if isinstance(feil, ollama.ResponseError) and feil.status_code == 404:
+        return SprakmodellFeil(f"Modellen {modell} er ikke lastet ned. Kjør:  ollama pull {modell}")
+    if isinstance(feil, (ConnectionError, httpx.ConnectError)):
+        return SprakmodellFeil("Får ikke kontakt med Ollama. Start Ollama-appen og prøv igjen.")
+    if isinstance(feil, httpx.TimeoutException):
+        return TimeoutError(f"{modell} svarte ikke innen tidsgrensen")
+    return feil
+
+
 def generer(system: str, melding: str, skjema: dict | None = None, temperatur: float | None = None) -> str:
     """system = instruksen (hvordan modellen skal oppføre seg), melding = det brukeren sender.
 
@@ -66,14 +87,8 @@ def _ollama(system: str, melding: str, innst: dict, skjema: dict | None = None) 
             think=innst["ollama"].get("tenkning"),
             format=skjema,   # None = fri tekst, ellers må svaret følge JSON-skjemaet
         )
-    except ollama.ResponseError as feil:
-        if feil.status_code == 404:
-            raise SystemExit(f"Modellen {modell} er ikke lastet ned. Kjør:  ollama pull {modell}") from None
-        raise
-    except ConnectionError:
-        raise SystemExit("Får ikke kontakt med Ollama. Start Ollama-appen og prøv igjen.") from None
-    except httpx.TimeoutException:
-        raise TimeoutError(f"{modell} svarte ikke innen tidsgrensen") from None
+    except (ollama.ResponseError, ConnectionError, httpx.HTTPError) as feil:
+        raise _ollama_feil(feil, modell) from None
     return svar.message.content
 
 
@@ -132,8 +147,8 @@ def _ollama_verktoy(system, samtale, verktoy, innst) -> dict:
             options={"temperature": innst["temperatur"], "num_predict": innst["ollama"].get("maks_tokens", 1500)},
             think=innst["ollama"].get("tenkning"),
         )
-    except httpx.TimeoutException:
-        raise TimeoutError(f"{innst['ollama']['modell']} svarte ikke innen tidsgrensen") from None
+    except (ollama.ResponseError, ConnectionError, httpx.HTTPError) as feil:
+        raise _ollama_feil(feil, innst["ollama"]["modell"]) from None
     kall = [{"id": f"kall{i}", "navn": k.function.name, "argumenter": dict(k.function.arguments or {})}
             for i, k in enumerate(svar.message.tool_calls or [])]
     return {"tekst": svar.message.content or "", "kall": kall}

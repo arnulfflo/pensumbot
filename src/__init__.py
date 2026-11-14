@@ -10,6 +10,7 @@ Skal du laste ned en ny modell (f.eks. etter å ha byttet modell i innstillinger
 
 import logging
 import os
+import sys
 
 # Må settes før sentence_transformers/huggingface_hub importeres, de leser verdien ved import.
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
@@ -22,3 +23,14 @@ os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
 for navn in ("sentence_transformers", "transformers", "huggingface_hub",
              "torch.distributed.elastic.multiprocessing.redirects"):   # «Redirects are not supported in MacOs»
     logging.getLogger(navn).setLevel(logging.ERROR)
+
+
+def _pen_feil(type_, feil, spor):
+    """I terminalen: «Start Ollama-appen» som én linje, ikke som en lang feilsporing."""
+    if type_.__name__ == "SprakmodellFeil":
+        print(feil, file=sys.stderr)       # Python avslutter selv med feilkode 1 etterpå
+        return
+    sys.__excepthook__(type_, feil, spor)
+
+
+sys.excepthook = _pen_feil

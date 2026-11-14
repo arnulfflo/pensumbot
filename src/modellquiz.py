@@ -238,6 +238,8 @@ Regler:
 1. «case»: 3–5 setninger om {navn}, en oppdiktet norsk bedrift innen {bransje}. Beskriv en konkret
    situasjon der akkurat denne modellen er det naturlige verktøyet for å analysere eller løse problemet.
    Ta med nok detaljer til at studenten kan bruke elementene i modellen på casen.
+   Handler modellen om forbrukere, skal casen handle om forbrukere som kjøper av bedriften (eller av
+   bedriftens kunder). Handler den om bedriftsmarkedet, skal kunden være en annen bedrift.
 2. Casen skal IKKE nevne navnet på modellen, forfatterne bak den eller navnene på elementene.
    Studenten skal selv kjenne igjen hvilken modell som passer.
 3. «hvorfor»: én setning om hvorfor nettopp denne modellen passer til casen.
@@ -285,12 +287,20 @@ def case_avslorer(case: str, m: Modell) -> str | None:
     return None
 
 
+def gjelder_forbrukere(m: Modell) -> bool:
+    """Handler modellen om forbrukere? Enten sier navnet det («forbrukerens kjøpsprosess»), eller så gjør
+    temaet for kapittelet det («Kjøpsatferd i forbrukermarkedet (kap. 4)» i config/eksamener.yaml)."""
+    from src.planlegger import last_eksamener
+    tema = next((t for t in last_eksamener()[1].get(m.fag, []) if kapittel_i(t) == m.kapittel), "")
+    return "forbruker" in f"{m.navn} {tema}".lower()
+
+
 def lag_case(m: Modell, rng: random.Random | None = None) -> tuple[dict | None, str]:
     melding = (f"Modell: {m.navn}\nElementer:\n"
                + "\n".join(f"- {e.navn}" + (f": {e.forklaring}" if e.forklaring else "") for e in m.elementer)
                + f"\n\nFra notatene:\n{m.tekst[:2500]}")
     try:
-        navn, bransje = signaler.tilfeldig_bedrift(rng or random.Random())
+        navn, bransje = signaler.tilfeldig_bedrift(rng or random.Random(), forbruker=gjelder_forbrukere(m))
         data = generer_json(SYSTEM_CASE.format(fagnavn=FAGNAVN.get(m.fag, m.fag), navn=navn, bransje=bransje),
                             melding, SKJEMA_CASE)
     except ValueError:
@@ -451,6 +461,10 @@ def modell_strom(fag: str, tema: str | None, stil: str = "blandet", antall: int 
             q, grunn = lag_bruk(m, rng)
         if q is None and type_ != "kjenn" and stil == "blandet":
             q, grunn = lag_kjenn(m, alle, rng), grunn      # casen feilet: ta et raskt spørsmål i stedet
+        elif q is None and stil == "blandet":
+            # Navnet røper elementene («Tre delsystemer: mikro, interessent og makro»), så det finnes ikke noe
+            # «kjenn»-spørsmål. Flere av dem er blant de vanligste på eksamen, så de får en case i stedet.
+            q, grunn = lag_velg(m, alle, rng)
         if q is None:
             print(f"  (hoppet over {m.navn}: {grunn})")
             continue
