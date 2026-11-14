@@ -19,7 +19,7 @@ import gradio as gr
 
 from src.database import koble, lagre_sporsmal
 from src.flashcards import forfalte, lag_nye_kort
-from src import dekning, eksamensmodus, eksamensvekt, formler, modellquiz, nyheter, signaler
+from src import dekning, eksamensmodus, eksamensvekt, formler, modellquiz, signaler
 from src.henting import Bit, hent
 from src.innlesing import alle_fag, standardfag
 from src.kortsvar import STILER, vurder
@@ -813,17 +813,17 @@ EKSAMENSFAG = [f for f in FAG if eksamensmodus.har_eksamensmodus(f)]
 TIDLIGERE, NYHET = "Tidligere eksamen", "Fersk nyhetssak"
 
 
-def eksamensvalg(fag, kilde, ferske=False):
-    """Fyller menyen med tidligere eksamenscaser, eller med nyhetssakene som passer faget best."""
-    if kilde == TIDLIGERE:
-        navn = list(signaler.caser(fag))
-        return gr.update(choices=navn, value=navn[0] if navn else None, label="Case"), []
-    saker = nyheter.for_fag(fag, 20, ferske)
-    if not saker:
-        gr.Warning("Fant ingen nyhetssaker. Sjekk at du er på nett, og trykk «Hent nyheter».")
-    valg = [n.etikett for n in saker]
-    return gr.update(choices=valg, value=valg[0] if valg else None, label="Nyhetssak (de mest relevante først)"), \
-        [vars(n) for n in saker]
+def eksamensvalg(fag, kilde):
+    """Menyen med tidligere eksamenscaser. Den skjules for nyhetssaker: der velger boten saken selv."""
+    navn = list(signaler.caser(fag))
+    return gr.update(choices=navn, value=navn[0] if navn else None, visible=kilde == TIDLIGERE)
+
+
+def _brukte_nyheter(fag) -> set[str]:
+    """Titlene på nyhetssakene du allerede har levert en besvarelse på."""
+    start = "📝 Nyhetscase: "
+    rader = koble().execute("SELECT sporsmal FROM sporsmal WHERE fag = ? AND ovingsmate = ?", (fag, dekning.EKSAMEN))
+    return {r["sporsmal"].split("\n")[0][len(start):] for r in rader if r["sporsmal"].startswith(start)}
 
 
 def _eksamenskort(case) -> str:
@@ -835,25 +835,33 @@ def _eksamenskort(case) -> str:
             f'Eksamensmodus</span><span>{len(case.tekst.split())} ord</span></div>'
             f'<div class="sporsmal">📝 {escape(case.tittel)}</div><div class="casetekst">{linjer(case.tekst)}</div>'
             + (f'<div class="oppgaver"><b>Oppgaver</b><ol>{oppgaver}</ol></div>' if oppgaver else "")
+            + (f'<div class="fra">🤖 Valgt fordi: {escape(case.hvorfor)}</div>' if case.hvorfor else "")
             + f'<div class="fra">📖 {escape(case.kilde)}{lenke}</div></div>')
 
 
-def start_eksamen(fag, kilde, valg, saker):
+def start_eksamen(fag, kilde, valg, viste):
+    """Starter en case. For nyhetssaker velger boten saken selv: en du ikke har fått før, og som passer faget."""
     skjul = gr.update(visible=False)
-    if not valg:
-        return _melding("Velg en case først."), skjul, skjul, "", None
+    viste = list(viste or [])
     if kilde == TIDLIGERE:
+        if not valg:
+            yield _melding("Velg en case først."), skjul, skjul, "", None, viste
+            return
         case = eksamensmodus.tidligere(fag, valg)
     else:
-        sak = next((s for s in saker or [] if nyheter.Nyhet(**s).etikett == valg), None)
-        case = eksamensmodus.fra_nyhet(fag, nyheter.Nyhet(**sak)) if sak else None
+        yield (_melding("Leter etter en fersk nyhetssak som passer faget … (henter overskrifter, språkmodellen velger "
+                        "den beste, og artikkelen hentes)"), skjul, skjul, "", None, viste)
+        unnga = _brukte_nyheter(fag) | set(viste)
+        case = eksamensmodus.velg_nyhet(fag, unnga) or eksamensmodus.velg_nyhet(fag, unnga, ferske=True)
         if case is None:
-            return (_melding("Saken kunne ikke hentes, eller den er for kort til å være en case (kanskje bak "
-                             "betalingsmur). Velg en annen sak."), skjul, skjul, "", None)
+            yield (_melding("Fant ingen ny nyhetssak som kan brukes akkurat nå. Sjekk at du er på nett, eller prøv "
+                            "igjen senere når det har kommet nye saker."), skjul, skjul, "", None, viste)
+            return
+        viste.append(case.tittel.removeprefix("Nyhetscase: "))
     okt = {"case": case, "start": datetime.now().isoformat(timespec="seconds")}
-    return (_eksamenskort(case), gr.update(value="", visible=True), gr.update(visible=True),
-            '<div class="tom">Skriv hele besvarelsen i feltet. Bruk gjerne overskrifter per oppgave. '
-            'Du har boka med på MRK-eksamen, ikke på ORG.</div>', okt)
+    yield (_eksamenskort(case), gr.update(value="", visible=True), gr.update(visible=True),
+           '<div class="tom">Skriv hele besvarelsen i feltet. Bruk gjerne overskrifter per oppgave. '
+           'Du har boka med på MRK-eksamen, ikke på ORG.</div>', okt, viste)
 
 
 def _eksamensresultat_html(case, r, minutter) -> str:
@@ -1119,8 +1127,8 @@ def lag_app() -> gr.Blocks:
                                                value=next(iter(signaler.caser(efag0)), None))
                     with gr.Row():
                         eks_start = gr.Button("Start", variant="primary")
-                        eks_hent = gr.Button("🔄 Hent nyheter", size="sm", visible=False)
-                eks_case = gr.HTML(_melding("Velg en tidligere eksamen eller en fersk nyhetssak, og trykk «Start». "
+                eks_case = gr.HTML(_melding("Velg en tidligere eksamen, eller «Fersk nyhetssak» (da finner boten selv en "
+                                            "sak som passer faget), og trykk «Start». "
                                             "Du får hele casen med oppgaver, skriver én besvarelse, og får den rettet "
                                             "mot modellene sensor ser etter."))
                 eks_svar = gr.Textbox(label="Din besvarelse", lines=18, visible=False,
@@ -1214,11 +1222,9 @@ def lag_app() -> gr.Blocks:
         svar_knapp.click(svar_quiz, [quiz_valg, quiz_tekst, quiz_flere], [quiz_resultat, poeng, *knapper])
 
         for felt in (eks_fag, eks_kilde):
-            felt.input(eksamensvalg, [eks_fag, eks_kilde], [eks_valg, eks_saker])
-        eks_kilde.input(lambda k: gr.update(visible=k == NYHET), eks_kilde, eks_hent)
-        eks_hent.click(lambda f, k: eksamensvalg(f, k, ferske=True), [eks_fag, eks_kilde], [eks_valg, eks_saker])
+            felt.input(eksamensvalg, [eks_fag, eks_kilde], eks_valg)
         eks_start.click(start_eksamen, [eks_fag, eks_kilde, eks_valg, eks_saker],
-                        [eks_case, eks_svar, eks_lever, eks_resultat, eks_okt])
+                        [eks_case, eks_svar, eks_lever, eks_resultat, eks_okt, eks_saker])
         eks_lever.click(lever_eksamen, [eks_svar, eks_okt], [eks_resultat, eks_okt])
 
         # .input (ikke .change): bare når du selv bytter fag, så «Øv nå» ikke nullstiller temaet

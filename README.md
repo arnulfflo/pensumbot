@@ -28,7 +28,7 @@ Jeg er økonomistudent ved NTNU og bygget dette høsten 2026 for å lære RAG og
 - 📝 **Eksamensmodus**: en hel case (tidligere eksamen eller en fersk nyhetssak) med oppgaver, én lang besvarelse, og retting mot modellene sensor ser etter
 - 🧭 **Studieveileder-agent**: «Jeg har to timer i kveld, hva bør jeg øve på?» gir en ferdig økt med «Øv nå»-knapper
 - 🔒 **100 % lokalt og privat**, og ett konfigurasjonsvalg fra å bruke Claude i stedet
-- 🧪 **Målt kvalitet** med eget testsett og 276 automatiske tester
+- 🧪 **Målt kvalitet** med eget testsett og 279 automatiske tester
 
 ## 🧩 Funksjoner
 
@@ -60,7 +60,7 @@ BØA-eksamen er uten hjelpemidler, så formlene må sitte. Fanen har 32 formler 
 Fanen «Eksamen» gir deg en hel case med oppgaver. Du skriver én besvarelse og får den rettet punkt for punkt.
 
 - **Tidligere eksamen**: de ekte eksamenscasene fra pensum. Fasiten er modellene sensorveiledningen, løsningsforslaget eller A-besvarelsen brukte, med grunnen til hver
-- **Fersk nyhetssak**: `src/nyheter.py` henter overskrifter fra E24, Kampanje, Finansavisen og NRK (RSS) og sorterer dem etter hvor godt de passer faget. Saken du velger, blir casen, med tre oppgaver formulert som på eksamen. Fasiten er modellene oppgaveordene peker på i signalkatalogen
+- **Fersk nyhetssak**: `src/nyheter.py` henter overskrifter fra E24, Kampanje, Finansavisen og NRK (RSS) og sorterer dem etter hvor godt de passer faget. Språkmodellen velger så den saken som egner seg best som case (én navngitt virksomhet i en situasjon som kan analyseres), og hopper over saker du har fått før og saker bak betalingsmur. Saken blir casen, med tre oppgaver formulert som på eksamen. Fasiten er modellene oppgaveordene peker på i signalkatalogen
 - **Rettingen gjøres i Python**, så den er lik hver gang: hvilke modeller fra fasiten du brukte, modeller sensor sier ikke passer, og en sjekkliste (koblet til casen, 4 P, drøfting, anbefaling, lengde). Språkmodellen skriver bare en kort kommentar til slutt
 - Rettingen ser etter om modellene er brukt, ikke hvor godt. Den er en indikasjon, ikke en karakter
 - **Dekningsoversikt** i Mestring-fanen: eksamensmodellene i faget, de vanligste først, med hva du har øvd på: kjenn, case og funnet i en hel case. Modeller du ikke har brukt riktig på en case, er merket
@@ -191,7 +191,7 @@ Målt mot håndlagde testsett (`tester/testsett_*.yaml`) med `uv run python -m s
 | Organisasjon og ledelse | 14 av 15 | 0,882 | 3 av 3 | 0 |
 | Markedsføring | 15 av 15 | 0,967 | 3 av 3 | 0 |
 
-Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **276 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
+Felle-spørsmålene spør om ting som *ikke* står i pensum, for eksempel Blue Ocean, NPS og Hofstede. Riktig svar er da «Finnes ikke i materialet». I tillegg finnes **279 enhetstester** for planleggeren, repetisjonen, mestringen, angre-knappen, sikkerhetskopien, agentenes kalkulator og kontroller, hvordan veilederen setter opp økter, at hver BØA-formel, omforming og fasit regner riktig, og at modellspørsmålene har én entydig fasit (blant annet at kalkulatoren aldri kjører kode). Hver endring testes også i nettleseren før den committes.
 
 ## 🛠️ Teknologi
 

@@ -174,3 +174,50 @@ def test_feller_flagges_naar_de_brukes():
 
 def test_fag_uten_signalkatalog_har_ingen_dekning(db):
     assert dekning.dekning(db, "BOA1100") == []
+
+
+# ---------- boten velger nyhetssaken selv ----------
+
+def _saker():
+    lag = lambda nr, tittel, ingress: nyheter.Nyhet(tittel, ingress, f"https://e24.no/a/{nr}", "E24", "2026-11-14T09:00")
+    return [lag(1, "Kommentar: prisene er for høye", "Mener vår kommentator."),
+            lag(2, "Rema 1000 lanserer ny kjede", "Rema 1000 vil ta markedsandeler med lavere pris."),
+            lag(3, "Oda mister kunder", "Netthandelen faller, og Oda kutter i sortimentet.")]
+
+
+def test_spraakmodellen_velger_saken_og_navnet_maa_staa_i_den(monkeypatch):
+    import src.llm
+    svar = {"valg": [{"nr": 3, "virksomhet": "Oda", "hvorfor": "Fall i salget gir en tydelig situasjonsanalyse."},
+                     {"nr": 2, "virksomhet": "Kiwi", "hvorfor": "Lansering."}, {"nr": 9, "virksomhet": "x", "hvorfor": "y"},
+                     {"nr": 3, "virksomhet": "Oda", "hvorfor": "to ganger"}]}
+    monkeypatch.setattr(src.llm, "generer_json", lambda *a, **k: svar)
+    valg = eksamensmodus.ranger_nyheter("MRK1001", _saker())
+    assert [v.nyhet.tittel[:4] for v in valg] == ["Oda ", "Rema", "Komm"], "modellens valg først, resten etter stikkord"
+    assert valg[0].virksomhet == "Oda" and valg[1].virksomhet == "", "Kiwi står ikke i Rema-saken og er funnet på"
+    assert valg[2].hvorfor == ""
+
+
+def test_uten_spraakmodell_brukes_stikkordrekkefolgen(monkeypatch):
+    import src.llm
+
+    def nede(*a, **k):
+        raise src.llm.SprakmodellFeil("Start Ollama-appen")
+    monkeypatch.setattr(src.llm, "generer_json", nede)
+    valg = eksamensmodus.ranger_nyheter("MRK1001", _saker())
+    assert [v.nyhet.lenke[-1] for v in valg] == ["1", "2", "3"] and not any(v.hvorfor or v.virksomhet for v in valg)
+    monkeypatch.setattr(src.llm, "generer_json", lambda *a, **k: {"valg": []})
+    assert eksamensmodus.ranger_nyheter("MRK1001", _saker())[0].hvorfor == eksamensmodus.NODLOSNING
+
+
+def test_boten_hopper_over_brukte_saker_og_saker_bak_betalingsmur(monkeypatch):
+    import src.llm
+    monkeypatch.setattr(nyheter, "for_fag", lambda fag, antall=20, ferske=False: _saker())
+    monkeypatch.setattr(src.llm, "generer_json", lambda *a, **k: {"valg": [
+        {"nr": 1, "virksomhet": "Rema 1000", "hvorfor": "Lansering av ny kjede."},
+        {"nr": 2, "virksomhet": "Oda", "hvorfor": "Fall i salget."}]})
+    monkeypatch.setattr(nyheter, "artikkel", lambda n: "" if "Rema" in n.tittel else "Oda kutter i sortimentet. " * 60)
+    case = eksamensmodus.velg_nyhet("MRK1001", unnga={"Kommentar: prisene er for høye"}, rng=random.Random(1))
+    assert case.tittel == "Nyhetscase: Oda mister kunder", "Rema-saken ga ingen tekst, så neste valg brukes"
+    assert case.hvorfor == "Fall i salget." and "Oda" in case.oppgaver[0] and "virksomheten i saken" not in case.som_tekst
+    monkeypatch.setattr(nyheter, "artikkel", lambda n: "")
+    assert eksamensmodus.velg_nyhet("MRK1001") is None
