@@ -30,7 +30,10 @@ from src.konfig import data_mappe, last_innstillinger
 
 STANDARDKILDER = [{"navn": "E24", "url": "https://e24.no/rss2/"},
                   {"navn": "Kampanje", "url": "https://kampanje.com/rss/"},
+                  {"navn": "Finansavisen", "url": "https://ws.finansavisen.no/api/articles.rss"},
                   {"navn": "NRK", "url": "https://www.nrk.no/toppsaker.rss"}]
+# Dagens Næringsliv (https://services.dn.no/api/feed/rss/) er med vilje ikke med: alle sakene ligger bak
+# betalingsmur (testet 14.11.2026, 0 av 25 ga tekst), så de ville bare fylt menyen med saker som ikke kan brukes.
 FERSK_I_TIMER = 6            # så lenge brukes de lagrede overskriftene før de hentes på nytt
 MAKS_BYTE = 3_000_000        # en nyhetsside er aldri større enn dette
 MAKS_ORD = 750               # casen kuttes ved avsnittet der den passerer dette (eksamenscasene er 800–1700 ord)

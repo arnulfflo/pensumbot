@@ -60,7 +60,7 @@ BØA-eksamen er uten hjelpemidler, så formlene må sitte. Fanen har 32 formler 
 Fanen «Eksamen» gir deg en hel case med oppgaver. Du skriver én besvarelse og får den rettet punkt for punkt.
 
 - **Tidligere eksamen**: de ekte eksamenscasene fra pensum. Fasiten er modellene sensorveiledningen, løsningsforslaget eller A-besvarelsen brukte, med grunnen til hver
-- **Fersk nyhetssak**: `src/nyheter.py` henter overskrifter fra E24, Kampanje og NRK (RSS) og sorterer dem etter hvor godt de passer faget. Saken du velger, blir casen, med tre oppgaver formulert som på eksamen. Fasiten er modellene oppgaveordene peker på i signalkatalogen
+- **Fersk nyhetssak**: `src/nyheter.py` henter overskrifter fra E24, Kampanje, Finansavisen og NRK (RSS) og sorterer dem etter hvor godt de passer faget. Saken du velger, blir casen, med tre oppgaver formulert som på eksamen. Fasiten er modellene oppgaveordene peker på i signalkatalogen
 - **Rettingen gjøres i Python**, så den er lik hver gang: hvilke modeller fra fasiten du brukte, modeller sensor sier ikke passer, og en sjekkliste (koblet til casen, 4 P, drøfting, anbefaling, lengde). Språkmodellen skriver bare en kort kommentar til slutt
 - Rettingen ser etter om modellene er brukt, ikke hvor godt. Den er en indikasjon, ikke en karakter
 - **Dekningsoversikt** i Mestring-fanen: eksamensmodellene i faget, de vanligste først, med hva du har øvd på: kjenn, case og funnet i en hel case. Modeller du ikke har brukt riktig på en case, er merket
